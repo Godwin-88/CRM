@@ -2,114 +2,130 @@
 
 namespace App\Jobs;
 
-use App\Models\Interaction;
-use App\Models\InteractionAttachment;
-use App\Models\EmailTemplate;
-use App\Models\UnmatchedItem;
 use App\Models\Contact;
-use App\Models\User;
+use App\Models\Interaction;
+use App\Models\SupportEmailAddress;
+use App\Models\Ticket;
+use App\Services\TicketService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 
 class ProcessInboundEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $rawEmail;
+    public function __construct(
+        public array $emailData,
+        public ?SupportEmailAddress $supportEmail = null
+    ) {}
 
-    public function __construct(array $rawEmail)
+    public function handle(TicketService $ticketService): void
     {
-        $this->rawEmail = $rawEmail;
+        $fromEmail = $this->emailData['from'] ?? null;
+        $subject = $this->emailData['subject'] ?? '';
+        $body = $this->emailData['body'] ?? '';
+        $headers = $this->emailData['headers'] ?? [];
+
+        // Check for auto-reply headers
+        if ($this->isAutoReply($headers)) {
+            Log::info('Discarded auto-reply email', ['from' => $fromEmail]);
+            return;
+        }
+
+        // Check for spam markers
+        if ($this->isSpam($body, $headers)) {
+            Log::info('Discarded spam email', ['from' => $fromEmail]);
+            return;
+        }
+
+        // Try to find ticket reference in subject
+        if (preg_match('/\[Ticket\s*#([^\]]+)\]/i', $subject, $matches)) {
+            $ticketRef = $matches[1];
+            $ticket = Ticket::where('id', $ticketRef)
+                ->orWhere('subject', 'like', "%[Ticket #{$ticketRef}%")
+                ->first();
+
+            if ($ticket) {
+                $this->createTicketInteraction($ticket, $fromEmail, $subject, $body);
+                return;
+            }
+        }
+
+        // Create new ticket
+        $contact = null;
+        if ($fromEmail) {
+            $contact = Contact::where('email', $fromEmail)->first();
+        }
+
+        if (!$contact && $fromEmail) {
+            $contact = $this->createContactFromEmail($fromEmail, $this->emailData['from_name'] ?? null);
+        }
+
+        $ticket = $ticketService->createTicket([
+            'subject' => $subject,
+            'description' => $body,
+            'contact_id' => $contact?->id,
+            'priority' => $this->supportEmail?->default_priority ?? 'medium',
+            'category_id' => $this->supportEmail?->default_category_id,
+        ]);
+
+        $this->createTicketInteraction($ticket, $fromEmail, $subject, $body);
     }
 
-    public function handle(): void
+    protected function isAutoReply(array $headers): bool
     {
-        $from = $this->rawEmail['from'] ?? null;
-        $to = $this->rawEmail['to'] ?? null;
-        $subject = $this->rawEmail['subject'] ?? '(No subject)';
-        $body = $this->rawEmail['body'] ?? '';
-        $messageId = $this->rawEmail['message_id'] ?? null;
-        $references = $this->rawEmail['references'] ?? null;
-        $attachments = $this->rawEmail['attachments'] ?? [];
+        $autoReplyHeaders = ['Auto-Submitted', 'X-Autoreply', 'X-Auto-Reply', 'Precedence'];
 
-        // Find contact by email
-        $contact = Contact::where('email', $from)->first();
+        foreach ($autoReplyHeaders as $header) {
+            if (!empty($headers[$header])) {
+                return true;
+            }
+        }
 
-        // Find agent by recipient email (CRM agent address)
-        $agent = User::where('email', $to)->first();
+        return false;
+    }
 
-        $interactionData = [
+    protected function isSpam(string $body, array $headers): bool
+    {
+        // Basic spam check - can be extended with more sophisticated logic
+        $spamIndicators = ['spam', 'viagra', 'casino', 'lottery'];
+
+        $content = strtolower($body . ' ' . ($headers['Subject'] ?? ''));
+        foreach ($spamIndicators as $indicator) {
+            if (str_contains($content, $indicator)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function createContactFromEmail(string $email, ?string $name): Contact
+    {
+        $nameParts = $name ? explode(' ', $name, 2) : [null, null];
+
+        return Contact::create([
+            'email' => $email,
+            'first_name' => $nameParts[0] ?? 'Unknown',
+            'last_name' => $nameParts[1] ?? '',
+            'type' => 'customer',
+        ]);
+    }
+
+    protected function createTicketInteraction(Ticket $ticket, ?string $fromEmail, string $subject, string $body): void
+    {
+        Interaction::create([
+            'contact_id' => $ticket->contact_id,
+            'account_id' => $ticket->account_id,
             'type' => 'email',
             'direction' => 'inbound',
             'subject' => $subject,
             'body' => $body,
-            'agent_id' => $agent?->id,
-            'external_message_id' => $messageId,
-        ];
-
-        if ($contact) {
-            $interactionData['contact_id'] = $contact->id;
-            if ($contact->account_id) {
-                $interactionData['account_id'] = $contact->account_id;
-            }
-            $interaction = Interaction::create($interactionData);
-
-            // Handle attachments
-            foreach ($attachments as $fileData) {
-                $this->storeAttachment($interaction, $fileData);
-            }
-
-            // Link to existing interaction if this is a reply
-            if ($references) {
-                $parent = Interaction::where('external_message_id', $references)->first();
-                if ($parent) {
-                    $interaction->update(['parent_interaction_id' => $parent->id]);
-                }
-            }
-
-            // Notify assigned agent
-            if ($agent) {
-                $agent->notify(new \App\Notifications\NewInteractionNotification($interaction));
-            }
-        } else {
-            // Create unmatched item for manual review
-            UnmatchedItem::create([
-                'source_type' => 'email',
-                'external_id' => $messageId,
-                'raw_payload' => $this->rawEmail,
-            ]);
-        }
-    }
-
-    private function storeAttachment(Interaction $interaction, array $fileData): void
-    {
-        $allowedMimes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                         'image/png', 'image/jpeg'];
-
-        if (!in_array($fileData['mime_type'] ?? '', $allowedMimes)) {
-            return;
-        }
-
-        $maxSize = 25 * 1024 * 1024; // 25MB
-        if (($fileData['size'] ?? 0) > $maxSize) {
-            return;
-        }
-
-        $path = Storage::disk('s3')->put('interaction-attachments', $fileData['content']);
-
-        InteractionAttachment::create([
-            'interaction_id' => $interaction->id,
-            'filename' => $fileData['filename'] ?? 'attachment',
-            'mime_type' => $fileData['mime_type'],
-            'size_bytes' => $fileData['size'] ?? 0,
-            'storage_path' => $path,
+            'ticket_id' => $ticket->id,
         ]);
     }
 }

@@ -23,6 +23,13 @@ class Interaction extends Model
         'duration_seconds',
         'outcome',
         'agent_id',
+        'external_message_id',
+        'parent_interaction_id',
+        'metadata',
+        'is_reviewed',
+        'is_locked',
+        'locked_by',
+        'locked_at',
     ];
 
     public function contact(): BelongsTo
@@ -33,6 +40,11 @@ class Interaction extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function channel(): BelongsTo
+    {
+        return $this->belongsTo(InteractionChannel::class, 'channel_id');
     }
 
     public function agent(): BelongsTo

@@ -1,21 +1,26 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AccountController;
-use App\Http\Controllers\Api\V1\ContactController;
-use App\Http\Controllers\Api\V1\SegmentController;
-use App\Http\Controllers\Api\V1\DealController;
-use App\Http\Controllers\Api\V1\PipelineController;
-use App\Http\Controllers\Api\V1\AnalyticsController;
+use App\Http\Controllers\Api\V1\CampaignAnalyticsController;
 use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\CampaignTemplateController;
-use App\Http\Controllers\Api\V1\DripSequenceController;
-use App\Http\Controllers\Api\V1\SocialPostController;
-use App\Http\Controllers\Api\V1\InteractionController;
-use App\Http\Controllers\Api\V1\IntegrationController;
+use App\Http\Controllers\Api\V1\CannedResponseController;
 use App\Http\Controllers\Api\V1\ChatController;
-use App\Http\Controllers\Api\V1\KioskController;
 use App\Http\Controllers\Api\V1\ContactCentreController;
+use App\Http\Controllers\Api\V1\ContactController;
+use App\Http\Controllers\Api\V1\CsatController;
+use App\Http\Controllers\Api\V1\DripSequenceController;
+use App\Http\Controllers\Api\V1\IntegrationController;
+use App\Http\Controllers\Api\V1\InteractionController;
+use App\Http\Controllers\Api\V1\KioskController;
+use App\Http\Controllers\Api\V1\KnowledgeBaseController;
+use App\Http\Controllers\Api\V1\PipelineController;
+use App\Http\Controllers\Api\V1\SegmentController;
+use App\Http\Controllers\Api\V1\SocialPostController;
+use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\TranslationController;
+use App\Http\Controllers\Api\V1\DealController;
+use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Admin\ScoringRuleController;
 use Illuminate\Support\Facades\Route;
 
@@ -87,6 +92,46 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('analytics/campaign-time-series/{campaign}', [CampaignAnalyticsController::class, 'timeSeries']);
     Route::get('analytics/campaign-per-contact/{campaign}', [CampaignAnalyticsController::class, 'perContact']);
     Route::get('analytics/campaign-per-link/{campaign}', [CampaignAnalyticsController::class, 'perLink']);
+
+    // Support Routes
+    Route::get('tickets', [TicketController::class, 'index']);
+    Route::post('tickets', [TicketController::class, 'store']);
+    Route::get('tickets/{ticket}', [TicketController::class, 'show']);
+    Route::put('tickets/{ticket}', [TicketController::class, 'update']);
+    Route::delete('tickets/{ticket}', [TicketController::class, 'destroy']);
+    Route::post('tickets/{ticket}/assign', [TicketController::class, 'assign']);
+    Route::post('tickets/{ticket}/escalate', [TicketController::class, 'escalate']);
+    Route::post('tickets/{ticket}/resolve', [TicketController::class, 'resolve']);
+    Route::post('tickets/{ticket}/close', [TicketController::class, 'close']);
+    Route::post('tickets/{ticket}/reopen', [TicketController::class, 'reopen']);
+    Route::post('tickets/{ticket}/merge', [TicketController::class, 'merge']);
+    Route::post('tickets/{ticket}/split', [TicketController::class, 'split']);
+    Route::post('tickets/{ticket}/notes', [TicketController::class, 'addNote']);
+    Route::post('tickets/{ticket}/link-article', [TicketController::class, 'linkArticle']);
+    Route::get('tickets/breached', [TicketController::class, 'breached']);
+
+    Route::get('ticket-categories', [\App\Http\Controllers\Api\V1\TicketCategoryController::class, 'index']);
+    Route::post('ticket-categories', [\App\Http\Controllers\Api\V1\TicketCategoryController::class, 'store']);
+    Route::put('ticket-categories/{ticketCategory}', [\App\Http\Controllers\Api\V1\TicketCategoryController::class, 'update']);
+    Route::delete('ticket-categories/{ticketCategory}', [\App\Http\Controllers\Api\V1\TicketCategoryController::class, 'destroy']);
+
+    Route::get('knowledge-base/search', [KnowledgeBaseController::class, 'search']);
+    Route::post('knowledge-base/{knowledge_base}/rate', [KnowledgeBaseController::class, 'rate']);
+    Route::post('knowledge-base/{knowledge_base}/restore-version', [KnowledgeBaseController::class, 'restoreVersion']);
+    Route::get('knowledge-base/categories', [\App\Http\Controllers\Api\V1\KnowledgeBaseCategoryController::class, 'index']);
+    Route::apiResource('knowledge-base', KnowledgeBaseController::class);
+
+    Route::get('canned-responses', [CannedResponseController::class, 'index']);
+    Route::post('canned-responses', [CannedResponseController::class, 'store']);
+    Route::get('canned-responses/{cannedResponse}', [CannedResponseController::class, 'show']);
+    Route::put('canned-responses/{cannedResponse}', [CannedResponseController::class, 'update']);
+    Route::delete('canned-responses/{cannedResponse}', [CannedResponseController::class, 'destroy']);
+    Route::patch('canned-responses/{cannedResponse}/toggle', [CannedResponseController::class, 'toggleActive']);
+    Route::post('canned-responses/{cannedResponse}/favorite', [CannedResponseController::class, 'favorite']);
+
+    Route::post('tickets/{ticket}/rating', [CsatController::class, 'store']);
+    Route::get('tickets/{ticket}/rating', [CsatController::class, 'show']);
+    Route::get('analytics/csat', [CsatController::class, 'analytics']);
 
     // Admin routes (manager+ access)
     Route::middleware('role:manager|admin')->group(function () {
@@ -172,6 +217,14 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         // Kiosk
         Route::post('kiosk/{kiosk}/ingest', [KioskController::class, 'ingest']);
 
+        Route::get('sla', [\App\Http\Controllers\Api\V1\SlaController::class, 'index']);
+        Route::post('sla', [\App\Http\Controllers\Api\V1\SlaController::class, 'store']);
+        Route::get('sla/{slaDefinition}', [\App\Http\Controllers\Api\V1\SlaController::class, 'show']);
+        Route::put('sla/{slaDefinition}', [\App\Http\Controllers\Api\V1\SlaController::class, 'update']);
+        Route::delete('sla/{slaDefinition}', [\App\Http\Controllers\Api\V1\SlaController::class, 'destroy']);
+        Route::get('tickets/{ticket}/sla', [\App\Http\Controllers\Api\V1\SlaController::class, 'ticketSla']);
+        Route::get('analytics/sla', [\App\Http\Controllers\Api\V1\SlaController::class, 'analytics']);
+        
         // Integrations
         Route::get('integrations', [IntegrationController::class, 'index']);
         Route::post('integrations', [IntegrationController::class, 'store']);

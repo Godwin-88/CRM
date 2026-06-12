@@ -68,7 +68,7 @@ const loadForecast = () => {
             <SelectValue placeholder="All pipelines" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Pipelines</SelectItem>
+            <SelectItem value=" ">All pipelines</SelectItem>
             <SelectItem v-for="pipeline in pipelines" :key="pipeline.id" :value="pipeline.id">
               {{ pipeline.name }}
             </SelectItem>

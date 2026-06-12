@@ -63,7 +63,7 @@ watch(filters, (newFilters) => {
               <SelectValue placeholder="All stages" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Stages</SelectItem>
+              <SelectItem value=" ">All Stages</SelectItem>
               <SelectItem value="qualification">Qualification</SelectItem>
               <SelectItem value="demo">Demo</SelectItem>
               <SelectItem value="proposal">Proposal</SelectItem>
@@ -77,7 +77,7 @@ watch(filters, (newFilters) => {
               <SelectValue placeholder="All pipelines" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Pipelines</SelectItem>
+              <SelectItem value=" ">All Pipelines</SelectItem>
               <SelectItem v-for="pipeline in pipelines" :key="pipeline.id" :value="pipeline.id">
                 {{ pipeline.name }}
               </SelectItem>

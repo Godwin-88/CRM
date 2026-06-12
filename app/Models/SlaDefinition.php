@@ -34,6 +34,11 @@ class SlaDefinition extends Model
         return $this->belongsTo(LoyaltyTier::class, 'loyalty_tier_id');
     }
 
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(TicketCategory::class, 'support_category');
+    }
+
     public function businessHours(): HasMany
     {
         return $this->hasMany(BusinessHours::class);
