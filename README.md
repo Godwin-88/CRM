@@ -28,27 +28,139 @@ This document specifies a full-stack CRM application built on Laravel, aligned t
 
 ### Backend
 - **Framework:** Laravel 11.x (PHP 8.3+)
-- **Database:** MySQL 8.0 / PostgreSQL 15+ (primary), Redis (cache/queues)
-- **Queue:** Laravel Horizon (Redis-backed)
-- **Search:** Laravel Scout + Meilisearch or Elasticsearch
-- **Storage:** Laravel Storage (S3-compatible for documents/assets)
-- **Auth:** Laravel Sanctum (API tokens) + Fortify (web sessions)
-- **Real-time:** Laravel Reverb (WebSockets) or Pusher
-- **Scheduler:** Laravel Scheduler (cron-based automation triggers)
-- **Notifications:** Laravel Notifications (email, SMS, push, in-app)
+- **Database:** PostgreSQL 16 (primary via Supabase or self-hosted), SQLite (local fallback)
+- **Cache/Queue/Session:** Redis 7 (Upstash or self-hosted)
+- **Search:** Laravel Scout + Meilisearch
+- **Storage:** Laravel Storage (S3-compatible via MinIO/Supabase)
+- **Auth:** Laravel Sanctum (API tokens) + Spatie Permission (RBAC)
+- **Real-time:** Laravel Reverb (WebSockets)
+- **Job Processing:** Laravel Horizon
+- **Media:** Spatie Media Library
+- **Audit:** Spatie Activity Log
+- **PDF:** Barryvdh DomPDF
 
 ### Frontend
-- **SPA:** Vue 3 (Inertia.js adapter) OR Livewire 3 (for server-driven UI)
-- **UI Kit:** Tailwind CSS 3.x + shadcn-style component library
-- **Charting:** Chart.js / ApexCharts (analytics dashboards)
-- **Data Tables:** TanStack Table (Vue) or similar
-- **Icons:** Heroicons / Lucide
+- **Framework:** Vue 3 + TypeScript
+- **Meta-framework:** Inertia.js v1 (server-driven SPA without separate API layer)
+- **UI:** Tailwind CSS + shadcn-vue components
+- **Icons:** Lucide Vue Next
+- **State:** Pinia (implicit via Inertia shared props)
+- **Build:** Vite
 
-### DevOps / Infrastructure
-- **Containerization:** Docker + Laravel Sail (dev), Docker Compose (staging)
-- **CI/CD:** GitHub Actions
-- **API Documentation:** L5-Swagger / Scribe
-- **Testing:** PHPUnit + Pest, Laravel Dusk (E2E)
+### Infrastructure
+- **Containerization:** Docker + Docker Compose (app, pgsql, redis)
+- **Local Dev:** Laravel Sail (PHP 8.4) or custom Docker
+- **Web Server:** Nginx + PHP-FPM (production)
+- **Process:** Supervisor (nginx, php-fpm, horizon, scheduler)
+- **Deployment:** Render (monolith) or any PHP host with Postgres + Redis
+
+### Architecture Diagram
+
+```mermaid
+flowchart TD
+    subgraph Client["Client Layer"]
+        Browser["Browser / Vite HMR"]
+    end
+    subgraph Web["Web Tier"]
+        Nginx["Nginx + PHP-FPM"]
+        Inertia["Inertia.js + Vue 3 SPA"]
+    end
+    subgraph App["Application Tier"]
+        Laravel["Laravel 11 App"]
+        Controllers["Controllers"]
+        Models["Eloquent Models"]
+        Policies["Spatie Permission Policies"]
+        Events["Events + Listeners"]
+        Jobs["Queued Jobs"]
+        Services["Domain Services"]
+    end
+    subgraph Data["Data Tier"]
+        Postgres["PostgreSQL 16 (Supabase / Docker)"]
+        Redis["Redis 7 (Upstash / Docker)"]
+        Meilisearch["Meilisearch (optional)"]
+        S3["S3 / MinIO"]
+    end
+    subgraph Workers["Background Workers"]
+        Horizon["Laravel Horizon"]
+        Scheduler["Scheduler"]
+        Reverb["Reverb WebSockets"]
+    end
+
+    Browser --> Nginx
+    Nginx --> Laravel
+    Laravel --> Controllers
+    Controllers --> Models
+    Controllers --> Policies
+    Controllers --> Inertia
+    Inertia --> Browser
+    Laravel --> Services
+    Services --> Models
+    Models --> Postgres
+    Models --> Redis
+    Models --> S3
+    Models -.-> Meilisearch
+    Laravel --> Events
+    Events --> Jobs
+    Jobs --> Horizon
+    Horizon --> Redis
+    Scheduler --> Jobs
+    Reverb --> Redis
+    Redis --> Postgres
+```
+
+### Request Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant N as Nginx
+    participant L as Laravel
+    participant M as Model/Policy
+    participant D as PostgreSQL
+    participant R as Redis
+    participant J as Queue/Horizon
+
+    U->>N: HTTP Request (Inertia page)
+    N->>L: Route to Controller
+    L->>M: Authorize + Validate
+    M->>D: Query / Write
+    D-->>M: Result
+    M-->>L: Data
+    L->>U: Inertia::render(props)
+
+    Note over L,J: Async side-effects
+    L->>J: Dispatch Event/Job
+    J->>R: Push to queue
+    R->>J: Worker picks up
+    J->>D: Background DB write
+    J->>U: Notification (via Reverb)
+```
+
+### Data Layer
+
+```mermaid
+erDiagram
+    ACCOUNTS ||--o{ CONTACTS : has
+    ACCOUNTS ||--o{ DEALS : owns
+    ACCOUNTS ||--o{ CONTRACTS : holds
+    CONTACTS ||--o{ INTERACTIONS : generates
+    CONTACTS ||--o{ ACTIVITIES : participates
+    CONTACTS ||--o{ LOYALTY_ENROLLMENTS : enrolled_in
+    CONTACTS ||--o{ TICKETS : files
+    CONTACTS ||--o{ SURVEY_RESPONSES : submits
+    DEALS ||--o{ DEAL_COMMENTS : has
+    DEALS ||--o{ DEMO_TRIALS : schedules
+    DEALS }|--|| PIPELINES : belongs_to
+    DEALS }|--|| PIPELINE_STAGES : current_stage
+    CAMPAIGNS ||--o{ CAMPAIGN_STEPS : contains
+    CAMPAIGNS ||--o{ CAMPAIGN_RECIPIENTS : targets
+    SEGMENTS ||--o{ CONTACTS : targets
+    SEGMENTS ||--o{ CAMPAIGNS : used_by
+    TICKETS }|--|| SLA_INSTANCES : tracked_by
+    ONBOARDING_RECORDS }|--|| ONBOARDING_TEMPLATES : follows
+    GUIDED_JOURNEYS ||--o{ JOURNEY_COMPLETIONS : records
+    CLV_CALCULATION }|--|| CONTACTS : for
+```
 
 ---
 
@@ -222,10 +334,26 @@ POST /api/segments/{id}/contacts/preview
 - Deal collaboration: multiple team members, comments, @mentions
 - Demo & trial management (from Manage Targeted Demos & Trials)
 
-**Automation Example (Laravel Observer/Event):**
+**Current implementation status:**
+- **Built:** migrations, Eloquent models, API controllers, services, jobs, events, and translation files for interactions/omni-channel, loyalty/CLV, and deal-stage move.
+- **In progress:** admin web controllers and Vue page stubs for these modules (route registration exists, pages are placeholder).
+- **Missing:** frontend pages and web controller methods for quote workflows, custom fields, admin campaign builder UI pages, and task completion flows.
+
+**API routes:** defined under `/api/v1` for contacts, accounts, segments, deals, pipelines, interactions, chat, kiosk, integrations, surveys, SLA, onboarding, guided journeys, reactivation, CLV analytics, campaign analytics, loyalty, and translations.
+
+**Admins:** admin web routes exist, but corresponding Vue pages are stubs for many sections. Web controllers exist for Pipelines, Win/Loss Reasons, Quote Templates, Scoring Rules, Campaigns, Campaign Templates, Drip Sequences, and Social Posts.
+
+**Status summary:**
+- ✅ Core models + migrations + API layer
+- ✅ Reverb events, Horizon jobs, and supporting services
+- ✅ Loyalty/CLV tables and API controllers
+- ✅ Interactions/admin UI registration and placeholder pages
+- ⏳ Full admin UI work remains for several sections
+
+**Automation Example:**
 ```php
-// When deal moves to "Proposal" stage → auto-create follow-up task
-DealStageChanged::class → CreateFollowUpTaskListener::class
+// When deal moves stage -> dispatch event -> listeners/jobs update activity
+DealStageMoved::class => Queue backend via Horizon
 ```
 
 ---
@@ -484,30 +612,26 @@ app/
 ```json
 {
   "require": {
-    "laravel/framework": "^11.0",
-    "laravel/sanctum": "^4.0",
-    "laravel/horizon": "^5.0",
-    "laravel/scout": "^10.0",
-    "laravel/reverb": "^1.0",
-    "spatie/laravel-permission": "^6.0",
-    "spatie/laravel-activitylog": "^4.0",
-    "spatie/laravel-media-library": "^11.0",
-    "spatie/laravel-query-builder": "^5.0",
-    "spatie/laravel-data": "^4.0",
-    "inertiajs/inertia-laravel": "^1.0",
-    "tightenco/ziggy": "^2.0",
+    "php": "^8.3",
+    "laravel/framework": "^13.8",
+    "laravel/sanctum": "^4.3",
+    "laravel/horizon": "^5.47",
+    "laravel/reverb": "^1.10",
+    "laravel/scout": "^11.2",
+    "spatie/laravel-permission": "^8.0",
+    "spatie/laravel-activitylog": "^5.0",
+    "spatie/laravel-medialibrary": "^11.23",
+    "spatie/laravel-query-builder": "^7.3",
+    "inertiajs/inertia-laravel": "^3.1",
+    "tightenco/ziggy": "^2.6",
     "barryvdh/laravel-dompdf": "^2.0",
-    "pragmarx/google2fa-laravel": "^2.0",
-    "knuckleswtf/scribe": "^4.0",
-    "maatwebsite/excel": "^3.1",
-    "league/flysystem-aws-s3-v3": "^3.0",
-    "meilisearch/meilisearch-php": "^1.0"
+    "maatwebsite/excel": "^3.1"
   },
   "require-dev": {
     "pestphp/pest": "^2.0",
     "pestphp/pest-plugin-laravel": "^2.0",
     "laravel/dusk": "^8.0",
-    "fakerphp/faker": "^1.9"
+    "fakerphp/faker": "^1.23"
   }
 }
 ```
