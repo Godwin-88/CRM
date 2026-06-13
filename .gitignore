@@ -14,8 +14,8 @@
 .zed
 .fleet
 auth.json
-composer.lock
-package-lock.json
+# composer.lock
+# package-lock.json
 pnpm-lock.yaml
 yarn.lock
 /node_modules

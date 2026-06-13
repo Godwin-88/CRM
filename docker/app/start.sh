@@ -1,14 +1,24 @@
 #!/bin/sh
 set -e
 
+mkdir -p /var/log/supervisor
+
 echo "Waiting for pgsql..."
-until pg_isready -h pgsql -U "${DB_USERNAME:-laravel}" -d "${DB_DATABASE:-laravel}" >/dev/null 2>&1; do
-  sleep 2
+for i in $(seq 1 30); do
+    if nc -z pgsql 5432 2>/dev/null; then
+        echo "pgsql is ready"
+        break
+    fi
+    sleep 2
 done
 
 echo "Waiting for redis..."
-until redis-cli -h redis ping >/dev/null 2>&1; do
-  sleep 2
+for i in $(seq 1 30); do
+    if nc -z redis 6379 2>/dev/null; then
+        echo "redis is ready"
+        break
+    fi
+    sleep 2
 done
 
 if [ ! -f .env ]; then

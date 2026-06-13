@@ -1,0 +1,156 @@
+﻿2026-06-12T11:26:16.1119639Z ##[group]Run docker/metadata-action@v5
+2026-06-12T11:26:16.1119961Z with:
+2026-06-12T11:26:16.1120179Z   images: ghcr.io/Godwin-88/CRM
+2026-06-12T11:26:16.1120820Z   tags: type=ref,event=branch
+type=ref,event=pr
+type=semver,pattern={{version}}
+type=semver,pattern={{major}}.{{minor}}
+type=semver,pattern={{major}}
+type=sha
+
+2026-06-12T11:26:16.1121799Z   context: workflow
+2026-06-12T11:26:16.1124595Z   github-token: ***
+2026-06-12T11:26:16.1124820Z env:
+2026-06-12T11:26:16.1125012Z   REGISTRY: ghcr.io
+2026-06-12T11:26:16.1125240Z   IMAGE_NAME: Godwin-88/CRM
+2026-06-12T11:26:16.1125481Z ##[endgroup]
+2026-06-12T11:26:16.7362668Z ##[group]Context info
+2026-06-12T11:26:16.7363432Z eventName: push
+2026-06-12T11:26:16.7363952Z sha: 6b1128e9fcb33d353fb1e493f10bdea2183956e3
+2026-06-12T11:26:16.7364568Z ref: refs/heads/main
+2026-06-12T11:26:16.7365098Z workflow: Docker Build and Push
+2026-06-12T11:26:16.7365674Z action: meta
+2026-06-12T11:26:16.7366152Z actor: Godwin-88
+2026-06-12T11:26:16.7366611Z runNumber: 1
+2026-06-12T11:26:16.7367109Z runId: 27412722975
+2026-06-12T11:26:16.7367687Z commitDate: Fri Jun 12 2026 11:25:54 GMT+0000 (Coordinated Universal Time)
+2026-06-12T11:26:16.7368715Z ##[endgroup]
+2026-06-12T11:26:16.7392356Z ##[group]Processing images input
+2026-06-12T11:26:16.7393382Z name=ghcr.io/Godwin-88/CRM,enable=true
+2026-06-12T11:26:16.7394248Z ##[endgroup]
+2026-06-12T11:26:16.7394992Z ##[group]Processing tags input
+2026-06-12T11:26:16.7395721Z type=semver,pattern={{version}},value=,match=,enable=true,priority=900
+2026-06-12T11:26:16.7396673Z type=semver,pattern={{major}}.{{minor}},value=,match=,enable=true,priority=900
+2026-06-12T11:26:16.7397624Z type=semver,pattern={{major}},value=,match=,enable=true,priority=900
+2026-06-12T11:26:16.7398418Z type=ref,event=branch,enable=true,priority=600
+2026-06-12T11:26:16.7399168Z type=ref,event=pr,prefix=pr-,enable=true,priority=600
+2026-06-12T11:26:16.7400125Z type=sha,prefix=sha-,format=short,enable=true,priority=100
+2026-06-12T11:26:16.7401114Z ##[endgroup]
+2026-06-12T11:26:16.7402114Z ##[group]Processing flavor input
+2026-06-12T11:26:16.7402649Z latest=auto
+2026-06-12T11:26:16.7403019Z prefix=
+2026-06-12T11:26:16.7403344Z prefixLatest=false
+2026-06-12T11:26:16.7403698Z suffix=
+2026-06-12T11:26:16.7404027Z suffixLatest=false
+2026-06-12T11:26:16.7462335Z ##[endgroup]
+2026-06-12T11:26:16.7462980Z ##[group]Docker image version
+2026-06-12T11:26:16.7463417Z main
+2026-06-12T11:26:16.7463975Z ##[endgroup]
+2026-06-12T11:26:16.7464546Z ##[group]Docker tags
+2026-06-12T11:26:16.7464931Z ghcr.io/godwin-88/crm:main
+2026-06-12T11:26:16.7465382Z ghcr.io/godwin-88/crm:sha-6b1128e
+2026-06-12T11:26:16.7466065Z ##[endgroup]
+2026-06-12T11:26:16.7528849Z ##[group]Docker labels
+2026-06-12T11:26:16.7529753Z org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+2026-06-12T11:26:16.7531128Z org.opencontainers.image.description=Customer Relationship management.
+2026-06-12T11:26:16.7532549Z org.opencontainers.image.licenses=
+2026-06-12T11:26:16.7533576Z org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+2026-06-12T11:26:16.7534897Z org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+2026-06-12T11:26:16.7535937Z org.opencontainers.image.title=CRM
+2026-06-12T11:26:16.7536911Z org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+2026-06-12T11:26:16.7537945Z org.opencontainers.image.version=main
+2026-06-12T11:26:16.7539102Z ##[endgroup]
+2026-06-12T11:26:16.7540079Z ##[group]Annotations
+2026-06-12T11:26:16.7540966Z manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+2026-06-12T11:26:16.7542500Z manifest:org.opencontainers.image.description=Customer Relationship management.
+2026-06-12T11:26:16.7543680Z manifest:org.opencontainers.image.licenses=
+2026-06-12T11:26:16.7544851Z manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+2026-06-12T11:26:16.7546236Z manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+2026-06-12T11:26:16.7547366Z manifest:org.opencontainers.image.title=CRM
+2026-06-12T11:26:16.7548767Z manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+2026-06-12T11:26:16.7549943Z manifest:org.opencontainers.image.version=main
+2026-06-12T11:26:16.7551187Z ##[endgroup]
+2026-06-12T11:26:16.7552741Z ##[group]JSON output
+2026-06-12T11:26:16.7553410Z {
+2026-06-12T11:26:16.7554019Z   "tags": [
+2026-06-12T11:26:16.7554709Z     "ghcr.io/godwin-88/crm:main",
+2026-06-12T11:26:16.7555574Z     "ghcr.io/godwin-88/crm:sha-6b1128e"
+2026-06-12T11:26:16.7556494Z   ],
+2026-06-12T11:26:16.7557169Z   "tag-names": [
+2026-06-12T11:26:16.7557802Z     "main",
+2026-06-12T11:26:16.7558402Z     "sha-6b1128e"
+2026-06-12T11:26:16.7559039Z   ],
+2026-06-12T11:26:16.7559640Z   "labels": {
+2026-06-12T11:26:16.7560422Z     "org.opencontainers.image.created": "2026-06-12T11:26:16.739Z",
+2026-06-12T11:26:16.7561917Z     "org.opencontainers.image.description": "Customer Relationship management.",
+2026-06-12T11:26:16.7563286Z     "org.opencontainers.image.licenses": "",
+2026-06-12T11:26:16.7564391Z     "org.opencontainers.image.revision": "6b1128e9fcb33d353fb1e493f10bdea2183956e3",
+2026-06-12T11:26:16.7565774Z     "org.opencontainers.image.source": "https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7566769Z     "org.opencontainers.image.title": "CRM",
+2026-06-12T11:26:16.7567861Z     "org.opencontainers.image.url": "https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7568755Z     "org.opencontainers.image.version": "main"
+2026-06-12T11:26:16.7569457Z   },
+2026-06-12T11:26:16.7569934Z   "annotations": [
+2026-06-12T11:26:16.7570654Z     "manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z",
+2026-06-12T11:26:16.7572052Z     "manifest:org.opencontainers.image.description=Customer Relationship management.",
+2026-06-12T11:26:16.7573045Z     "manifest:org.opencontainers.image.licenses=",
+2026-06-12T11:26:16.7574005Z     "manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3",
+2026-06-12T11:26:16.7575145Z     "manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7576091Z     "manifest:org.opencontainers.image.title=CRM",
+2026-06-12T11:26:16.7576966Z     "manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7577866Z     "manifest:org.opencontainers.image.version=main"
+2026-06-12T11:26:16.7578543Z   ]
+2026-06-12T11:26:16.7579009Z }
+2026-06-12T11:26:16.7579759Z ##[endgroup]
+2026-06-12T11:26:16.7580549Z ##[group]Bake file definition (tags)
+2026-06-12T11:26:16.7581167Z {
+2026-06-12T11:26:16.7581882Z   "target": {
+2026-06-12T11:26:16.7582442Z     "docker-metadata-action": {
+2026-06-12T11:26:16.7583054Z       "tags": [
+2026-06-12T11:26:16.7583606Z         "ghcr.io/godwin-88/crm:main",
+2026-06-12T11:26:16.7584272Z         "ghcr.io/godwin-88/crm:sha-6b1128e"
+2026-06-12T11:26:16.7584998Z       ],
+2026-06-12T11:26:16.7585561Z       "args": {
+2026-06-12T11:26:16.7586115Z         "DOCKER_META_IMAGES": "ghcr.io/godwin-88/crm",
+2026-06-12T11:26:16.7586791Z         "DOCKER_META_VERSION": "main"
+2026-06-12T11:26:16.7587374Z       }
+2026-06-12T11:26:16.7587857Z     }
+2026-06-12T11:26:16.7588329Z   }
+2026-06-12T11:26:16.7588884Z }
+2026-06-12T11:26:16.7589627Z ##[endgroup]
+2026-06-12T11:26:16.7590462Z ##[group]Bake file definition (labels)
+2026-06-12T11:26:16.7591064Z {
+2026-06-12T11:26:16.7591739Z   "target": {
+2026-06-12T11:26:16.7599203Z     "docker-metadata-action": {
+2026-06-12T11:26:16.7599847Z       "labels": {
+2026-06-12T11:26:16.7600434Z         "org.opencontainers.image.created": "2026-06-12T11:26:16.739Z",
+2026-06-12T11:26:16.7601661Z         "org.opencontainers.image.description": "Customer Relationship management.",
+2026-06-12T11:26:16.7602635Z         "org.opencontainers.image.licenses": "",
+2026-06-12T11:26:16.7603525Z         "org.opencontainers.image.revision": "6b1128e9fcb33d353fb1e493f10bdea2183956e3",
+2026-06-12T11:26:16.7604360Z         "org.opencontainers.image.source": "https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7604972Z         "org.opencontainers.image.title": "CRM",
+2026-06-12T11:26:16.7605784Z         "org.opencontainers.image.url": "https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7606375Z         "org.opencontainers.image.version": "main"
+2026-06-12T11:26:16.7606831Z       }
+2026-06-12T11:26:16.7607170Z     }
+2026-06-12T11:26:16.7607498Z   }
+2026-06-12T11:26:16.7607829Z }
+2026-06-12T11:26:16.7608326Z ##[endgroup]
+2026-06-12T11:26:16.7608822Z ##[group]Bake file definition (annotations)
+2026-06-12T11:26:16.7609230Z {
+2026-06-12T11:26:16.7609557Z   "target": {
+2026-06-12T11:26:16.7609917Z     "docker-metadata-action": {
+2026-06-12T11:26:16.7610315Z       "annotations": [
+2026-06-12T11:26:16.7610799Z         "manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z",
+2026-06-12T11:26:16.7611803Z         "manifest:org.opencontainers.image.description=Customer Relationship management.",
+2026-06-12T11:26:16.7613055Z         "manifest:org.opencontainers.image.licenses=",
+2026-06-12T11:26:16.7614067Z         "manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3",
+2026-06-12T11:26:16.7614902Z         "manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7615368Z         "manifest:org.opencontainers.image.title=CRM",
+2026-06-12T11:26:16.7615980Z         "manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7616429Z         "manifest:org.opencontainers.image.version=main"
+2026-06-12T11:26:16.7616727Z       ]
+2026-06-12T11:26:16.7616906Z     }
+2026-06-12T11:26:16.7617079Z   }
+2026-06-12T11:26:16.7617253Z }
+2026-06-12T11:26:16.7617632Z ##[endgroup]

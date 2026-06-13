@@ -1,0 +1,896 @@
+﻿2026-06-12T11:26:09.0669793Z Current runner version: '2.334.0'
+2026-06-12T11:26:09.0703931Z ##[group]Runner Image Provisioner
+2026-06-12T11:26:09.0705478Z Hosted Compute Agent
+2026-06-12T11:26:09.0706484Z Version: 20260527.539
+2026-06-12T11:26:09.0707622Z Commit: a891dd388383b896fa6ac04a82c0b75cec981078
+2026-06-12T11:26:09.0708938Z Build Date: 2026-05-27T21:39:57Z
+2026-06-12T11:26:09.0710625Z Worker ID: {95ee33b4-1ca4-47e3-ab5f-f7957f94a81a}
+2026-06-12T11:26:09.0712318Z Azure Region: eastus
+2026-06-12T11:26:09.0713297Z ##[endgroup]
+2026-06-12T11:26:09.0716777Z ##[group]Operating System
+2026-06-12T11:26:09.0717924Z Ubuntu
+2026-06-12T11:26:09.0718812Z 24.04.4
+2026-06-12T11:26:09.0719763Z LTS
+2026-06-12T11:26:09.0720565Z ##[endgroup]
+2026-06-12T11:26:09.0722004Z ##[group]Runner Image
+2026-06-12T11:26:09.0723094Z Image: ubuntu-24.04
+2026-06-12T11:26:09.0723991Z Version: 20260607.184.1
+2026-06-12T11:26:09.0726086Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260607.184/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-12T11:26:09.0728899Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260607.184
+2026-06-12T11:26:09.0730579Z ##[endgroup]
+2026-06-12T11:26:09.0732863Z ##[group]GITHUB_TOKEN Permissions
+2026-06-12T11:26:09.0735731Z Contents: read
+2026-06-12T11:26:09.0736785Z Metadata: read
+2026-06-12T11:26:09.0737796Z Packages: write
+2026-06-12T11:26:09.0738670Z ##[endgroup]
+2026-06-12T11:26:09.0741920Z Secret source: Actions
+2026-06-12T11:26:09.0743086Z Prepare workflow directory
+2026-06-12T11:26:09.1465175Z Prepare all required actions
+2026-06-12T11:26:09.1502700Z Getting action download info
+2026-06-12T11:26:09.6444949Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-06-12T11:26:09.7208430Z Download action repository 'docker/setup-buildx-action@v3' (SHA:8d2750c68a42422c14e847fe6c8ac0403b4cbd6f)
+2026-06-12T11:26:09.9164041Z Download action repository 'docker/login-action@v3' (SHA:c94ce9fb468520275223c153574b00df6fe4bcc9)
+2026-06-12T11:26:10.1602127Z Download action repository 'docker/metadata-action@v5' (SHA:c299e40c65443455700f0fdfc63efafe5b349051)
+2026-06-12T11:26:10.4134113Z Download action repository 'docker/build-push-action@v5' (SHA:ca052bb54ab0790a636c9b5f226502c73d547a25)
+2026-06-12T11:26:10.7766360Z Complete job name: build-and-push
+2026-06-12T11:26:10.8629198Z ##[group]Run actions/checkout@v4
+2026-06-12T11:26:10.8630592Z with:
+2026-06-12T11:26:10.8631675Z   repository: Godwin-88/CRM
+2026-06-12T11:26:10.8641638Z   token: ***
+2026-06-12T11:26:10.8642495Z   ssh-strict: true
+2026-06-12T11:26:10.8643361Z   ssh-user: git
+2026-06-12T11:26:10.8644243Z   persist-credentials: true
+2026-06-12T11:26:10.8645201Z   clean: true
+2026-06-12T11:26:10.8646087Z   sparse-checkout-cone-mode: true
+2026-06-12T11:26:10.8647130Z   fetch-depth: 1
+2026-06-12T11:26:10.8647972Z   fetch-tags: false
+2026-06-12T11:26:10.8648843Z   show-progress: true
+2026-06-12T11:26:10.8649728Z   lfs: false
+2026-06-12T11:26:10.8650544Z   submodules: false
+2026-06-12T11:26:10.8651641Z   set-safe-directory: true
+2026-06-12T11:26:10.8652869Z env:
+2026-06-12T11:26:10.8653653Z   REGISTRY: ghcr.io
+2026-06-12T11:26:10.8654534Z   IMAGE_NAME: Godwin-88/CRM
+2026-06-12T11:26:10.8655472Z ##[endgroup]
+2026-06-12T11:26:10.9766886Z Syncing repository: Godwin-88/CRM
+2026-06-12T11:26:10.9769767Z ##[group]Getting Git version info
+2026-06-12T11:26:10.9771021Z Working directory is '/home/runner/work/CRM/CRM'
+2026-06-12T11:26:10.9773353Z [command]/usr/bin/git version
+2026-06-12T11:26:10.9860008Z git version 2.54.0
+2026-06-12T11:26:10.9887379Z ##[endgroup]
+2026-06-12T11:26:10.9903983Z Temporarily overriding HOME='/home/runner/work/_temp/cc914e2c-6d89-4401-a094-31bccd3e9ca2' before making global git config changes
+2026-06-12T11:26:10.9908937Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-12T11:26:10.9917215Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/CRM/CRM
+2026-06-12T11:26:10.9963599Z Deleting the contents of '/home/runner/work/CRM/CRM'
+2026-06-12T11:26:10.9968273Z ##[group]Initializing the repository
+2026-06-12T11:26:10.9973101Z [command]/usr/bin/git init /home/runner/work/CRM/CRM
+2026-06-12T11:26:11.0114862Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-06-12T11:26:11.0116973Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-06-12T11:26:11.0119599Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-06-12T11:26:11.0122048Z hint: call:
+2026-06-12T11:26:11.0123527Z hint:
+2026-06-12T11:26:11.0125400Z hint: 	git config --global init.defaultBranch <name>
+2026-06-12T11:26:11.0127631Z hint:
+2026-06-12T11:26:11.0129645Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-06-12T11:26:11.0133355Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-06-12T11:26:11.0136087Z hint:
+2026-06-12T11:26:11.0137492Z hint: 	git branch -m <name>
+2026-06-12T11:26:11.0139355Z hint:
+2026-06-12T11:26:11.0140746Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-06-12T11:26:11.0142972Z Initialized empty Git repository in /home/runner/work/CRM/CRM/.git/
+2026-06-12T11:26:11.0147459Z [command]/usr/bin/git remote add origin https://github.com/Godwin-88/CRM
+2026-06-12T11:26:11.0178385Z ##[endgroup]
+2026-06-12T11:26:11.0181140Z ##[group]Disabling automatic garbage collection
+2026-06-12T11:26:11.0183802Z [command]/usr/bin/git config --local gc.auto 0
+2026-06-12T11:26:11.0211873Z ##[endgroup]
+2026-06-12T11:26:11.0214491Z ##[group]Setting up auth
+2026-06-12T11:26:11.0219342Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-12T11:26:11.0253808Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-12T11:26:11.0606097Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-12T11:26:11.0643744Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-12T11:26:11.0880646Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-12T11:26:11.0922455Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-12T11:26:11.1165813Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-06-12T11:26:11.1199300Z ##[endgroup]
+2026-06-12T11:26:11.1202209Z ##[group]Fetching the repository
+2026-06-12T11:26:11.1211714Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6b1128e9fcb33d353fb1e493f10bdea2183956e3:refs/remotes/origin/main
+2026-06-12T11:26:11.3771619Z From https://github.com/Godwin-88/CRM
+2026-06-12T11:26:11.3773992Z  * [new ref]         6b1128e9fcb33d353fb1e493f10bdea2183956e3 -> origin/main
+2026-06-12T11:26:11.3810042Z ##[endgroup]
+2026-06-12T11:26:11.3812626Z ##[group]Determining the checkout info
+2026-06-12T11:26:11.3814655Z ##[endgroup]
+2026-06-12T11:26:11.3816490Z [command]/usr/bin/git sparse-checkout disable
+2026-06-12T11:26:11.3856911Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-06-12T11:26:11.3884665Z ##[group]Checking out the ref
+2026-06-12T11:26:11.3887937Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-06-12T11:26:11.4170897Z Switched to a new branch 'main'
+2026-06-12T11:26:11.4173351Z branch 'main' set up to track 'origin/main'.
+2026-06-12T11:26:11.4180404Z ##[endgroup]
+2026-06-12T11:26:11.4214836Z [command]/usr/bin/git log -1 --format=%H
+2026-06-12T11:26:11.4237246Z 6b1128e9fcb33d353fb1e493f10bdea2183956e3
+2026-06-12T11:26:11.4534752Z ##[group]Run docker/setup-buildx-action@v3
+2026-06-12T11:26:11.4536080Z with:
+2026-06-12T11:26:11.4536880Z   driver: docker-container
+2026-06-12T11:26:11.4537799Z   use: true
+2026-06-12T11:26:11.4538580Z   keep-state: false
+2026-06-12T11:26:11.4539426Z   cache-binary: true
+2026-06-12T11:26:11.4540277Z   cleanup: true
+2026-06-12T11:26:11.4541092Z   install: false
+2026-06-12T11:26:11.4542078Z env:
+2026-06-12T11:26:11.4542834Z   REGISTRY: ghcr.io
+2026-06-12T11:26:11.4543697Z   IMAGE_NAME: Godwin-88/CRM
+2026-06-12T11:26:11.4544611Z ##[endgroup]
+2026-06-12T11:26:11.7143902Z ##[group]Docker info
+2026-06-12T11:26:11.7172172Z [command]/usr/bin/docker version
+2026-06-12T11:26:11.8037687Z Client: Docker Engine - Community
+2026-06-12T11:26:11.8040572Z  Version:           28.0.4
+2026-06-12T11:26:11.8042050Z  API version:       1.48
+2026-06-12T11:26:11.8043016Z  Go version:        go1.23.7
+2026-06-12T11:26:11.8043993Z  Git commit:        b8034c0
+2026-06-12T11:26:11.8045051Z  Built:             Tue Mar 25 15:07:16 2025
+2026-06-12T11:26:11.8046153Z  OS/Arch:           linux/amd64
+2026-06-12T11:26:11.8047162Z  Context:           default
+2026-06-12T11:26:11.8047744Z 
+2026-06-12T11:26:11.8048158Z Server: Docker Engine - Community
+2026-06-12T11:26:11.8049170Z  Engine:
+2026-06-12T11:26:11.8050114Z   Version:          28.0.4
+2026-06-12T11:26:11.8051251Z   API version:      1.48 (minimum version 1.24)
+2026-06-12T11:26:11.8052675Z   Go version:       go1.23.7
+2026-06-12T11:26:11.8053617Z   Git commit:       6430e49
+2026-06-12T11:26:11.8054581Z   Built:            Tue Mar 25 15:07:16 2025
+2026-06-12T11:26:11.8055665Z   OS/Arch:          linux/amd64
+2026-06-12T11:26:11.8056628Z   Experimental:     false
+2026-06-12T11:26:11.8057523Z  containerd:
+2026-06-12T11:26:11.8058324Z   Version:          v2.2.4
+2026-06-12T11:26:11.8059451Z   GitCommit:        193637f7ee8ae5f5aa5248f49e7baa3e6164966e
+2026-06-12T11:26:11.8060667Z  runc:
+2026-06-12T11:26:11.8061864Z   Version:          1.3.5
+2026-06-12T11:26:11.8063103Z   GitCommit:        v1.3.5-0-g488fc13e
+2026-06-12T11:26:11.8064137Z  docker-init:
+2026-06-12T11:26:11.8064965Z   Version:          0.19.0
+2026-06-12T11:26:11.8065890Z   GitCommit:        de40ad0
+2026-06-12T11:26:11.8090861Z [command]/usr/bin/docker info
+2026-06-12T11:26:12.0813508Z Client: Docker Engine - Community
+2026-06-12T11:26:12.0815388Z  Version:    28.0.4
+2026-06-12T11:26:12.0816655Z  Context:    default
+2026-06-12T11:26:12.0817533Z  Debug Mode: false
+2026-06-12T11:26:12.0818374Z  Plugins:
+2026-06-12T11:26:12.0819206Z   buildx: Docker Buildx (Docker Inc.)
+2026-06-12T11:26:12.0820257Z     Version:  v0.34.1
+2026-06-12T11:26:12.0821825Z     Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+2026-06-12T11:26:12.0823192Z   compose: Docker Compose (Docker Inc.)
+2026-06-12T11:26:12.0824252Z     Version:  v2.38.2
+2026-06-12T11:26:12.0825305Z     Path:     /usr/libexec/docker/cli-plugins/docker-compose
+2026-06-12T11:26:12.0826670Z 
+2026-06-12T11:26:12.0827286Z Server:
+2026-06-12T11:26:12.0828808Z  Containers: 0
+2026-06-12T11:26:12.0830140Z   Running: 0
+2026-06-12T11:26:12.0831777Z   Paused: 0
+2026-06-12T11:26:12.0833118Z   Stopped: 0
+2026-06-12T11:26:12.0834420Z  Images: 6
+2026-06-12T11:26:12.0835770Z  Server Version: 28.0.4
+2026-06-12T11:26:12.0837303Z  Storage Driver: overlay2
+2026-06-12T11:26:12.0838952Z   Backing Filesystem: extfs
+2026-06-12T11:26:12.0840674Z   Supports d_type: true
+2026-06-12T11:26:12.0842726Z   Using metacopy: false
+2026-06-12T11:26:12.0844388Z   Native Overlay Diff: false
+2026-06-12T11:26:12.0846089Z   userxattr: false
+2026-06-12T11:26:12.0847647Z  Logging Driver: json-file
+2026-06-12T11:26:12.0849347Z  Cgroup Driver: systemd
+2026-06-12T11:26:12.0851012Z  Cgroup Version: 2
+2026-06-12T11:26:12.0852732Z  Plugins:
+2026-06-12T11:26:12.0854194Z   Volume: local
+2026-06-12T11:26:12.0855916Z   Network: bridge host ipvlan macvlan null overlay
+2026-06-12T11:26:12.0858642Z   Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+2026-06-12T11:26:12.0861187Z  Swarm: inactive
+2026-06-12T11:26:12.0863587Z  Runtimes: io.containerd.runc.v2 runc
+2026-06-12T11:26:12.0865658Z  Default Runtime: runc
+2026-06-12T11:26:12.0867096Z  Init Binary: docker-init
+2026-06-12T11:26:12.0869073Z  containerd version: 193637f7ee8ae5f5aa5248f49e7baa3e6164966e
+2026-06-12T11:26:12.0871237Z  runc version: v1.3.5-0-g488fc13e
+2026-06-12T11:26:12.0873081Z  init version: de40ad0
+2026-06-12T11:26:12.0874507Z  Security Options:
+2026-06-12T11:26:12.0875815Z   apparmor
+2026-06-12T11:26:12.0877221Z   seccomp
+2026-06-12T11:26:12.0878197Z    Profile: builtin
+2026-06-12T11:26:12.0879012Z   cgroupns
+2026-06-12T11:26:12.0879797Z  Kernel Version: 6.17.0-1018-azure
+2026-06-12T11:26:12.0880823Z  Operating System: Ubuntu 24.04.4 LTS
+2026-06-12T11:26:12.0882215Z  OSType: linux
+2026-06-12T11:26:12.0883040Z  Architecture: x86_64
+2026-06-12T11:26:12.0883861Z  CPUs: 4
+2026-06-12T11:26:12.0884834Z  Total Memory: 15.62GiB
+2026-06-12T11:26:12.0886318Z  Name: runnervm1li68
+2026-06-12T11:26:12.0887946Z  ID: 9eac8dfe-87b8-4fbb-b95c-78918ab76978
+2026-06-12T11:26:12.0889679Z  Docker Root Dir: /var/lib/docker
+2026-06-12T11:26:12.0890692Z  Debug Mode: false
+2026-06-12T11:26:12.0891804Z  Username: githubactions
+2026-06-12T11:26:12.0892711Z  Experimental: false
+2026-06-12T11:26:12.0893563Z  Insecure Registries:
+2026-06-12T11:26:12.0898693Z   ::1/128
+2026-06-12T11:26:12.0899467Z   127.0.0.0/8
+2026-06-12T11:26:12.0900278Z  Live Restore Enabled: false
+2026-06-12T11:26:12.0900882Z 
+2026-06-12T11:26:12.0902227Z ##[endgroup]
+2026-06-12T11:26:12.1539965Z ##[group]Buildx version
+2026-06-12T11:26:12.1561007Z [command]/usr/bin/docker buildx version
+2026-06-12T11:26:12.2052557Z github.com/docker/buildx v0.34.1 e0b0e77d18d3379bc1e0d55f3b37de288d36fe47
+2026-06-12T11:26:12.2087206Z ##[endgroup]
+2026-06-12T11:26:12.2233253Z ##[group]Inspecting default docker context
+2026-06-12T11:26:12.2368516Z [
+2026-06-12T11:26:12.2369873Z   {
+2026-06-12T11:26:12.2371196Z     "Name": "default",
+2026-06-12T11:26:12.2373017Z     "Metadata": {},
+2026-06-12T11:26:12.2374585Z     "Endpoints": {
+2026-06-12T11:26:12.2376071Z       "docker": {
+2026-06-12T11:26:12.2377700Z         "Host": "unix:///var/run/docker.sock",
+2026-06-12T11:26:12.2379720Z         "SkipTLSVerify": false
+2026-06-12T11:26:12.2381691Z       }
+2026-06-12T11:26:12.2383031Z     },
+2026-06-12T11:26:12.2384423Z     "TLSMaterial": {},
+2026-06-12T11:26:12.2385993Z     "Storage": {
+2026-06-12T11:26:12.2387530Z       "MetadataPath": "<IN MEMORY>",
+2026-06-12T11:26:12.2389396Z       "TLSPath": "<IN MEMORY>"
+2026-06-12T11:26:12.2391069Z     }
+2026-06-12T11:26:12.2392659Z   }
+2026-06-12T11:26:12.2393953Z ]
+2026-06-12T11:26:12.2396185Z ##[endgroup]
+2026-06-12T11:26:12.2398579Z ##[group]Creating a new builder instance
+2026-06-12T11:26:12.3554107Z [command]/usr/bin/docker buildx create --name builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a --driver docker-container --buildkitd-flags --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host --use
+2026-06-12T11:26:12.4123863Z builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a
+2026-06-12T11:26:12.4155392Z ##[endgroup]
+2026-06-12T11:26:12.4157956Z ##[group]Booting builder
+2026-06-12T11:26:12.4188144Z [command]/usr/bin/docker buildx inspect --bootstrap --builder builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a
+2026-06-12T11:26:12.4704836Z #1 [internal] booting buildkit
+2026-06-12T11:26:12.6212086Z #1 pulling image moby/buildkit:buildx-stable-1
+2026-06-12T11:26:15.0928406Z #1 pulling image moby/buildkit:buildx-stable-1 2.6s done
+2026-06-12T11:26:15.2436545Z #1 creating container buildx_buildkit_builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a0
+2026-06-12T11:26:15.4755482Z #1 creating container buildx_buildkit_builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a0 0.4s done
+2026-06-12T11:26:15.4780127Z #1 DONE 3.0s
+2026-06-12T11:26:15.5072843Z Name:          builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a
+2026-06-12T11:26:15.5073467Z Driver:        docker-container
+2026-06-12T11:26:15.5073908Z Last Activity: 2026-06-12 11:26:12 +0000 UTC
+2026-06-12T11:26:15.5074258Z 
+2026-06-12T11:26:15.5074819Z Nodes:
+2026-06-12T11:26:15.5075349Z Name:                  builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a0
+2026-06-12T11:26:15.5076276Z Endpoint:              unix:///var/run/docker.sock
+2026-06-12T11:26:15.5076802Z Status:                running
+2026-06-12T11:26:15.5077726Z BuildKit daemon flags: --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host
+2026-06-12T11:26:15.5078735Z BuildKit version:      v0.30.0
+2026-06-12T11:26:15.5079378Z Platforms:             linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/386
+2026-06-12T11:26:15.5080135Z Labels:
+2026-06-12T11:26:15.5080619Z  org.mobyproject.buildkit.worker.executor:         oci
+2026-06-12T11:26:15.5081659Z  org.mobyproject.buildkit.worker.hostname:         19ee4f0168a3
+2026-06-12T11:26:15.5082470Z  org.mobyproject.buildkit.worker.network:          host
+2026-06-12T11:26:15.5083261Z  org.mobyproject.buildkit.worker.oci.process-mode: sandbox
+2026-06-12T11:26:15.5084067Z  org.mobyproject.buildkit.worker.selinux.enabled:  false
+2026-06-12T11:26:15.5084923Z  org.mobyproject.buildkit.worker.snapshotter:      overlayfs
+2026-06-12T11:26:15.5085644Z GC Policy rule#0:
+2026-06-12T11:26:15.5086043Z  All:            false
+2026-06-12T11:26:15.5086695Z  Filters:        type==source.local,type==exec.cachemount,type==source.git.checkout
+2026-06-12T11:26:15.5087449Z  Keep Duration:  48h0m0s
+2026-06-12T11:26:15.5087940Z  Max Used Space: 488.3MiB
+2026-06-12T11:26:15.5088363Z GC Policy rule#1:
+2026-06-12T11:26:15.5088767Z  All:            false
+2026-06-12T11:26:15.5089244Z  Keep Duration:  1440h0m0s
+2026-06-12T11:26:15.5090065Z  Reserved Space: 9.313GiB
+2026-06-12T11:26:15.5093457Z  Max Used Space: 93.13GiB
+2026-06-12T11:26:15.5094121Z  Min Free Space: 27.01GiB
+2026-06-12T11:26:15.5094551Z GC Policy rule#2:
+2026-06-12T11:26:15.5094931Z  All:            false
+2026-06-12T11:26:15.5095331Z  Reserved Space: 9.313GiB
+2026-06-12T11:26:15.5098911Z  Max Used Space: 93.13GiB
+2026-06-12T11:26:15.5099420Z  Min Free Space: 27.01GiB
+2026-06-12T11:26:15.5099859Z GC Policy rule#3:
+2026-06-12T11:26:15.5100257Z  All:            true
+2026-06-12T11:26:15.5100682Z  Reserved Space: 9.313GiB
+2026-06-12T11:26:15.5101108Z  Max Used Space: 93.13GiB
+2026-06-12T11:26:15.5101871Z  Min Free Space: 27.01GiB
+2026-06-12T11:26:15.5124100Z ##[endgroup]
+2026-06-12T11:26:15.6004110Z ##[group]Inspect builder
+2026-06-12T11:26:15.6004724Z {
+2026-06-12T11:26:15.6022986Z   "nodes": [
+2026-06-12T11:26:15.6029206Z     {
+2026-06-12T11:26:15.6029866Z       "name": "builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a0",
+2026-06-12T11:26:15.6030769Z       "endpoint": "unix:///var/run/docker.sock",
+2026-06-12T11:26:15.6031575Z       "status": "running",
+2026-06-12T11:26:15.6032866Z       "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+2026-06-12T11:26:15.6033752Z       "buildkit": "v0.30.0",
+2026-06-12T11:26:15.6034384Z       "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/386",
+2026-06-12T11:26:15.6035057Z       "features": {
+2026-06-12T11:26:15.6035658Z         "Automatically load images to the Docker Engine image store": true,
+2026-06-12T11:26:15.6036486Z         "Cache export": true,
+2026-06-12T11:26:15.6036939Z         "Direct push": true,
+2026-06-12T11:26:15.6037376Z         "Docker exporter": true,
+2026-06-12T11:26:15.6037849Z         "Multi-platform build": true,
+2026-06-12T11:26:15.6038361Z         "OCI exporter": true
+2026-06-12T11:26:15.6038775Z       },
+2026-06-12T11:26:15.6039106Z       "labels": {
+2026-06-12T11:26:15.6039593Z         "org.mobyproject.buildkit.worker.executor": "oci",
+2026-06-12T11:26:15.6040362Z         "org.mobyproject.buildkit.worker.hostname": "19ee4f0168a3",
+2026-06-12T11:26:15.6041138Z         "org.mobyproject.buildkit.worker.network": "host",
+2026-06-12T11:26:15.6042188Z         "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+2026-06-12T11:26:15.6043052Z         "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+2026-06-12T11:26:15.6044475Z         "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+2026-06-12T11:26:15.6045159Z       },
+2026-06-12T11:26:15.6045701Z       "gcPolicy": [
+2026-06-12T11:26:15.6046067Z         {
+2026-06-12T11:26:15.6046405Z           "all": false,
+2026-06-12T11:26:15.6046801Z           "filter": [
+2026-06-12T11:26:15.6047201Z             "type==source.local",
+2026-06-12T11:26:15.6047656Z             "type==exec.cachemount",
+2026-06-12T11:26:15.6048139Z             "type==source.git.checkout"
+2026-06-12T11:26:15.6048588Z           ],
+2026-06-12T11:26:15.6048947Z           "keepDuration": "48h0m0s",
+2026-06-12T11:26:15.6049409Z           "maxUsedSpace": "488.3MiB"
+2026-06-12T11:26:15.6049861Z         },
+2026-06-12T11:26:15.6050195Z         {
+2026-06-12T11:26:15.6050529Z           "all": false,
+2026-06-12T11:26:15.6050957Z           "keepDuration": "1440h0m0s",
+2026-06-12T11:26:15.6051885Z           "reservedSpace": "9.313GiB",
+2026-06-12T11:26:15.6052405Z           "maxUsedSpace": "93.13GiB",
+2026-06-12T11:26:15.6052885Z           "minFreeSpace": "27.01GiB"
+2026-06-12T11:26:15.6053317Z         },
+2026-06-12T11:26:15.6053652Z         {
+2026-06-12T11:26:15.6053971Z           "all": false,
+2026-06-12T11:26:15.6054346Z           "reservedSpace": "9.313GiB",
+2026-06-12T11:26:15.6054858Z           "maxUsedSpace": "93.13GiB",
+2026-06-12T11:26:15.6055338Z           "minFreeSpace": "27.01GiB"
+2026-06-12T11:26:15.6055779Z         },
+2026-06-12T11:26:15.6056114Z         {
+2026-06-12T11:26:15.6056567Z           "all": true,
+2026-06-12T11:26:15.6057311Z           "reservedSpace": "9.313GiB",
+2026-06-12T11:26:15.6057956Z           "maxUsedSpace": "93.13GiB",
+2026-06-12T11:26:15.6058653Z           "minFreeSpace": "27.01GiB"
+2026-06-12T11:26:15.6059306Z         }
+2026-06-12T11:26:15.6059782Z       ]
+2026-06-12T11:26:15.6060345Z     }
+2026-06-12T11:26:15.6060870Z   ],
+2026-06-12T11:26:15.6061736Z   "name": "builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a",
+2026-06-12T11:26:15.6062560Z   "driver": "docker-container",
+2026-06-12T11:26:15.6063120Z   "lastActivity": "2026-06-12T11:26:12.000Z"
+2026-06-12T11:26:15.6063791Z }
+2026-06-12T11:26:15.6064668Z ##[endgroup]
+2026-06-12T11:26:15.6065540Z ##[group]BuildKit version
+2026-06-12T11:26:15.6066399Z builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a0: v0.30.0
+2026-06-12T11:26:15.6068015Z ##[endgroup]
+2026-06-12T11:26:15.6222438Z ##[group]Run docker/login-action@v3
+2026-06-12T11:26:15.6222744Z with:
+2026-06-12T11:26:15.6222951Z   registry: ghcr.io
+2026-06-12T11:26:15.6223182Z   username: Godwin-88
+2026-06-12T11:26:15.6226178Z   password: ***
+2026-06-12T11:26:15.6226421Z   logout: true
+2026-06-12T11:26:15.6226624Z env:
+2026-06-12T11:26:15.6226814Z   REGISTRY: ghcr.io
+2026-06-12T11:26:15.6227044Z   IMAGE_NAME: Godwin-88/CRM
+2026-06-12T11:26:15.6227283Z ##[endgroup]
+2026-06-12T11:26:15.9206286Z Logging into ghcr.io...
+2026-06-12T11:26:16.0948488Z Login Succeeded!
+2026-06-12T11:26:16.1119649Z ##[group]Run docker/metadata-action@v5
+2026-06-12T11:26:16.1119964Z with:
+2026-06-12T11:26:16.1120182Z   images: ghcr.io/Godwin-88/CRM
+2026-06-12T11:26:16.1120826Z   tags: type=ref,event=branch
+type=ref,event=pr
+type=semver,pattern={{version}}
+type=semver,pattern={{major}}.{{minor}}
+type=semver,pattern={{major}}
+type=sha
+
+2026-06-12T11:26:16.1121804Z   context: workflow
+2026-06-12T11:26:16.1124598Z   github-token: ***
+2026-06-12T11:26:16.1124822Z env:
+2026-06-12T11:26:16.1125014Z   REGISTRY: ghcr.io
+2026-06-12T11:26:16.1125242Z   IMAGE_NAME: Godwin-88/CRM
+2026-06-12T11:26:16.1125483Z ##[endgroup]
+2026-06-12T11:26:16.7362704Z ##[group]Context info
+2026-06-12T11:26:16.7363438Z eventName: push
+2026-06-12T11:26:16.7363958Z sha: 6b1128e9fcb33d353fb1e493f10bdea2183956e3
+2026-06-12T11:26:16.7364573Z ref: refs/heads/main
+2026-06-12T11:26:16.7365102Z workflow: Docker Build and Push
+2026-06-12T11:26:16.7365679Z action: meta
+2026-06-12T11:26:16.7366157Z actor: Godwin-88
+2026-06-12T11:26:16.7366690Z runNumber: 1
+2026-06-12T11:26:16.7367114Z runId: 27412722975
+2026-06-12T11:26:16.7367695Z commitDate: Fri Jun 12 2026 11:25:54 GMT+0000 (Coordinated Universal Time)
+2026-06-12T11:26:16.7368721Z ##[endgroup]
+2026-06-12T11:26:16.7392368Z ##[group]Processing images input
+2026-06-12T11:26:16.7393390Z name=ghcr.io/Godwin-88/CRM,enable=true
+2026-06-12T11:26:16.7394253Z ##[endgroup]
+2026-06-12T11:26:16.7394998Z ##[group]Processing tags input
+2026-06-12T11:26:16.7395727Z type=semver,pattern={{version}},value=,match=,enable=true,priority=900
+2026-06-12T11:26:16.7396680Z type=semver,pattern={{major}}.{{minor}},value=,match=,enable=true,priority=900
+2026-06-12T11:26:16.7397629Z type=semver,pattern={{major}},value=,match=,enable=true,priority=900
+2026-06-12T11:26:16.7398424Z type=ref,event=branch,enable=true,priority=600
+2026-06-12T11:26:16.7399174Z type=ref,event=pr,prefix=pr-,enable=true,priority=600
+2026-06-12T11:26:16.7400129Z type=sha,prefix=sha-,format=short,enable=true,priority=100
+2026-06-12T11:26:16.7401128Z ##[endgroup]
+2026-06-12T11:26:16.7402120Z ##[group]Processing flavor input
+2026-06-12T11:26:16.7402653Z latest=auto
+2026-06-12T11:26:16.7403023Z prefix=
+2026-06-12T11:26:16.7403348Z prefixLatest=false
+2026-06-12T11:26:16.7403702Z suffix=
+2026-06-12T11:26:16.7404032Z suffixLatest=false
+2026-06-12T11:26:16.7462347Z ##[endgroup]
+2026-06-12T11:26:16.7462985Z ##[group]Docker image version
+2026-06-12T11:26:16.7463422Z main
+2026-06-12T11:26:16.7463980Z ##[endgroup]
+2026-06-12T11:26:16.7464552Z ##[group]Docker tags
+2026-06-12T11:26:16.7464945Z ghcr.io/godwin-88/crm:main
+2026-06-12T11:26:16.7465386Z ghcr.io/godwin-88/crm:sha-6b1128e
+2026-06-12T11:26:16.7466070Z ##[endgroup]
+2026-06-12T11:26:16.7528863Z ##[group]Docker labels
+2026-06-12T11:26:16.7529765Z org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+2026-06-12T11:26:16.7531140Z org.opencontainers.image.description=Customer Relationship management.
+2026-06-12T11:26:16.7532560Z org.opencontainers.image.licenses=
+2026-06-12T11:26:16.7533597Z org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+2026-06-12T11:26:16.7534908Z org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+2026-06-12T11:26:16.7535948Z org.opencontainers.image.title=CRM
+2026-06-12T11:26:16.7536922Z org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+2026-06-12T11:26:16.7537955Z org.opencontainers.image.version=main
+2026-06-12T11:26:16.7539114Z ##[endgroup]
+2026-06-12T11:26:16.7540090Z ##[group]Annotations
+2026-06-12T11:26:16.7540977Z manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+2026-06-12T11:26:16.7542512Z manifest:org.opencontainers.image.description=Customer Relationship management.
+2026-06-12T11:26:16.7543690Z manifest:org.opencontainers.image.licenses=
+2026-06-12T11:26:16.7544864Z manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+2026-06-12T11:26:16.7546258Z manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+2026-06-12T11:26:16.7547650Z manifest:org.opencontainers.image.title=CRM
+2026-06-12T11:26:16.7548779Z manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+2026-06-12T11:26:16.7549955Z manifest:org.opencontainers.image.version=main
+2026-06-12T11:26:16.7551206Z ##[endgroup]
+2026-06-12T11:26:16.7552753Z ##[group]JSON output
+2026-06-12T11:26:16.7553417Z {
+2026-06-12T11:26:16.7554029Z   "tags": [
+2026-06-12T11:26:16.7554719Z     "ghcr.io/godwin-88/crm:main",
+2026-06-12T11:26:16.7555584Z     "ghcr.io/godwin-88/crm:sha-6b1128e"
+2026-06-12T11:26:16.7556501Z   ],
+2026-06-12T11:26:16.7557178Z   "tag-names": [
+2026-06-12T11:26:16.7557810Z     "main",
+2026-06-12T11:26:16.7558411Z     "sha-6b1128e"
+2026-06-12T11:26:16.7559048Z   ],
+2026-06-12T11:26:16.7559646Z   "labels": {
+2026-06-12T11:26:16.7560431Z     "org.opencontainers.image.created": "2026-06-12T11:26:16.739Z",
+2026-06-12T11:26:16.7561932Z     "org.opencontainers.image.description": "Customer Relationship management.",
+2026-06-12T11:26:16.7563298Z     "org.opencontainers.image.licenses": "",
+2026-06-12T11:26:16.7564415Z     "org.opencontainers.image.revision": "6b1128e9fcb33d353fb1e493f10bdea2183956e3",
+2026-06-12T11:26:16.7565786Z     "org.opencontainers.image.source": "https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7566775Z     "org.opencontainers.image.title": "CRM",
+2026-06-12T11:26:16.7567867Z     "org.opencontainers.image.url": "https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7568761Z     "org.opencontainers.image.version": "main"
+2026-06-12T11:26:16.7569463Z   },
+2026-06-12T11:26:16.7569938Z   "annotations": [
+2026-06-12T11:26:16.7570659Z     "manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z",
+2026-06-12T11:26:16.7572059Z     "manifest:org.opencontainers.image.description=Customer Relationship management.",
+2026-06-12T11:26:16.7573049Z     "manifest:org.opencontainers.image.licenses=",
+2026-06-12T11:26:16.7574010Z     "manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3",
+2026-06-12T11:26:16.7575159Z     "manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7576097Z     "manifest:org.opencontainers.image.title=CRM",
+2026-06-12T11:26:16.7576971Z     "manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7577872Z     "manifest:org.opencontainers.image.version=main"
+2026-06-12T11:26:16.7578548Z   ]
+2026-06-12T11:26:16.7579014Z }
+2026-06-12T11:26:16.7579764Z ##[endgroup]
+2026-06-12T11:26:16.7580555Z ##[group]Bake file definition (tags)
+2026-06-12T11:26:16.7581172Z {
+2026-06-12T11:26:16.7581887Z   "target": {
+2026-06-12T11:26:16.7582447Z     "docker-metadata-action": {
+2026-06-12T11:26:16.7583058Z       "tags": [
+2026-06-12T11:26:16.7583610Z         "ghcr.io/godwin-88/crm:main",
+2026-06-12T11:26:16.7584278Z         "ghcr.io/godwin-88/crm:sha-6b1128e"
+2026-06-12T11:26:16.7585004Z       ],
+2026-06-12T11:26:16.7585566Z       "args": {
+2026-06-12T11:26:16.7586119Z         "DOCKER_META_IMAGES": "ghcr.io/godwin-88/crm",
+2026-06-12T11:26:16.7586802Z         "DOCKER_META_VERSION": "main"
+2026-06-12T11:26:16.7587378Z       }
+2026-06-12T11:26:16.7587861Z     }
+2026-06-12T11:26:16.7588333Z   }
+2026-06-12T11:26:16.7588889Z }
+2026-06-12T11:26:16.7589631Z ##[endgroup]
+2026-06-12T11:26:16.7590467Z ##[group]Bake file definition (labels)
+2026-06-12T11:26:16.7591068Z {
+2026-06-12T11:26:16.7591746Z   "target": {
+2026-06-12T11:26:16.7599213Z     "docker-metadata-action": {
+2026-06-12T11:26:16.7599852Z       "labels": {
+2026-06-12T11:26:16.7600440Z         "org.opencontainers.image.created": "2026-06-12T11:26:16.739Z",
+2026-06-12T11:26:16.7601669Z         "org.opencontainers.image.description": "Customer Relationship management.",
+2026-06-12T11:26:16.7602641Z         "org.opencontainers.image.licenses": "",
+2026-06-12T11:26:16.7603529Z         "org.opencontainers.image.revision": "6b1128e9fcb33d353fb1e493f10bdea2183956e3",
+2026-06-12T11:26:16.7604364Z         "org.opencontainers.image.source": "https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7605173Z         "org.opencontainers.image.title": "CRM",
+2026-06-12T11:26:16.7605787Z         "org.opencontainers.image.url": "https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7606378Z         "org.opencontainers.image.version": "main"
+2026-06-12T11:26:16.7606833Z       }
+2026-06-12T11:26:16.7607172Z     }
+2026-06-12T11:26:16.7607501Z   }
+2026-06-12T11:26:16.7607832Z }
+2026-06-12T11:26:16.7608329Z ##[endgroup]
+2026-06-12T11:26:16.7608824Z ##[group]Bake file definition (annotations)
+2026-06-12T11:26:16.7609232Z {
+2026-06-12T11:26:16.7609559Z   "target": {
+2026-06-12T11:26:16.7609920Z     "docker-metadata-action": {
+2026-06-12T11:26:16.7610317Z       "annotations": [
+2026-06-12T11:26:16.7610802Z         "manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z",
+2026-06-12T11:26:16.7611811Z         "manifest:org.opencontainers.image.description=Customer Relationship management.",
+2026-06-12T11:26:16.7613061Z         "manifest:org.opencontainers.image.licenses=",
+2026-06-12T11:26:16.7614086Z         "manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3",
+2026-06-12T11:26:16.7614911Z         "manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7615370Z         "manifest:org.opencontainers.image.title=CRM",
+2026-06-12T11:26:16.7615983Z         "manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM",
+2026-06-12T11:26:16.7616431Z         "manifest:org.opencontainers.image.version=main"
+2026-06-12T11:26:16.7616729Z       ]
+2026-06-12T11:26:16.7616908Z     }
+2026-06-12T11:26:16.7617081Z   }
+2026-06-12T11:26:16.7617255Z }
+2026-06-12T11:26:16.7617634Z ##[endgroup]
+2026-06-12T11:26:16.8183738Z ##[group]Run docker/build-push-action@v5
+2026-06-12T11:26:16.8184056Z with:
+2026-06-12T11:26:16.8184250Z   context: .
+2026-06-12T11:26:16.8184461Z   file: docker/app.Dockerfile
+2026-06-12T11:26:16.8184700Z   push: true
+2026-06-12T11:26:16.8184997Z   tags: ghcr.io/godwin-88/crm:main
+ghcr.io/godwin-88/crm:sha-6b1128e
+2026-06-12T11:26:16.8186809Z   labels: org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+org.opencontainers.image.description=Customer Relationship management.
+org.opencontainers.image.licenses=
+org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+org.opencontainers.image.title=CRM
+org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+org.opencontainers.image.version=main
+2026-06-12T11:26:16.8188527Z   cache-from: type=gha
+2026-06-12T11:26:16.8188760Z   cache-to: type=gha,mode=max
+2026-06-12T11:26:16.8189019Z   platforms: linux/amd64,linux/arm64
+2026-06-12T11:26:16.8189302Z   load: false
+2026-06-12T11:26:16.8189494Z   no-cache: false
+2026-06-12T11:26:16.8189690Z   pull: false
+2026-06-12T11:26:16.8192636Z   github-token: ***
+2026-06-12T11:26:16.8192857Z env:
+2026-06-12T11:26:16.8193042Z   REGISTRY: ghcr.io
+2026-06-12T11:26:16.8193263Z   IMAGE_NAME: Godwin-88/CRM
+2026-06-12T11:26:16.8193521Z   DOCKER_METADATA_OUTPUT_VERSION: main
+2026-06-12T11:26:16.8193956Z   DOCKER_METADATA_OUTPUT_TAGS: ghcr.io/godwin-88/crm:main
+ghcr.io/godwin-88/crm:sha-6b1128e
+2026-06-12T11:26:16.8194432Z   DOCKER_METADATA_OUTPUT_TAG_NAMES: main
+sha-6b1128e
+2026-06-12T11:26:16.8196264Z   DOCKER_METADATA_OUTPUT_LABELS: org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+org.opencontainers.image.description=Customer Relationship management.
+org.opencontainers.image.licenses=
+org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+org.opencontainers.image.title=CRM
+org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+org.opencontainers.image.version=main
+2026-06-12T11:26:16.8199795Z   DOCKER_METADATA_OUTPUT_ANNOTATIONS: manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+manifest:org.opencontainers.image.description=Customer Relationship management.
+manifest:org.opencontainers.image.licenses=
+manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+manifest:org.opencontainers.image.title=CRM
+manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+manifest:org.opencontainers.image.version=main
+2026-06-12T11:26:16.8205844Z   DOCKER_METADATA_OUTPUT_JSON: {"tags":["ghcr.io/godwin-88/crm:main","ghcr.io/godwin-88/crm:sha-6b1128e"],"tag-names":["main","sha-6b1128e"],"labels":{"org.opencontainers.image.created":"2026-06-12T11:26:16.739Z","org.opencontainers.image.description":"Customer Relationship management.","org.opencontainers.image.licenses":"","org.opencontainers.image.revision":"6b1128e9fcb33d353fb1e493f10bdea2183956e3","org.opencontainers.image.source":"https://github.com/Godwin-88/CRM","org.opencontainers.image.title":"CRM","org.opencontainers.image.url":"https://github.com/Godwin-88/CRM","org.opencontainers.image.version":"main"},"annotations":["manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z","manifest:org.opencontainers.image.description=Customer Relationship management.","manifest:org.opencontainers.image.licenses=","manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3","manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM","manifest:org.opencontainers.image.title=CRM","manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM","manifest:org.opencontainers.image.version=main"]}
+2026-06-12T11:26:16.8210616Z   DOCKER_METADATA_OUTPUT_BAKE_FILE_TAGS: /home/runner/work/_temp/docker-actions-toolkit-darrGp/docker-metadata-action-bake-tags.json
+2026-06-12T11:26:16.8211827Z   DOCKER_METADATA_OUTPUT_BAKE_FILE_LABELS: /home/runner/work/_temp/docker-actions-toolkit-darrGp/docker-metadata-action-bake-labels.json
+2026-06-12T11:26:16.8212813Z   DOCKER_METADATA_OUTPUT_BAKE_FILE_ANNOTATIONS: /home/runner/work/_temp/docker-actions-toolkit-darrGp/docker-metadata-action-bake-annotations.json
+2026-06-12T11:26:16.8213727Z   DOCKER_METADATA_OUTPUT_BAKE_FILE: /home/runner/work/_temp/docker-actions-toolkit-darrGp/docker-metadata-action-bake.json
+2026-06-12T11:26:16.8214271Z ##[endgroup]
+2026-06-12T11:26:17.0464990Z ##[group]GitHub Actions runtime token ACs
+2026-06-12T11:26:17.0475343Z refs/heads/main: read/write
+2026-06-12T11:26:17.0476430Z ##[endgroup]
+2026-06-12T11:26:17.0477070Z ##[group]Docker info
+2026-06-12T11:26:17.0517647Z [command]/usr/bin/docker version
+2026-06-12T11:26:17.0708245Z Client: Docker Engine - Community
+2026-06-12T11:26:17.0711527Z  Version:           28.0.4
+2026-06-12T11:26:17.0712132Z  API version:       1.48
+2026-06-12T11:26:17.0712730Z  Go version:        go1.23.7
+2026-06-12T11:26:17.0713185Z  Git commit:        b8034c0
+2026-06-12T11:26:17.0713608Z  Built:             Tue Mar 25 15:07:16 2025
+2026-06-12T11:26:17.0713976Z  OS/Arch:           linux/amd64
+2026-06-12T11:26:17.0714235Z  Context:           default
+2026-06-12T11:26:17.0714406Z 
+2026-06-12T11:26:17.0714518Z Server: Docker Engine - Community
+2026-06-12T11:26:17.0714785Z  Engine:
+2026-06-12T11:26:17.0715188Z   Version:          28.0.4
+2026-06-12T11:26:17.0715467Z   API version:      1.48 (minimum version 1.24)
+2026-06-12T11:26:17.0715784Z   Go version:       go1.23.7
+2026-06-12T11:26:17.0716031Z   Git commit:       6430e49
+2026-06-12T11:26:17.0716286Z   Built:            Tue Mar 25 15:07:16 2025
+2026-06-12T11:26:17.0716606Z   OS/Arch:          linux/amd64
+2026-06-12T11:26:17.0716914Z   Experimental:     false
+2026-06-12T11:26:17.0717160Z  containerd:
+2026-06-12T11:26:17.0717368Z   Version:          v2.2.4
+2026-06-12T11:26:17.0717678Z   GitCommit:        193637f7ee8ae5f5aa5248f49e7baa3e6164966e
+2026-06-12T11:26:17.0718006Z  runc:
+2026-06-12T11:26:17.0718208Z   Version:          1.3.5
+2026-06-12T11:26:17.0718464Z   GitCommit:        v1.3.5-0-g488fc13e
+2026-06-12T11:26:17.0718740Z  docker-init:
+2026-06-12T11:26:17.0718947Z   Version:          0.19.0
+2026-06-12T11:26:17.0719239Z   GitCommit:        de40ad0
+2026-06-12T11:26:17.0755704Z [command]/usr/bin/docker info
+2026-06-12T11:26:17.1182402Z Client: Docker Engine - Community
+2026-06-12T11:26:17.1182981Z  Version:    28.0.4
+2026-06-12T11:26:17.1183252Z  Context:    default
+2026-06-12T11:26:17.1183483Z  Debug Mode: false
+2026-06-12T11:26:17.1183700Z  Plugins:
+2026-06-12T11:26:17.1183936Z   buildx: Docker Buildx (Docker Inc.)
+2026-06-12T11:26:17.1184419Z     Version:  v0.34.1
+2026-06-12T11:26:17.1184738Z     Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+2026-06-12T11:26:17.1185086Z   compose: Docker Compose (Docker Inc.)
+2026-06-12T11:26:17.1185355Z     Version:  v2.38.2
+2026-06-12T11:26:17.1185633Z     Path:     /usr/libexec/docker/cli-plugins/docker-compose
+2026-06-12T11:26:17.1185863Z 
+2026-06-12T11:26:17.1185967Z Server:
+2026-06-12T11:26:17.1186152Z  Containers: 1
+2026-06-12T11:26:17.1186352Z   Running: 1
+2026-06-12T11:26:17.1186541Z   Paused: 0
+2026-06-12T11:26:17.1186729Z   Stopped: 0
+2026-06-12T11:26:17.1186913Z  Images: 7
+2026-06-12T11:26:17.1187104Z  Server Version: 28.0.4
+2026-06-12T11:26:17.1187329Z  Storage Driver: overlay2
+2026-06-12T11:26:17.1187564Z   Backing Filesystem: extfs
+2026-06-12T11:26:17.1187800Z   Supports d_type: true
+2026-06-12T11:26:17.1188027Z   Using metacopy: false
+2026-06-12T11:26:17.1188252Z   Native Overlay Diff: false
+2026-06-12T11:26:17.1188494Z   userxattr: false
+2026-06-12T11:26:17.1188709Z  Logging Driver: json-file
+2026-06-12T11:26:17.1189254Z  Cgroup Driver: systemd
+2026-06-12T11:26:17.1189469Z  Cgroup Version: 2
+2026-06-12T11:26:17.1189673Z  Plugins:
+2026-06-12T11:26:17.1189860Z   Volume: local
+2026-06-12T11:26:17.1190114Z   Network: bridge host ipvlan macvlan null overlay
+2026-06-12T11:26:17.1190661Z   Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+2026-06-12T11:26:17.1191040Z  Swarm: inactive
+2026-06-12T11:26:17.1191262Z  Runtimes: io.containerd.runc.v2 runc
+2026-06-12T11:26:17.1191834Z  Default Runtime: runc
+2026-06-12T11:26:17.1192060Z  Init Binary: docker-init
+2026-06-12T11:26:17.1192368Z  containerd version: 193637f7ee8ae5f5aa5248f49e7baa3e6164966e
+2026-06-12T11:26:17.1192710Z  runc version: v1.3.5-0-g488fc13e
+2026-06-12T11:26:17.1192965Z  init version: de40ad0
+2026-06-12T11:26:17.1193189Z  Security Options:
+2026-06-12T11:26:17.1193394Z   apparmor
+2026-06-12T11:26:17.1193577Z   seccomp
+2026-06-12T11:26:17.1193761Z    Profile: builtin
+2026-06-12T11:26:17.1193963Z   cgroupns
+2026-06-12T11:26:17.1194164Z  Kernel Version: 6.17.0-1018-azure
+2026-06-12T11:26:17.1194428Z  Operating System: Ubuntu 24.04.4 LTS
+2026-06-12T11:26:17.1194686Z  OSType: linux
+2026-06-12T11:26:17.1194888Z  Architecture: x86_64
+2026-06-12T11:26:17.1195099Z  CPUs: 4
+2026-06-12T11:26:17.1195286Z  Total Memory: 15.62GiB
+2026-06-12T11:26:17.1195506Z  Name: runnervm1li68
+2026-06-12T11:26:17.1195744Z  ID: 9eac8dfe-87b8-4fbb-b95c-78918ab76978
+2026-06-12T11:26:17.1196032Z  Docker Root Dir: /var/lib/docker
+2026-06-12T11:26:17.1196277Z  Debug Mode: false
+2026-06-12T11:26:17.1196492Z  Username: githubactions
+2026-06-12T11:26:17.1196719Z  Experimental: false
+2026-06-12T11:26:17.1196936Z  Insecure Registries:
+2026-06-12T11:26:17.1197169Z   ::1/128
+2026-06-12T11:26:17.1197353Z   127.0.0.0/8
+2026-06-12T11:26:17.1208136Z  Live Restore Enabled: false
+2026-06-12T11:26:17.1208468Z 
+2026-06-12T11:26:17.1218108Z ##[endgroup]
+2026-06-12T11:26:17.1218545Z ##[group]Proxy configuration
+2026-06-12T11:26:17.1222220Z No proxy configuration found
+2026-06-12T11:26:17.1222996Z ##[endgroup]
+2026-06-12T11:26:17.1763736Z ##[group]Buildx version
+2026-06-12T11:26:17.1789674Z [command]/usr/bin/docker buildx version
+2026-06-12T11:26:17.2254674Z github.com/docker/buildx v0.34.1 e0b0e77d18d3379bc1e0d55f3b37de288d36fe47
+2026-06-12T11:26:17.2285581Z ##[endgroup]
+2026-06-12T11:26:17.2286188Z ##[group]Builder info
+2026-06-12T11:26:17.3105908Z {
+2026-06-12T11:26:17.3106512Z   "nodes": [
+2026-06-12T11:26:17.3107072Z     {
+2026-06-12T11:26:17.3107825Z       "name": "builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a0",
+2026-06-12T11:26:17.3108944Z       "endpoint": "unix:///var/run/docker.sock",
+2026-06-12T11:26:17.3109325Z       "status": "running",
+2026-06-12T11:26:17.3109881Z       "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+2026-06-12T11:26:17.3110446Z       "buildkit": "v0.30.0",
+2026-06-12T11:26:17.3110811Z       "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/386",
+2026-06-12T11:26:17.3111212Z       "features": {
+2026-06-12T11:26:17.3111839Z         "Automatically load images to the Docker Engine image store": true,
+2026-06-12T11:26:17.3112249Z         "Cache export": true,
+2026-06-12T11:26:17.3112530Z         "Direct push": true,
+2026-06-12T11:26:17.3112805Z         "Docker exporter": true,
+2026-06-12T11:26:17.3113106Z         "Multi-platform build": true,
+2026-06-12T11:26:17.3113411Z         "OCI exporter": true
+2026-06-12T11:26:17.3113676Z       },
+2026-06-12T11:26:17.3113898Z       "labels": {
+2026-06-12T11:26:17.3114199Z         "org.mobyproject.buildkit.worker.executor": "oci",
+2026-06-12T11:26:17.3114629Z         "org.mobyproject.buildkit.worker.hostname": "19ee4f0168a3",
+2026-06-12T11:26:17.3115058Z         "org.mobyproject.buildkit.worker.network": "host",
+2026-06-12T11:26:17.3115497Z         "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+2026-06-12T11:26:17.3115976Z         "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+2026-06-12T11:26:17.3116434Z         "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+2026-06-12T11:26:17.3117139Z       },
+2026-06-12T11:26:17.3117369Z       "gcPolicy": [
+2026-06-12T11:26:17.3117601Z         {
+2026-06-12T11:26:17.3117821Z           "all": false,
+2026-06-12T11:26:17.3118065Z           "filter": [
+2026-06-12T11:26:17.3118313Z             "type==source.local",
+2026-06-12T11:26:17.3118741Z             "type==exec.cachemount",
+2026-06-12T11:26:17.3119048Z             "type==source.git.checkout"
+2026-06-12T11:26:17.3119335Z           ],
+2026-06-12T11:26:17.3119562Z           "keepDuration": "48h0m0s"
+2026-06-12T11:26:17.3119830Z         },
+2026-06-12T11:26:17.3120053Z         {
+2026-06-12T11:26:17.3120271Z           "all": false,
+2026-06-12T11:26:17.3120534Z           "keepDuration": "1440h0m0s"
+2026-06-12T11:26:17.3120815Z         },
+2026-06-12T11:26:17.3121033Z         {
+2026-06-12T11:26:17.3121261Z           "all": false
+2026-06-12T11:26:17.3122030Z         },
+2026-06-12T11:26:17.3122241Z         {
+2026-06-12T11:26:17.3122477Z           "all": true
+2026-06-12T11:26:17.3122723Z         }
+2026-06-12T11:26:17.3122950Z       ]
+2026-06-12T11:26:17.3123158Z     }
+2026-06-12T11:26:17.3123372Z   ],
+2026-06-12T11:26:17.3123659Z   "name": "builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a",
+2026-06-12T11:26:17.3124015Z   "driver": "docker-container",
+2026-06-12T11:26:17.3124321Z   "lastActivity": "2026-06-12T11:26:12.000Z"
+2026-06-12T11:26:17.3124622Z }
+2026-06-12T11:26:17.3125087Z ##[endgroup]
+2026-06-12T11:26:17.4564310Z [command]/usr/bin/docker buildx build --cache-from type=gha --cache-to type=gha,mode=max --file docker/app.Dockerfile --iidfile /home/runner/work/_temp/docker-actions-toolkit-u5F35X/build-iidfile-69ad5abee5.txt --label org.opencontainers.image.created=2026-06-12T11:26:16.739Z --label org.opencontainers.image.description=Customer Relationship management. --label org.opencontainers.image.licenses= --label org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3 --label org.opencontainers.image.source=https://github.com/Godwin-88/CRM --label org.opencontainers.image.title=CRM --label org.opencontainers.image.url=https://github.com/Godwin-88/CRM --label org.opencontainers.image.version=main --platform linux/amd64,linux/arm64 --attest type=provenance,mode=max,builder-id=https://github.com/Godwin-88/CRM/actions/runs/27412722975 --tag ghcr.io/godwin-88/crm:main --tag ghcr.io/godwin-88/crm:sha-6b1128e --metadata-file /home/runner/work/_temp/docker-actions-toolkit-u5F35X/build-metadata-2cc27b6221.json --push .
+2026-06-12T11:26:17.7544321Z #0 building with "builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a" instance using docker-container driver
+2026-06-12T11:26:17.7544865Z 
+2026-06-12T11:26:17.7545029Z #1 [internal] load build definition from app.Dockerfile
+2026-06-12T11:26:17.7545421Z #1 transferring dockerfile: 1.40kB done
+2026-06-12T11:26:17.7545723Z #1 DONE 0.0s
+2026-06-12T11:26:17.7545851Z 
+2026-06-12T11:26:17.7546038Z #2 [auth] library/composer:pull token for registry-1.docker.io
+2026-06-12T11:26:17.7546410Z #2 DONE 0.0s
+2026-06-12T11:26:17.7546560Z 
+2026-06-12T11:26:17.7546725Z #3 [auth] library/php:pull token for registry-1.docker.io
+2026-06-12T11:26:17.7547077Z #3 DONE 0.0s
+2026-06-12T11:26:17.7547209Z 
+2026-06-12T11:26:17.7547449Z #4 [linux/amd64 internal] load metadata for docker.io/library/php:8.3-fpm-alpine
+2026-06-12T11:26:17.9394361Z #4 ...
+2026-06-12T11:26:17.9395806Z 
+2026-06-12T11:26:17.9396386Z #5 [linux/amd64 internal] load metadata for docker.io/library/composer:latest
+2026-06-12T11:26:17.9397365Z #5 DONE 0.4s
+2026-06-12T11:26:18.1222616Z 
+2026-06-12T11:26:18.1227489Z #6 [linux/arm64 internal] load metadata for docker.io/library/php:8.3-fpm-alpine
+2026-06-12T11:26:18.1227947Z #6 DONE 0.4s
+2026-06-12T11:26:18.1228072Z 
+2026-06-12T11:26:18.1228295Z #4 [linux/amd64 internal] load metadata for docker.io/library/php:8.3-fpm-alpine
+2026-06-12T11:26:18.1228685Z #4 DONE 0.4s
+2026-06-12T11:26:18.1228802Z 
+2026-06-12T11:26:18.1229001Z #7 [linux/arm64 internal] load metadata for docker.io/library/composer:latest
+2026-06-12T11:26:18.1229643Z #7 DONE 0.4s
+2026-06-12T11:26:18.1229758Z 
+2026-06-12T11:26:18.1229853Z #8 [internal] load .dockerignore
+2026-06-12T11:26:18.1230116Z #8 transferring context: 2B done
+2026-06-12T11:26:18.1230349Z #8 DONE 0.0s
+2026-06-12T11:26:18.1230550Z 
+2026-06-12T11:26:18.1230811Z #9 importing cache manifest from gha:8680939905724665080
+2026-06-12T11:26:18.1231664Z #9 DONE 0.0s
+2026-06-12T11:26:18.1231841Z 
+2026-06-12T11:26:18.1232291Z #10 [linux/arm64 stage-0  1/17] FROM docker.io/library/php:8.3-fpm-alpine@sha256:2a8bba000f40258d4e71de8775c9d2474d35c68873bc957185d32c065ab48d16
+2026-06-12T11:26:18.1233512Z #10 resolve docker.io/library/php:8.3-fpm-alpine@sha256:2a8bba000f40258d4e71de8775c9d2474d35c68873bc957185d32c065ab48d16 0.0s done
+2026-06-12T11:26:18.2401023Z #10 DONE 0.2s
+2026-06-12T11:26:18.2401635Z 
+2026-06-12T11:26:18.2401890Z #11 [internal] load build context
+2026-06-12T11:26:18.2402415Z #11 transferring context: 1.74MB 0.1s done
+2026-06-12T11:26:18.2402929Z #11 DONE 0.1s
+2026-06-12T11:26:18.2403172Z 
+2026-06-12T11:26:18.2403544Z #12 [linux/arm64 stage-0  5/17] COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+2026-06-12T11:26:18.2404072Z #12 CACHED
+2026-06-12T11:26:18.2404186Z 
+2026-06-12T11:26:18.2405059Z #13 [linux/arm64 stage-0  3/17] RUN docker-php-ext-configure gd --with-freetype --with-jpeg     && docker-php-ext-install -j$(nproc)         bcmath         exif         gd         intl         mbstring         opcache         pcntl         pdo         pdo_pgsql         zip         xml         dom
+2026-06-12T11:26:18.2406366Z #13 CACHED
+2026-06-12T11:26:18.2406568Z 
+2026-06-12T11:26:18.2407931Z #14 [linux/arm64 stage-0  2/17] RUN apk add --no-cache     nginx     supervisor     nodejs     npm     git     curl     libpng-dev     libjpeg-turbo-dev     freetype-dev     oniguruma-dev     libzip-dev     icu-dev     linux-headers     autoconf 		dpkg-dev dpkg 		file 		g++ 		gcc 		libc-dev 		make 		pkgconf 		re2c
+2026-06-12T11:26:18.2410289Z #14 CACHED
+2026-06-12T11:26:18.2410513Z 
+2026-06-12T11:26:18.2411144Z #15 [linux/arm64 stage-0  4/17] RUN pecl install redis     && docker-php-ext-enable redis
+2026-06-12T11:26:18.2411952Z #15 CACHED
+2026-06-12T11:26:18.2412075Z 
+2026-06-12T11:26:18.2412387Z #16 [linux/arm64 stage-0  6/17] WORKDIR /var/www/html
+2026-06-12T11:26:18.2412862Z #16 CACHED
+2026-06-12T11:26:18.2412980Z 
+2026-06-12T11:26:18.2413230Z #17 [linux/amd64 stage-0  4/17] RUN pecl install redis     && docker-php-ext-enable redis
+2026-06-12T11:26:18.2413654Z #17 CACHED
+2026-06-12T11:26:18.2413764Z 
+2026-06-12T11:26:18.2413960Z #18 [linux/amd64 stage-0  6/17] WORKDIR /var/www/html
+2026-06-12T11:26:18.2414338Z #18 CACHED
+2026-06-12T11:26:18.2414446Z 
+2026-06-12T11:26:18.2415348Z #19 [linux/amd64 stage-0  3/17] RUN docker-php-ext-configure gd --with-freetype --with-jpeg     && docker-php-ext-install -j$(nproc)         bcmath         exif         gd         intl         mbstring         opcache         pcntl         pdo         pdo_pgsql         zip         xml         dom
+2026-06-12T11:26:18.2416461Z #19 CACHED
+2026-06-12T11:26:18.2416565Z 
+2026-06-12T11:26:18.2417725Z #20 [linux/amd64 stage-0  2/17] RUN apk add --no-cache     nginx     supervisor     nodejs     npm     git     curl     libpng-dev     libjpeg-turbo-dev     freetype-dev     oniguruma-dev     libzip-dev     icu-dev     linux-headers     autoconf 		dpkg-dev dpkg 		file 		g++ 		gcc 		libc-dev 		make 		pkgconf 		re2c
+2026-06-12T11:26:18.2419696Z #20 CACHED
+2026-06-12T11:26:18.2419884Z 
+2026-06-12T11:26:18.2420332Z #21 [linux/amd64 stage-0  5/17] COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+2026-06-12T11:26:18.2421087Z #21 CACHED
+2026-06-12T11:26:18.2421280Z 
+2026-06-12T11:26:18.2421796Z #22 [linux/arm64 stage-0  7/17] COPY composer.json composer.lock ./
+2026-06-12T11:26:18.2423024Z #22 ERROR: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/composer.lock": not found
+2026-06-12T11:26:18.2423929Z 
+2026-06-12T11:26:18.2424269Z #23 [linux/amd64 stage-0  7/17] COPY composer.json composer.lock ./
+2026-06-12T11:26:18.2425843Z #23 ERROR: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/composer.lock": not found
+2026-06-12T11:26:18.2426898Z 
+2026-06-12T11:26:18.2427451Z #24 [linux/arm64 stage-0  8/17] RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+2026-06-12T11:26:18.2428526Z #24 CACHED
+2026-06-12T11:26:18.2428744Z 
+2026-06-12T11:26:18.2429093Z #25 [linux/arm64 stage-0  9/17] COPY package.json package-lock.json ./
+2026-06-12T11:26:18.2430198Z #25 ERROR: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/package-lock.json": not found
+2026-06-12T11:26:18.2431048Z 
+2026-06-12T11:26:18.2431784Z #26 [linux/amd64 stage-0  8/17] RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+2026-06-12T11:26:18.2432540Z #26 CACHED
+2026-06-12T11:26:18.2432661Z 
+2026-06-12T11:26:18.2432842Z #27 [linux/amd64 stage-0  9/17] COPY package.json package-lock.json ./
+2026-06-12T11:26:18.2433919Z #27 ERROR: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/package-lock.json": not found
+2026-06-12T11:26:18.2434630Z 
+2026-06-12T11:26:18.2435302Z #28 [linux/amd64 stage-0  1/17] FROM docker.io/library/php:8.3-fpm-alpine@sha256:2a8bba000f40258d4e71de8775c9d2474d35c68873bc957185d32c065ab48d16
+2026-06-12T11:26:18.2436870Z #28 resolve docker.io/library/php:8.3-fpm-alpine@sha256:2a8bba000f40258d4e71de8775c9d2474d35c68873bc957185d32c065ab48d16 done
+2026-06-12T11:26:18.2437910Z #28 DONE 0.2s
+2026-06-12T11:26:18.2438136Z 
+2026-06-12T11:26:18.2438741Z #29 FROM docker.io/library/composer:latest@sha256:c883af18892268b3b8369c4a39c08f80b393383e79d80b75140a3ea489dbbb78
+2026-06-12T11:26:18.2440562Z #29 resolve docker.io/library/composer:latest@sha256:c883af18892268b3b8369c4a39c08f80b393383e79d80b75140a3ea489dbbb78 done
+2026-06-12T11:26:18.2441236Z #29 DONE 0.2s
+2026-06-12T11:26:18.2441580Z 
+2026-06-12T11:26:18.2441910Z #30 FROM docker.io/library/composer:latest@sha256:c883af18892268b3b8369c4a39c08f80b393383e79d80b75140a3ea489dbbb78
+2026-06-12T11:26:18.2442836Z #30 resolve docker.io/library/composer:latest@sha256:c883af18892268b3b8369c4a39c08f80b393383e79d80b75140a3ea489dbbb78 0.0s done
+2026-06-12T11:26:18.2443482Z #30 DONE 0.2s
+2026-06-12T11:26:18.2443701Z ------
+2026-06-12T11:26:18.2443991Z  > [linux/arm64 stage-0  7/17] COPY composer.json composer.lock ./:
+2026-06-12T11:26:18.2444336Z ------
+2026-06-12T11:26:18.2444585Z ------
+2026-06-12T11:26:18.2444913Z  > [linux/amd64 stage-0  7/17] COPY composer.json composer.lock ./:
+2026-06-12T11:26:18.2445242Z ------
+2026-06-12T11:26:18.2445412Z ------
+2026-06-12T11:26:18.2445762Z  > [linux/arm64 stage-0  9/17] COPY package.json package-lock.json ./:
+2026-06-12T11:26:18.2446317Z ------
+2026-06-12T11:26:18.2446493Z ------
+2026-06-12T11:26:18.2446765Z  > [linux/amd64 stage-0  9/17] COPY package.json package-lock.json ./:
+2026-06-12T11:26:18.2447363Z ------
+2026-06-12T11:26:18.2471438Z app.Dockerfile:44
+2026-06-12T11:26:18.2472111Z --------------------
+2026-06-12T11:26:18.2472754Z   42 |     RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+2026-06-12T11:26:18.2473442Z   43 |     
+2026-06-12T11:26:18.2473835Z   44 | >>> COPY package.json package-lock.json ./
+2026-06-12T11:26:18.2474355Z   45 |     RUN npm ci --production=false
+2026-06-12T11:26:18.2474806Z   46 |     
+2026-06-12T11:26:18.2475122Z --------------------
+2026-06-12T11:26:18.2476399Z ERROR: failed to build: failed to solve: failed to compute cache key: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/package-lock.json": not found
+2026-06-12T11:26:18.2557739Z ##[error]buildx failed with: ERROR: failed to build: failed to solve: failed to compute cache key: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/package-lock.json": not found
+2026-06-12T11:26:18.2696878Z Post job cleanup.
+2026-06-12T11:26:18.4857988Z ##[group]Removing temp folder /home/runner/work/_temp/docker-actions-toolkit-u5F35X
+2026-06-12T11:26:18.4867201Z ##[endgroup]
+2026-06-12T11:26:18.4868005Z ##[group]Post cache
+2026-06-12T11:26:18.4868985Z State not set
+2026-06-12T11:26:18.4870784Z ##[endgroup]
+2026-06-12T11:26:18.4995871Z Post job cleanup.
+2026-06-12T11:26:18.7992439Z ##[group]Logout from ghcr.io
+2026-06-12T11:26:18.8043371Z [command]/usr/bin/docker logout ghcr.io
+2026-06-12T11:26:18.8177292Z Removing login credentials for ghcr.io
+2026-06-12T11:26:18.8215867Z ##[endgroup]
+2026-06-12T11:26:18.8216680Z ##[group]Post cache
+2026-06-12T11:26:18.8217775Z State not set
+2026-06-12T11:26:18.8218878Z ##[endgroup]
+2026-06-12T11:26:18.8344737Z Post job cleanup.
+2026-06-12T11:26:19.0756079Z ##[group]Removing builder
+2026-06-12T11:26:19.1677929Z [command]/usr/bin/docker buildx rm builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a
+2026-06-12T11:26:19.3225467Z builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a removed
+2026-06-12T11:26:19.3257878Z ##[endgroup]
+2026-06-12T11:26:19.3259458Z ##[group]Cleaning up certificates
+2026-06-12T11:26:19.3265853Z ##[endgroup]
+2026-06-12T11:26:19.3266538Z ##[group]Post cache
+2026-06-12T11:26:19.3268462Z State not set
+2026-06-12T11:26:19.3269239Z ##[endgroup]
+2026-06-12T11:26:19.3429188Z Post job cleanup.
+2026-06-12T11:26:19.4406406Z [command]/usr/bin/git version
+2026-06-12T11:26:19.4442387Z git version 2.54.0
+2026-06-12T11:26:19.4485586Z Temporarily overriding HOME='/home/runner/work/_temp/2308e238-a0fc-46ef-8de4-609c875de188' before making global git config changes
+2026-06-12T11:26:19.4486736Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-12T11:26:19.4491233Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/CRM/CRM
+2026-06-12T11:26:19.4526086Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-12T11:26:19.4557700Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-12T11:26:19.4773887Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-12T11:26:19.4796578Z http.https://github.com/.extraheader
+2026-06-12T11:26:19.4808400Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-06-12T11:26:19.4838495Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-12T11:26:19.5048561Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-12T11:26:19.5078504Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-12T11:26:19.5395791Z Cleaning up orphan processes
+2026-06-12T11:26:19.5717175Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, docker/build-push-action@v5, docker/login-action@v3, docker/metadata-action@v5, docker/setup-buildx-action@v3. Actions will be forced to run with Node.js 24 by default starting June 16th, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

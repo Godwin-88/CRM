@@ -1,0 +1,75 @@
+﻿2026-06-12T11:26:10.8629173Z ##[group]Run actions/checkout@v4
+2026-06-12T11:26:10.8630581Z with:
+2026-06-12T11:26:10.8631668Z   repository: Godwin-88/CRM
+2026-06-12T11:26:10.8641632Z   token: ***
+2026-06-12T11:26:10.8642491Z   ssh-strict: true
+2026-06-12T11:26:10.8643350Z   ssh-user: git
+2026-06-12T11:26:10.8644239Z   persist-credentials: true
+2026-06-12T11:26:10.8645197Z   clean: true
+2026-06-12T11:26:10.8646077Z   sparse-checkout-cone-mode: true
+2026-06-12T11:26:10.8647126Z   fetch-depth: 1
+2026-06-12T11:26:10.8647968Z   fetch-tags: false
+2026-06-12T11:26:10.8648839Z   show-progress: true
+2026-06-12T11:26:10.8649724Z   lfs: false
+2026-06-12T11:26:10.8650540Z   submodules: false
+2026-06-12T11:26:10.8651635Z   set-safe-directory: true
+2026-06-12T11:26:10.8652860Z env:
+2026-06-12T11:26:10.8653649Z   REGISTRY: ghcr.io
+2026-06-12T11:26:10.8654531Z   IMAGE_NAME: Godwin-88/CRM
+2026-06-12T11:26:10.8655468Z ##[endgroup]
+2026-06-12T11:26:10.9766831Z Syncing repository: Godwin-88/CRM
+2026-06-12T11:26:10.9769667Z ##[group]Getting Git version info
+2026-06-12T11:26:10.9771014Z Working directory is '/home/runner/work/CRM/CRM'
+2026-06-12T11:26:10.9773342Z [command]/usr/bin/git version
+2026-06-12T11:26:10.9859981Z git version 2.54.0
+2026-06-12T11:26:10.9887346Z ##[endgroup]
+2026-06-12T11:26:10.9903948Z Temporarily overriding HOME='/home/runner/work/_temp/cc914e2c-6d89-4401-a094-31bccd3e9ca2' before making global git config changes
+2026-06-12T11:26:10.9908908Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-12T11:26:10.9917163Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/CRM/CRM
+2026-06-12T11:26:10.9963564Z Deleting the contents of '/home/runner/work/CRM/CRM'
+2026-06-12T11:26:10.9968244Z ##[group]Initializing the repository
+2026-06-12T11:26:10.9973068Z [command]/usr/bin/git init /home/runner/work/CRM/CRM
+2026-06-12T11:26:11.0114829Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-06-12T11:26:11.0116938Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-06-12T11:26:11.0119572Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-06-12T11:26:11.0122020Z hint: call:
+2026-06-12T11:26:11.0123503Z hint:
+2026-06-12T11:26:11.0125371Z hint: 	git config --global init.defaultBranch <name>
+2026-06-12T11:26:11.0127607Z hint:
+2026-06-12T11:26:11.0129630Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-06-12T11:26:11.0133323Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-06-12T11:26:11.0136066Z hint:
+2026-06-12T11:26:11.0137481Z hint: 	git branch -m <name>
+2026-06-12T11:26:11.0139335Z hint:
+2026-06-12T11:26:11.0140733Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-06-12T11:26:11.0142961Z Initialized empty Git repository in /home/runner/work/CRM/CRM/.git/
+2026-06-12T11:26:11.0147433Z [command]/usr/bin/git remote add origin https://github.com/Godwin-88/CRM
+2026-06-12T11:26:11.0178331Z ##[endgroup]
+2026-06-12T11:26:11.0181109Z ##[group]Disabling automatic garbage collection
+2026-06-12T11:26:11.0183775Z [command]/usr/bin/git config --local gc.auto 0
+2026-06-12T11:26:11.0211840Z ##[endgroup]
+2026-06-12T11:26:11.0214434Z ##[group]Setting up auth
+2026-06-12T11:26:11.0219309Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-12T11:26:11.0253773Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-12T11:26:11.0606052Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-12T11:26:11.0643698Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-12T11:26:11.0880176Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-12T11:26:11.0922417Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-12T11:26:11.1165775Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-06-12T11:26:11.1199271Z ##[endgroup]
+2026-06-12T11:26:11.1202180Z ##[group]Fetching the repository
+2026-06-12T11:26:11.1211678Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6b1128e9fcb33d353fb1e493f10bdea2183956e3:refs/remotes/origin/main
+2026-06-12T11:26:11.3771555Z From https://github.com/Godwin-88/CRM
+2026-06-12T11:26:11.3773968Z  * [new ref]         6b1128e9fcb33d353fb1e493f10bdea2183956e3 -> origin/main
+2026-06-12T11:26:11.3810016Z ##[endgroup]
+2026-06-12T11:26:11.3812613Z ##[group]Determining the checkout info
+2026-06-12T11:26:11.3814649Z ##[endgroup]
+2026-06-12T11:26:11.3816435Z [command]/usr/bin/git sparse-checkout disable
+2026-06-12T11:26:11.3856882Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-06-12T11:26:11.3884637Z ##[group]Checking out the ref
+2026-06-12T11:26:11.3887903Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-06-12T11:26:11.4170794Z Switched to a new branch 'main'
+2026-06-12T11:26:11.4173333Z branch 'main' set up to track 'origin/main'.
+2026-06-12T11:26:11.4180385Z ##[endgroup]
+2026-06-12T11:26:11.4214804Z [command]/usr/bin/git log -1 --format=%H
+2026-06-12T11:26:11.4237217Z 6b1128e9fcb33d353fb1e493f10bdea2183956e3

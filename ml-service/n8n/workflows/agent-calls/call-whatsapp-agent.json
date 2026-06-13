@@ -1,0 +1,65 @@
+{
+  "name": "call-whatsapp-agent",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/whatsapp-inbound",
+        "method": "POST",
+        "authentication": "none"
+      },
+      "name": "Webhook - Inbound WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ml-agents:8000/agents/whatsapp-message",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"thread_id\": \"{{ $json.body.thread_id }}\",\n  \"message\": \"{{ $json.body.message }}\",\n  \"sender_phone\": \"{{ $json.body.from }}\"\n}",
+        "options": {}
+      },
+      "name": "HTTP - LangGraph WhatsApp Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/{{ $json.whatsapp_business_account }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $node['Webhook - Inbound WhatsApp'].json.body.from }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $node['HTTP - LangGraph WhatsApp Agent'].json.response_message }}\"\n  }\n}",
+        "options": {}
+      },
+      "name": "API - WhatsApp Send Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Inbound WhatsApp": {
+      "main": [[{ "node": "HTTP - LangGraph WhatsApp Agent", "type": "main", "index": 0 }]]
+    },
+    "HTTP - LangGraph WhatsApp Agent": {
+      "main": [
+        [{ "node": "API - WhatsApp Send Reply", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {}
+}

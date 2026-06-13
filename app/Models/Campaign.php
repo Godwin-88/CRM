@@ -32,6 +32,8 @@ class Campaign extends Model
         'utm_term',
         'utm_content',
         'tags',
+        'budget',
+        'spent',
     ];
 
     protected $casts = [
@@ -42,6 +44,8 @@ class Campaign extends Model
         'throttle_sms_per_hour' => 'integer',
         'optimize_send_time' => 'boolean',
         'tags' => 'array',
+        'budget' => 'decimal:2',
+        'spent' => 'decimal:2',
     ];
 
     public function segment(): BelongsTo

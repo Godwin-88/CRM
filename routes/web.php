@@ -6,6 +6,7 @@ use App\Http\Controllers\SegmentController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\AnalyticsWebController;
 use App\Http\Controllers\Admin\CampaignWebController;
 use App\Http\Controllers\Admin\ClvAnalyticsWebController;
 use App\Http\Controllers\Admin\GuidedJourneyWebController;
@@ -73,6 +74,17 @@ Route::middleware(['auth'])->group(function () {
 
     // Analytics
     Route::get('/analytics/forecast', [DealController::class, 'forecast'])->name('analytics.forecast');
+
+    // Admin Analytics (manager+ access)
+    Route::middleware(['role:manager|admin'])->group(function () {
+        Route::get('/admin/analytics/dashboard', [AnalyticsWebController::class, 'dashboard'])->name('admin.analytics.dashboard');
+        Route::get('/admin/analytics/customer', [AnalyticsWebController::class, 'customerAnalytics'])->name('admin.analytics.customer');
+        Route::get('/admin/analytics/growth', [AnalyticsWebController::class, 'growthAnalytics'])->name('admin.analytics.growth');
+        Route::get('/admin/analytics/finance', [AnalyticsWebController::class, 'financeAnalytics'])->name('admin.analytics.finance');
+        Route::get('/admin/analytics/compliance', [AnalyticsWebController::class, 'complianceAnalytics'])->name('admin.analytics.compliance');
+        Route::get('/admin/analytics/predictive-scoring', [AnalyticsWebController::class, 'predictiveScoring'])->name('admin.analytics.predictive-scoring');
+        Route::get('/admin/analytics/report-builder', [AnalyticsWebController::class, 'reportBuilder'])->name('admin.analytics.report-builder');
+    });
 
     // Pipelines
     Route::get('/pipelines', [PipelineController::class, 'index'])->name('pipelines.index');

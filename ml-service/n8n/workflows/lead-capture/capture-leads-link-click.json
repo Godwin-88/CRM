@@ -1,0 +1,162 @@
+{
+  "name": "capture-leads-link-click",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/lead-click",
+        "method": "POST",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson"
+      },
+      "name": "Webhook - Lead Click",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": "Webhook - Header Auth"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $input.first().json.body;\n\nif (!payload.email || !payload.email.includes('@')) {\n  throw new Error('Invalid or missing email in payload');\n}\n\nreturn {\n  json: {\n    email: payload.email.trim().toLowerCase(),\n    first_name: payload.first_name || null,\n    last_name: payload.last_name || null,\n    phone: payload.phone || null,\n    source_channel: payload.utm_source || 'direct',\n    utm_source: payload.utm_source || null,\n    utm_medium: payload.utm_medium || null,\n    utm_campaign: payload.utm_campaign || null,\n    interaction_type: 'link_click',\n    message_text: `Clicked link from ${payload.utm_campaign || 'campaign'}`,\n    interaction_metadata: JSON.stringify({\n      referer: payload.referer,\n      ip_address: payload.ip_address,\n      user_agent: payload.user_agent\n    }),\n    created_at: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Transform - Normalize Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM leads WHERE email = $1 LIMIT 1;",
+        "additionalFields": {
+          "queryParams": "={{ JSON.stringify([$node['Transform - Normalize Lead'].json.email]) }}"
+        }
+      },
+      "name": "Query - Check Existing Lead",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "credentials": {
+        "postgres": "PostgreSQL - Marketing Hub"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "conditions_0",
+              "leftValue": "={{ $node['Query - Check Existing Lead'].json[0]?.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "Branch - New vs Existing",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH inserted AS (\n  INSERT INTO leads (email, first_name, last_name, phone, source_channel, utm_source, utm_medium, utm_campaign, lead_stage, lead_score, created_at)\n  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'cold', 1, $9)\n  RETURNING id\n)\nINSERT INTO lead_interactions (lead_id, interaction_type, message_text, interaction_metadata, created_at)\nSELECT id, 'link_click', $10, $11, NOW() FROM inserted;",
+        "additionalFields": {
+          "queryParams": "={{ JSON.stringify([\n  $node['Transform - Normalize Lead'].json.email,\n  $node['Transform - Normalize Lead'].json.first_name,\n  $node['Transform - Normalize Lead'].json.last_name,\n  $node['Transform - Normalize Lead'].json.phone,\n  $node['Transform - Normalize Lead'].json.source_channel,\n  $node['Transform - Normalize Lead'].json.utm_source,\n  $node['Transform - Normalize Lead'].json.utm_medium,\n  $node['Transform - Normalize Lead'].json.utm_campaign,\n  $node['Transform - Normalize Lead'].json.created_at,\n  $node['Transform - Normalize Lead'].json.message_text,\n  $node['Transform - Normalize Lead'].json.interaction_metadata\n]) }}"
+        }
+      },
+      "name": "DB - Insert New Lead",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 200],
+      "credentials": {
+        "postgres": "PostgreSQL - Marketing Hub"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO lead_interactions (lead_id, interaction_type, message_text, interaction_metadata, created_at)\nSELECT id, 'link_click', $2, $3, NOW() FROM leads WHERE email = $1;\n\nUPDATE leads\nSET lead_score = lead_score + 1\nWHERE email = $1;",
+        "additionalFields": {
+          "queryParams": "={{ JSON.stringify([\n  $node['Transform - Normalize Lead'].json.email,\n  $node['Transform - Normalize Lead'].json.message_text,\n  $node['Transform - Normalize Lead'].json.interaction_metadata\n]) }}"
+        }
+      },
+      "name": "DB - Log Interaction (Existing)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 400],
+      "credentials": {
+        "postgres": "PostgreSQL - Marketing Hub"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO action_log (action_type, resource_type, actor, actor_type, status, details)\nVALUES ('lead_capture', 'lead', 'webhook', 'system', 'success', $1);",
+        "additionalFields": {
+          "queryParams": "={{ JSON.stringify([\n  JSON.stringify({ email: $node['Transform - Normalize Lead'].json.email, utm_campaign: $node['Transform - Normalize Lead'].json.utm_campaign, type: 'link_click' })\n]) }}"
+        }
+      },
+      "name": "DB - Log Success",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "credentials": {
+        "postgres": "PostgreSQL - Marketing Hub"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO action_log (action_type, resource_type, actor, actor_type, status, details)\nVALUES ('lead_capture', 'lead', 'webhook', 'system', 'error', $1);",
+        "additionalFields": {
+          "queryParams": "={{ JSON.stringify([\n  JSON.stringify({ error: $node['Transform - Normalize Lead'].json?.email || 'unknown', message: $input.first().json.message || 'Workflow error' })\n]) }}"
+        }
+      },
+      "name": "DB - Log Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 500],
+      "credentials": {
+        "postgres": "PostgreSQL - Marketing Hub"
+      },
+      "executeOnError": true
+    }
+  ],
+  "connections": {
+    "Webhook - Lead Click": {
+      "main": [[{ "node": "Transform - Normalize Lead", "type": "main", "index": 0 }]]
+    },
+    "Transform - Normalize Lead": {
+      "main": [[{ "node": "Query - Check Existing Lead", "type": "main", "index": 0 }]]
+    },
+    "Query - Check Existing Lead": {
+      "main": [[{ "node": "Branch - New vs Existing", "type": "main", "index": 0 }]]
+    },
+    "Branch - New vs Existing": {
+      "main": [
+        [{ "node": "DB - Insert New Lead", "type": "main", "index": 0 }],
+        [{ "node": "DB - Log Interaction (Existing)", "type": "main", "index": 0 }]
+      ]
+    },
+    "DB - Insert New Lead": {
+      "main": [[{ "node": "DB - Log Success", "type": "main", "index": 0 }]]
+    },
+    "DB - Log Interaction (Existing)": {
+      "main": [[{ "node": "DB - Log Success", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "errorWorkflow": "",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

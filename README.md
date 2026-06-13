@@ -74,6 +74,10 @@ flowchart TD
         Jobs["Queued Jobs"]
         Services["Domain Services"]
     end
+    subgraph ML["AI/ML Tier"]
+        ML_Agents["LangGraph Agents"]
+        n8n_Workflows["n8n Workflows"]
+    end
     subgraph Data["Data Tier"]
         Postgres["PostgreSQL 16 (Supabase / Docker)"]
         Redis["Redis 7 (Upstash / Docker)"]
@@ -106,6 +110,13 @@ flowchart TD
     Scheduler --> Jobs
     Reverb --> Redis
     Redis --> Postgres
+    
+    ML_Agents --> Postgres
+    ML_Agents --> Redis
+    n8n_Workflows --> Postgres
+    n8n_Workflows --> ML_Agents
+    Laravel --> ML_Agents
+    Laravel --> n8n_Workflows
 ```
 
 ### Request Flow

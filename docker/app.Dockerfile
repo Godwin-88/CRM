@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 RUN apk add --no-cache \
     nginx \
@@ -7,13 +7,16 @@ RUN apk add --no-cache \
     npm \
     git \
     curl \
+    netcat-openbsd \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
     oniguruma-dev \
     libzip-dev \
     icu-dev \
+    libxml2-dev \
     linux-headers \
+    postgresql-dev \
     $PHPIZE_DEPS
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -31,8 +34,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         xml \
         dom
 
-RUN pecl install redis \
-    && docker-php-ext-enable redis
+RUN git clone https://github.com/phpredis/phpredis.git /usr/src/php/ext/redis \
+    && docker-php-ext-install redis
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -51,6 +54,7 @@ RUN composer dump-autoload --optimize \
     && rm -rf node_modules
 
 RUN mkdir -p storage/framework/{cache,sessions,views} \
+    && mkdir -p /var/log/supervisor \
     && chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/app/nginx.conf /etc/nginx/http.d/default.conf

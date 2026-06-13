@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AccountController;
+use App\Http\Controllers\Api\V1\AnalyticsApiController;
 use App\Http\Controllers\Api\V1\CampaignAnalyticsController;
 use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\CampaignTemplateController;
 use App\Http\Controllers\Api\V1\CannedResponseController;
 use App\Http\Controllers\Api\V1\ChatController;
+use App\Http\Controllers\Api\V1\ComplianceAnalyticsController;
 use App\Http\Controllers\Api\V1\ContactCentreController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CsatController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\Api\V1\InteractionController;
 use App\Http\Controllers\Api\V1\KioskController;
 use App\Http\Controllers\Api\V1\KnowledgeBaseController;
 use App\Http\Controllers\Api\V1\PipelineController;
+use App\Http\Controllers\Api\V1\ReportBuilderController;
 use App\Http\Controllers\Api\V1\SegmentController;
 use App\Http\Controllers\Api\V1\SocialPostController;
 use App\Http\Controllers\Api\V1\TicketController;
@@ -88,10 +91,27 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Analytics
     Route::get('analytics/forecast', [AnalyticsController::class, 'forecast']);
     Route::get('analytics/win-loss', [AnalyticsController::class, 'winLossAnalysis']);
+    Route::get('analytics/dashboard', [AnalyticsApiController::class, 'dashboard']);
+    Route::get('analytics/growth', [AnalyticsApiController::class, 'growthMetrics']);
+    Route::get('analytics/finance', [AnalyticsApiController::class, 'financeMetrics']);
+    Route::get('analytics/deal-score/{deal}', [AnalyticsApiController::class, 'dealScore']);
     Route::get('analytics/campaign-performance', [\App\Http\Controllers\Api\V1\CampaignAnalyticsController::class, 'performance']);
     Route::get('analytics/campaign-time-series/{campaign}', [CampaignAnalyticsController::class, 'timeSeries']);
     Route::get('analytics/campaign-per-contact/{campaign}', [CampaignAnalyticsController::class, 'perContact']);
     Route::get('analytics/campaign-per-link/{campaign}', [CampaignAnalyticsController::class, 'perLink']);
+    
+    // Reports
+    Route::get('reports', [ReportBuilderController::class, 'index']);
+    Route::post('reports', [ReportBuilderController::class, 'store']);
+    Route::get('reports/{report}', [ReportBuilderController::class, 'show']);
+    Route::put('reports/{report}', [ReportBuilderController::class, 'update']);
+    Route::delete('reports/{report}', [ReportBuilderController::class, 'destroy']);
+    Route::post('reports/{report}/schedule', [ReportBuilderController::class, 'schedule']);
+    
+    // Compliance
+    Route::get('audit-trail', [ComplianceAnalyticsController::class, 'auditTrail']);
+    Route::get('audit-stats', [ComplianceAnalyticsController::class, 'auditStats']);
+    Route::get('audit-anomalies', [ComplianceAnalyticsController::class, 'anomalies']);
 
     // Support Routes
     Route::get('tickets', [TicketController::class, 'index']);

@@ -1,0 +1,332 @@
+﻿2026-06-12T11:26:16.8183728Z ##[group]Run docker/build-push-action@v5
+2026-06-12T11:26:16.8184053Z with:
+2026-06-12T11:26:16.8184248Z   context: .
+2026-06-12T11:26:16.8184458Z   file: docker/app.Dockerfile
+2026-06-12T11:26:16.8184698Z   push: true
+2026-06-12T11:26:16.8184993Z   tags: ghcr.io/godwin-88/crm:main
+ghcr.io/godwin-88/crm:sha-6b1128e
+2026-06-12T11:26:16.8186802Z   labels: org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+org.opencontainers.image.description=Customer Relationship management.
+org.opencontainers.image.licenses=
+org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+org.opencontainers.image.title=CRM
+org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+org.opencontainers.image.version=main
+2026-06-12T11:26:16.8188525Z   cache-from: type=gha
+2026-06-12T11:26:16.8188758Z   cache-to: type=gha,mode=max
+2026-06-12T11:26:16.8189017Z   platforms: linux/amd64,linux/arm64
+2026-06-12T11:26:16.8189273Z   load: false
+2026-06-12T11:26:16.8189492Z   no-cache: false
+2026-06-12T11:26:16.8189688Z   pull: false
+2026-06-12T11:26:16.8192633Z   github-token: ***
+2026-06-12T11:26:16.8192854Z env:
+2026-06-12T11:26:16.8193040Z   REGISTRY: ghcr.io
+2026-06-12T11:26:16.8193261Z   IMAGE_NAME: Godwin-88/CRM
+2026-06-12T11:26:16.8193514Z   DOCKER_METADATA_OUTPUT_VERSION: main
+2026-06-12T11:26:16.8193952Z   DOCKER_METADATA_OUTPUT_TAGS: ghcr.io/godwin-88/crm:main
+ghcr.io/godwin-88/crm:sha-6b1128e
+2026-06-12T11:26:16.8194427Z   DOCKER_METADATA_OUTPUT_TAG_NAMES: main
+sha-6b1128e
+2026-06-12T11:26:16.8196253Z   DOCKER_METADATA_OUTPUT_LABELS: org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+org.opencontainers.image.description=Customer Relationship management.
+org.opencontainers.image.licenses=
+org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+org.opencontainers.image.title=CRM
+org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+org.opencontainers.image.version=main
+2026-06-12T11:26:16.8199781Z   DOCKER_METADATA_OUTPUT_ANNOTATIONS: manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z
+manifest:org.opencontainers.image.description=Customer Relationship management.
+manifest:org.opencontainers.image.licenses=
+manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3
+manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM
+manifest:org.opencontainers.image.title=CRM
+manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM
+manifest:org.opencontainers.image.version=main
+2026-06-12T11:26:16.8205829Z   DOCKER_METADATA_OUTPUT_JSON: {"tags":["ghcr.io/godwin-88/crm:main","ghcr.io/godwin-88/crm:sha-6b1128e"],"tag-names":["main","sha-6b1128e"],"labels":{"org.opencontainers.image.created":"2026-06-12T11:26:16.739Z","org.opencontainers.image.description":"Customer Relationship management.","org.opencontainers.image.licenses":"","org.opencontainers.image.revision":"6b1128e9fcb33d353fb1e493f10bdea2183956e3","org.opencontainers.image.source":"https://github.com/Godwin-88/CRM","org.opencontainers.image.title":"CRM","org.opencontainers.image.url":"https://github.com/Godwin-88/CRM","org.opencontainers.image.version":"main"},"annotations":["manifest:org.opencontainers.image.created=2026-06-12T11:26:16.739Z","manifest:org.opencontainers.image.description=Customer Relationship management.","manifest:org.opencontainers.image.licenses=","manifest:org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3","manifest:org.opencontainers.image.source=https://github.com/Godwin-88/CRM","manifest:org.opencontainers.image.title=CRM","manifest:org.opencontainers.image.url=https://github.com/Godwin-88/CRM","manifest:org.opencontainers.image.version=main"]}
+2026-06-12T11:26:16.8210613Z   DOCKER_METADATA_OUTPUT_BAKE_FILE_TAGS: /home/runner/work/_temp/docker-actions-toolkit-darrGp/docker-metadata-action-bake-tags.json
+2026-06-12T11:26:16.8211663Z   DOCKER_METADATA_OUTPUT_BAKE_FILE_LABELS: /home/runner/work/_temp/docker-actions-toolkit-darrGp/docker-metadata-action-bake-labels.json
+2026-06-12T11:26:16.8212811Z   DOCKER_METADATA_OUTPUT_BAKE_FILE_ANNOTATIONS: /home/runner/work/_temp/docker-actions-toolkit-darrGp/docker-metadata-action-bake-annotations.json
+2026-06-12T11:26:16.8213724Z   DOCKER_METADATA_OUTPUT_BAKE_FILE: /home/runner/work/_temp/docker-actions-toolkit-darrGp/docker-metadata-action-bake.json
+2026-06-12T11:26:16.8214268Z ##[endgroup]
+2026-06-12T11:26:17.0464967Z ##[group]GitHub Actions runtime token ACs
+2026-06-12T11:26:17.0475330Z refs/heads/main: read/write
+2026-06-12T11:26:17.0476423Z ##[endgroup]
+2026-06-12T11:26:17.0477065Z ##[group]Docker info
+2026-06-12T11:26:17.0517633Z [command]/usr/bin/docker version
+2026-06-12T11:26:17.0708208Z Client: Docker Engine - Community
+2026-06-12T11:26:17.0711513Z  Version:           28.0.4
+2026-06-12T11:26:17.0712122Z  API version:       1.48
+2026-06-12T11:26:17.0712725Z  Go version:        go1.23.7
+2026-06-12T11:26:17.0713157Z  Git commit:        b8034c0
+2026-06-12T11:26:17.0713604Z  Built:             Tue Mar 25 15:07:16 2025
+2026-06-12T11:26:17.0713973Z  OS/Arch:           linux/amd64
+2026-06-12T11:26:17.0714233Z  Context:           default
+2026-06-12T11:26:17.0714403Z 
+2026-06-12T11:26:17.0714515Z Server: Docker Engine - Community
+2026-06-12T11:26:17.0714783Z  Engine:
+2026-06-12T11:26:17.0715185Z   Version:          28.0.4
+2026-06-12T11:26:17.0715459Z   API version:      1.48 (minimum version 1.24)
+2026-06-12T11:26:17.0715782Z   Go version:       go1.23.7
+2026-06-12T11:26:17.0716029Z   Git commit:       6430e49
+2026-06-12T11:26:17.0716284Z   Built:            Tue Mar 25 15:07:16 2025
+2026-06-12T11:26:17.0716604Z   OS/Arch:          linux/amd64
+2026-06-12T11:26:17.0716912Z   Experimental:     false
+2026-06-12T11:26:17.0717157Z  containerd:
+2026-06-12T11:26:17.0717366Z   Version:          v2.2.4
+2026-06-12T11:26:17.0717675Z   GitCommit:        193637f7ee8ae5f5aa5248f49e7baa3e6164966e
+2026-06-12T11:26:17.0718004Z  runc:
+2026-06-12T11:26:17.0718200Z   Version:          1.3.5
+2026-06-12T11:26:17.0718462Z   GitCommit:        v1.3.5-0-g488fc13e
+2026-06-12T11:26:17.0718738Z  docker-init:
+2026-06-12T11:26:17.0718945Z   Version:          0.19.0
+2026-06-12T11:26:17.0719234Z   GitCommit:        de40ad0
+2026-06-12T11:26:17.0755692Z [command]/usr/bin/docker info
+2026-06-12T11:26:17.1182363Z Client: Docker Engine - Community
+2026-06-12T11:26:17.1182976Z  Version:    28.0.4
+2026-06-12T11:26:17.1183249Z  Context:    default
+2026-06-12T11:26:17.1183480Z  Debug Mode: false
+2026-06-12T11:26:17.1183698Z  Plugins:
+2026-06-12T11:26:17.1183931Z   buildx: Docker Buildx (Docker Inc.)
+2026-06-12T11:26:17.1184404Z     Version:  v0.34.1
+2026-06-12T11:26:17.1184735Z     Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+2026-06-12T11:26:17.1185083Z   compose: Docker Compose (Docker Inc.)
+2026-06-12T11:26:17.1185352Z     Version:  v2.38.2
+2026-06-12T11:26:17.1185627Z     Path:     /usr/libexec/docker/cli-plugins/docker-compose
+2026-06-12T11:26:17.1185860Z 
+2026-06-12T11:26:17.1185949Z Server:
+2026-06-12T11:26:17.1186150Z  Containers: 1
+2026-06-12T11:26:17.1186350Z   Running: 1
+2026-06-12T11:26:17.1186539Z   Paused: 0
+2026-06-12T11:26:17.1186727Z   Stopped: 0
+2026-06-12T11:26:17.1186912Z  Images: 7
+2026-06-12T11:26:17.1187102Z  Server Version: 28.0.4
+2026-06-12T11:26:17.1187327Z  Storage Driver: overlay2
+2026-06-12T11:26:17.1187562Z   Backing Filesystem: extfs
+2026-06-12T11:26:17.1187798Z   Supports d_type: true
+2026-06-12T11:26:17.1188025Z   Using metacopy: false
+2026-06-12T11:26:17.1188250Z   Native Overlay Diff: false
+2026-06-12T11:26:17.1188486Z   userxattr: false
+2026-06-12T11:26:17.1188707Z  Logging Driver: json-file
+2026-06-12T11:26:17.1189252Z  Cgroup Driver: systemd
+2026-06-12T11:26:17.1189468Z  Cgroup Version: 2
+2026-06-12T11:26:17.1189671Z  Plugins:
+2026-06-12T11:26:17.1189858Z   Volume: local
+2026-06-12T11:26:17.1190112Z   Network: bridge host ipvlan macvlan null overlay
+2026-06-12T11:26:17.1190515Z   Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+2026-06-12T11:26:17.1191038Z  Swarm: inactive
+2026-06-12T11:26:17.1191259Z  Runtimes: io.containerd.runc.v2 runc
+2026-06-12T11:26:17.1191828Z  Default Runtime: runc
+2026-06-12T11:26:17.1192058Z  Init Binary: docker-init
+2026-06-12T11:26:17.1192365Z  containerd version: 193637f7ee8ae5f5aa5248f49e7baa3e6164966e
+2026-06-12T11:26:17.1192707Z  runc version: v1.3.5-0-g488fc13e
+2026-06-12T11:26:17.1192963Z  init version: de40ad0
+2026-06-12T11:26:17.1193181Z  Security Options:
+2026-06-12T11:26:17.1193392Z   apparmor
+2026-06-12T11:26:17.1193575Z   seccomp
+2026-06-12T11:26:17.1193759Z    Profile: builtin
+2026-06-12T11:26:17.1193960Z   cgroupns
+2026-06-12T11:26:17.1194162Z  Kernel Version: 6.17.0-1018-azure
+2026-06-12T11:26:17.1194426Z  Operating System: Ubuntu 24.04.4 LTS
+2026-06-12T11:26:17.1194684Z  OSType: linux
+2026-06-12T11:26:17.1194886Z  Architecture: x86_64
+2026-06-12T11:26:17.1195096Z  CPUs: 4
+2026-06-12T11:26:17.1195284Z  Total Memory: 15.62GiB
+2026-06-12T11:26:17.1195504Z  Name: runnervm1li68
+2026-06-12T11:26:17.1195736Z  ID: 9eac8dfe-87b8-4fbb-b95c-78918ab76978
+2026-06-12T11:26:17.1196030Z  Docker Root Dir: /var/lib/docker
+2026-06-12T11:26:17.1196275Z  Debug Mode: false
+2026-06-12T11:26:17.1196490Z  Username: githubactions
+2026-06-12T11:26:17.1196716Z  Experimental: false
+2026-06-12T11:26:17.1196934Z  Insecure Registries:
+2026-06-12T11:26:17.1197167Z   ::1/128
+2026-06-12T11:26:17.1197351Z   127.0.0.0/8
+2026-06-12T11:26:17.1208121Z  Live Restore Enabled: false
+2026-06-12T11:26:17.1208464Z 
+2026-06-12T11:26:17.1218099Z ##[endgroup]
+2026-06-12T11:26:17.1218543Z ##[group]Proxy configuration
+2026-06-12T11:26:17.1222204Z No proxy configuration found
+2026-06-12T11:26:17.1222989Z ##[endgroup]
+2026-06-12T11:26:17.1763696Z ##[group]Buildx version
+2026-06-12T11:26:17.1789659Z [command]/usr/bin/docker buildx version
+2026-06-12T11:26:17.2254633Z github.com/docker/buildx v0.34.1 e0b0e77d18d3379bc1e0d55f3b37de288d36fe47
+2026-06-12T11:26:17.2285570Z ##[endgroup]
+2026-06-12T11:26:17.2286185Z ##[group]Builder info
+2026-06-12T11:26:17.3105846Z {
+2026-06-12T11:26:17.3106505Z   "nodes": [
+2026-06-12T11:26:17.3107063Z     {
+2026-06-12T11:26:17.3107815Z       "name": "builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a0",
+2026-06-12T11:26:17.3108929Z       "endpoint": "unix:///var/run/docker.sock",
+2026-06-12T11:26:17.3109322Z       "status": "running",
+2026-06-12T11:26:17.3109878Z       "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+2026-06-12T11:26:17.3110444Z       "buildkit": "v0.30.0",
+2026-06-12T11:26:17.3110809Z       "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/386",
+2026-06-12T11:26:17.3111210Z       "features": {
+2026-06-12T11:26:17.3111834Z         "Automatically load images to the Docker Engine image store": true,
+2026-06-12T11:26:17.3112247Z         "Cache export": true,
+2026-06-12T11:26:17.3112528Z         "Direct push": true,
+2026-06-12T11:26:17.3112803Z         "Docker exporter": true,
+2026-06-12T11:26:17.3113098Z         "Multi-platform build": true,
+2026-06-12T11:26:17.3113409Z         "OCI exporter": true
+2026-06-12T11:26:17.3113674Z       },
+2026-06-12T11:26:17.3113895Z       "labels": {
+2026-06-12T11:26:17.3114196Z         "org.mobyproject.buildkit.worker.executor": "oci",
+2026-06-12T11:26:17.3114626Z         "org.mobyproject.buildkit.worker.hostname": "19ee4f0168a3",
+2026-06-12T11:26:17.3115056Z         "org.mobyproject.buildkit.worker.network": "host",
+2026-06-12T11:26:17.3115495Z         "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+2026-06-12T11:26:17.3115974Z         "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+2026-06-12T11:26:17.3116432Z         "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+2026-06-12T11:26:17.3117136Z       },
+2026-06-12T11:26:17.3117367Z       "gcPolicy": [
+2026-06-12T11:26:17.3117599Z         {
+2026-06-12T11:26:17.3117819Z           "all": false,
+2026-06-12T11:26:17.3118063Z           "filter": [
+2026-06-12T11:26:17.3118310Z             "type==source.local",
+2026-06-12T11:26:17.3118595Z             "type==exec.cachemount",
+2026-06-12T11:26:17.3119045Z             "type==source.git.checkout"
+2026-06-12T11:26:17.3119333Z           ],
+2026-06-12T11:26:17.3119560Z           "keepDuration": "48h0m0s"
+2026-06-12T11:26:17.3119828Z         },
+2026-06-12T11:26:17.3120051Z         {
+2026-06-12T11:26:17.3120269Z           "all": false,
+2026-06-12T11:26:17.3120532Z           "keepDuration": "1440h0m0s"
+2026-06-12T11:26:17.3120814Z         },
+2026-06-12T11:26:17.3121031Z         {
+2026-06-12T11:26:17.3121259Z           "all": false
+2026-06-12T11:26:17.3122027Z         },
+2026-06-12T11:26:17.3122239Z         {
+2026-06-12T11:26:17.3122475Z           "all": true
+2026-06-12T11:26:17.3122721Z         }
+2026-06-12T11:26:17.3122948Z       ]
+2026-06-12T11:26:17.3123156Z     }
+2026-06-12T11:26:17.3123370Z   ],
+2026-06-12T11:26:17.3123656Z   "name": "builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a",
+2026-06-12T11:26:17.3124013Z   "driver": "docker-container",
+2026-06-12T11:26:17.3124309Z   "lastActivity": "2026-06-12T11:26:12.000Z"
+2026-06-12T11:26:17.3124619Z }
+2026-06-12T11:26:17.3125085Z ##[endgroup]
+2026-06-12T11:26:17.4564224Z [command]/usr/bin/docker buildx build --cache-from type=gha --cache-to type=gha,mode=max --file docker/app.Dockerfile --iidfile /home/runner/work/_temp/docker-actions-toolkit-u5F35X/build-iidfile-69ad5abee5.txt --label org.opencontainers.image.created=2026-06-12T11:26:16.739Z --label org.opencontainers.image.description=Customer Relationship management. --label org.opencontainers.image.licenses= --label org.opencontainers.image.revision=6b1128e9fcb33d353fb1e493f10bdea2183956e3 --label org.opencontainers.image.source=https://github.com/Godwin-88/CRM --label org.opencontainers.image.title=CRM --label org.opencontainers.image.url=https://github.com/Godwin-88/CRM --label org.opencontainers.image.version=main --platform linux/amd64,linux/arm64 --attest type=provenance,mode=max,builder-id=https://github.com/Godwin-88/CRM/actions/runs/27412722975 --tag ghcr.io/godwin-88/crm:main --tag ghcr.io/godwin-88/crm:sha-6b1128e --metadata-file /home/runner/work/_temp/docker-actions-toolkit-u5F35X/build-metadata-2cc27b6221.json --push .
+2026-06-12T11:26:17.7544285Z #0 building with "builder-38a795fb-ecf2-472a-8cef-76f3b37ae77a" instance using docker-container driver
+2026-06-12T11:26:17.7544862Z 
+2026-06-12T11:26:17.7545026Z #1 [internal] load build definition from app.Dockerfile
+2026-06-12T11:26:17.7545419Z #1 transferring dockerfile: 1.40kB done
+2026-06-12T11:26:17.7545721Z #1 DONE 0.0s
+2026-06-12T11:26:17.7545848Z 
+2026-06-12T11:26:17.7546035Z #2 [auth] library/composer:pull token for registry-1.docker.io
+2026-06-12T11:26:17.7546408Z #2 DONE 0.0s
+2026-06-12T11:26:17.7546558Z 
+2026-06-12T11:26:17.7546722Z #3 [auth] library/php:pull token for registry-1.docker.io
+2026-06-12T11:26:17.7547075Z #3 DONE 0.0s
+2026-06-12T11:26:17.7547199Z 
+2026-06-12T11:26:17.7547446Z #4 [linux/amd64 internal] load metadata for docker.io/library/php:8.3-fpm-alpine
+2026-06-12T11:26:17.9394340Z #4 ...
+2026-06-12T11:26:17.9395774Z 
+2026-06-12T11:26:17.9396378Z #5 [linux/amd64 internal] load metadata for docker.io/library/composer:latest
+2026-06-12T11:26:17.9397357Z #5 DONE 0.4s
+2026-06-12T11:26:18.1222560Z 
+2026-06-12T11:26:18.1227474Z #6 [linux/arm64 internal] load metadata for docker.io/library/php:8.3-fpm-alpine
+2026-06-12T11:26:18.1227944Z #6 DONE 0.4s
+2026-06-12T11:26:18.1228069Z 
+2026-06-12T11:26:18.1228293Z #4 [linux/amd64 internal] load metadata for docker.io/library/php:8.3-fpm-alpine
+2026-06-12T11:26:18.1228682Z #4 DONE 0.4s
+2026-06-12T11:26:18.1228800Z 
+2026-06-12T11:26:18.1228997Z #7 [linux/arm64 internal] load metadata for docker.io/library/composer:latest
+2026-06-12T11:26:18.1229641Z #7 DONE 0.4s
+2026-06-12T11:26:18.1229755Z 
+2026-06-12T11:26:18.1229851Z #8 [internal] load .dockerignore
+2026-06-12T11:26:18.1230114Z #8 transferring context: 2B done
+2026-06-12T11:26:18.1230347Z #8 DONE 0.0s
+2026-06-12T11:26:18.1230545Z 
+2026-06-12T11:26:18.1230804Z #9 importing cache manifest from gha:8680939905724665080
+2026-06-12T11:26:18.1231212Z #9 DONE 0.0s
+2026-06-12T11:26:18.1231838Z 
+2026-06-12T11:26:18.1232288Z #10 [linux/arm64 stage-0  1/17] FROM docker.io/library/php:8.3-fpm-alpine@sha256:2a8bba000f40258d4e71de8775c9d2474d35c68873bc957185d32c065ab48d16
+2026-06-12T11:26:18.1233507Z #10 resolve docker.io/library/php:8.3-fpm-alpine@sha256:2a8bba000f40258d4e71de8775c9d2474d35c68873bc957185d32c065ab48d16 0.0s done
+2026-06-12T11:26:18.2400995Z #10 DONE 0.2s
+2026-06-12T11:26:18.2401624Z 
+2026-06-12T11:26:18.2401882Z #11 [internal] load build context
+2026-06-12T11:26:18.2402409Z #11 transferring context: 1.74MB 0.1s done
+2026-06-12T11:26:18.2402922Z #11 DONE 0.1s
+2026-06-12T11:26:18.2403169Z 
+2026-06-12T11:26:18.2403538Z #12 [linux/arm64 stage-0  5/17] COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+2026-06-12T11:26:18.2404069Z #12 CACHED
+2026-06-12T11:26:18.2404184Z 
+2026-06-12T11:26:18.2405042Z #13 [linux/arm64 stage-0  3/17] RUN docker-php-ext-configure gd --with-freetype --with-jpeg     && docker-php-ext-install -j$(nproc)         bcmath         exif         gd         intl         mbstring         opcache         pcntl         pdo         pdo_pgsql         zip         xml         dom
+2026-06-12T11:26:18.2406360Z #13 CACHED
+2026-06-12T11:26:18.2406563Z 
+2026-06-12T11:26:18.2407914Z #14 [linux/arm64 stage-0  2/17] RUN apk add --no-cache     nginx     supervisor     nodejs     npm     git     curl     libpng-dev     libjpeg-turbo-dev     freetype-dev     oniguruma-dev     libzip-dev     icu-dev     linux-headers     autoconf 		dpkg-dev dpkg 		file 		g++ 		gcc 		libc-dev 		make 		pkgconf 		re2c
+2026-06-12T11:26:18.2410275Z #14 CACHED
+2026-06-12T11:26:18.2410507Z 
+2026-06-12T11:26:18.2411135Z #15 [linux/arm64 stage-0  4/17] RUN pecl install redis     && docker-php-ext-enable redis
+2026-06-12T11:26:18.2411947Z #15 CACHED
+2026-06-12T11:26:18.2412072Z 
+2026-06-12T11:26:18.2412381Z #16 [linux/arm64 stage-0  6/17] WORKDIR /var/www/html
+2026-06-12T11:26:18.2412858Z #16 CACHED
+2026-06-12T11:26:18.2412978Z 
+2026-06-12T11:26:18.2413218Z #17 [linux/amd64 stage-0  4/17] RUN pecl install redis     && docker-php-ext-enable redis
+2026-06-12T11:26:18.2413653Z #17 CACHED
+2026-06-12T11:26:18.2413762Z 
+2026-06-12T11:26:18.2413955Z #18 [linux/amd64 stage-0  6/17] WORKDIR /var/www/html
+2026-06-12T11:26:18.2414336Z #18 CACHED
+2026-06-12T11:26:18.2414445Z 
+2026-06-12T11:26:18.2415344Z #19 [linux/amd64 stage-0  3/17] RUN docker-php-ext-configure gd --with-freetype --with-jpeg     && docker-php-ext-install -j$(nproc)         bcmath         exif         gd         intl         mbstring         opcache         pcntl         pdo         pdo_pgsql         zip         xml         dom
+2026-06-12T11:26:18.2416456Z #19 CACHED
+2026-06-12T11:26:18.2416563Z 
+2026-06-12T11:26:18.2417707Z #20 [linux/amd64 stage-0  2/17] RUN apk add --no-cache     nginx     supervisor     nodejs     npm     git     curl     libpng-dev     libjpeg-turbo-dev     freetype-dev     oniguruma-dev     libzip-dev     icu-dev     linux-headers     autoconf 		dpkg-dev dpkg 		file 		g++ 		gcc 		libc-dev 		make 		pkgconf 		re2c
+2026-06-12T11:26:18.2419685Z #20 CACHED
+2026-06-12T11:26:18.2419880Z 
+2026-06-12T11:26:18.2420326Z #21 [linux/amd64 stage-0  5/17] COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+2026-06-12T11:26:18.2421082Z #21 CACHED
+2026-06-12T11:26:18.2421277Z 
+2026-06-12T11:26:18.2421790Z #22 [linux/arm64 stage-0  7/17] COPY composer.json composer.lock ./
+2026-06-12T11:26:18.2423013Z #22 ERROR: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/composer.lock": not found
+2026-06-12T11:26:18.2423920Z 
+2026-06-12T11:26:18.2424263Z #23 [linux/amd64 stage-0  7/17] COPY composer.json composer.lock ./
+2026-06-12T11:26:18.2425832Z #23 ERROR: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/composer.lock": not found
+2026-06-12T11:26:18.2426888Z 
+2026-06-12T11:26:18.2427443Z #24 [linux/arm64 stage-0  8/17] RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+2026-06-12T11:26:18.2428299Z #24 CACHED
+2026-06-12T11:26:18.2428740Z 
+2026-06-12T11:26:18.2429087Z #25 [linux/arm64 stage-0  9/17] COPY package.json package-lock.json ./
+2026-06-12T11:26:18.2430192Z #25 ERROR: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/package-lock.json": not found
+2026-06-12T11:26:18.2431041Z 
+2026-06-12T11:26:18.2431775Z #26 [linux/amd64 stage-0  8/17] RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+2026-06-12T11:26:18.2432536Z #26 CACHED
+2026-06-12T11:26:18.2432659Z 
+2026-06-12T11:26:18.2432839Z #27 [linux/amd64 stage-0  9/17] COPY package.json package-lock.json ./
+2026-06-12T11:26:18.2433914Z #27 ERROR: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/package-lock.json": not found
+2026-06-12T11:26:18.2434626Z 
+2026-06-12T11:26:18.2435296Z #28 [linux/amd64 stage-0  1/17] FROM docker.io/library/php:8.3-fpm-alpine@sha256:2a8bba000f40258d4e71de8775c9d2474d35c68873bc957185d32c065ab48d16
+2026-06-12T11:26:18.2436849Z #28 resolve docker.io/library/php:8.3-fpm-alpine@sha256:2a8bba000f40258d4e71de8775c9d2474d35c68873bc957185d32c065ab48d16 done
+2026-06-12T11:26:18.2437900Z #28 DONE 0.2s
+2026-06-12T11:26:18.2438130Z 
+2026-06-12T11:26:18.2438735Z #29 FROM docker.io/library/composer:latest@sha256:c883af18892268b3b8369c4a39c08f80b393383e79d80b75140a3ea489dbbb78
+2026-06-12T11:26:18.2440552Z #29 resolve docker.io/library/composer:latest@sha256:c883af18892268b3b8369c4a39c08f80b393383e79d80b75140a3ea489dbbb78 done
+2026-06-12T11:26:18.2441233Z #29 DONE 0.2s
+2026-06-12T11:26:18.2441575Z 
+2026-06-12T11:26:18.2441908Z #30 FROM docker.io/library/composer:latest@sha256:c883af18892268b3b8369c4a39c08f80b393383e79d80b75140a3ea489dbbb78
+2026-06-12T11:26:18.2442833Z #30 resolve docker.io/library/composer:latest@sha256:c883af18892268b3b8369c4a39c08f80b393383e79d80b75140a3ea489dbbb78 0.0s done
+2026-06-12T11:26:18.2443474Z #30 DONE 0.2s
+2026-06-12T11:26:18.2443698Z ------
+2026-06-12T11:26:18.2443984Z  > [linux/arm64 stage-0  7/17] COPY composer.json composer.lock ./:
+2026-06-12T11:26:18.2444334Z ------
+2026-06-12T11:26:18.2444579Z ------
+2026-06-12T11:26:18.2444911Z  > [linux/amd64 stage-0  7/17] COPY composer.json composer.lock ./:
+2026-06-12T11:26:18.2445240Z ------
+2026-06-12T11:26:18.2445411Z ------
+2026-06-12T11:26:18.2445757Z  > [linux/arm64 stage-0  9/17] COPY package.json package-lock.json ./:
+2026-06-12T11:26:18.2446313Z ------
+2026-06-12T11:26:18.2446492Z ------
+2026-06-12T11:26:18.2446763Z  > [linux/amd64 stage-0  9/17] COPY package.json package-lock.json ./:
+2026-06-12T11:26:18.2447356Z ------
+2026-06-12T11:26:18.2471423Z app.Dockerfile:44
+2026-06-12T11:26:18.2472102Z --------------------
+2026-06-12T11:26:18.2472750Z   42 |     RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+2026-06-12T11:26:18.2473439Z   43 |     
+2026-06-12T11:26:18.2473831Z   44 | >>> COPY package.json package-lock.json ./
+2026-06-12T11:26:18.2474351Z   45 |     RUN npm ci --production=false
+2026-06-12T11:26:18.2474795Z   46 |     
+2026-06-12T11:26:18.2475119Z --------------------
+2026-06-12T11:26:18.2476394Z ERROR: failed to build: failed to solve: failed to compute cache key: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/package-lock.json": not found
+2026-06-12T11:26:18.2557722Z ##[error]buildx failed with: ERROR: failed to build: failed to solve: failed to compute cache key: failed to calculate checksum of ref 59y6xpfqb2vttuhv0ug8dz7gq::jxehcirdut0e54evxradjckem: "/package-lock.json": not found

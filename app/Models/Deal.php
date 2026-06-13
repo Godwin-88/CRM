@@ -27,6 +27,11 @@ class Deal extends Model
         'win_loss_reason_id',
         'win_loss_note',
         'exclude_from_automations',
+        'predicted_score',
+        'manual_score',
+        'score_override_note',
+        'score_last_calculated_at',
+        'product_id',
     ];
 
     protected $casts = [
@@ -34,6 +39,9 @@ class Deal extends Model
         'probability' => 'integer',
         'expected_close_date' => 'date',
         'exclude_from_automations' => 'boolean',
+        'predicted_score' => 'integer',
+        'manual_score' => 'integer',
+        'score_last_calculated_at' => 'datetime',
     ];
 
     public function contact(): BelongsTo
@@ -79,6 +87,11 @@ class Deal extends Model
     public function demoTrials(): HasMany
     {
         return $this->hasMany(DemoTrial::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 
     public function getWeightedValue(): float

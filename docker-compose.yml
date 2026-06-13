@@ -20,12 +20,29 @@ services:
             - CACHE_STORE=redis
             - QUEUE_CONNECTION=redis
             - SESSION_DRIVER=redis
+            - SCOUT_DRIVER=meilisearch
+            - MEILISEARCH_HOST=http://meilisearch:7700
+            - MEILISEARCH_MASTER_KEY=masterKey
+            - FILESYSTEM_DISK=s3
+            - AWS_ACCESS_KEY_ID=minioadmin
+            - AWS_SECRET_ACCESS_KEY=minioadmin
+            - AWS_DEFAULT_REGION=us-east-1
+            - AWS_BUCKET=crm-local
+            - AWS_ENDPOINT=http://minio:9000
+            - REVERB_APP_ID=local-app-id
+            - REVERB_APP_KEY=local-app-key
+            - REVERB_APP_SECRET=local-app-secret
+            - REVERB_HOST=reverb
+            - REVERB_PORT=8080
+            - REVERB_SCHEME=http
         volumes:
             - '.:/var/www/html'
         depends_on:
             pgsql:
                 condition: service_healthy
             redis:
+                condition: service_healthy
+            meilisearch:
                 condition: service_healthy
         healthcheck:
             test: ['CMD', 'curl', '-f', 'http://localhost/up']
@@ -64,6 +81,206 @@ services:
             retries: 5
             start_period: 10s
 
+    meilisearch:
+        image: getmeili/meilisearch:latest
+        ports:
+            - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
+        environment:
+            - MEILI_MASTER_KEY=masterKey
+            - MEILI_NO_AUTH=true
+        volumes:
+            - 'meilisearch-data:/meili_data'
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:7700/health']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+
+    minio:
+        image: minio/minio:latest
+        ports:
+            - '${FORWARD_MINIO_PORT:-9000}:9000'
+            - '9001:9001'
+        environment:
+            MINIO_ROOT_USER: minioadmin
+            MINIO_ROOT_PASSWORD: minioadmin
+        volumes:
+            - 'minio-data:/data'
+        command: server /data --console-address ":9001"
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/ready']
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 30s
+
+    mailpit:
+        image: axllent/mailpit:latest
+        ports:
+            - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+            - '8025:8025'
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:8025/health']
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 10s
+
+    reverb:
+        image: enterprise-crm-app
+        command: php artisan reverb:start --host=0.0.0.0 --port=8080
+        ports:
+            - '8080:8080'
+        environment:
+            - APP_ENV=${APP_ENV:-local}
+            - APP_KEY=${APP_KEY}
+            - DB_CONNECTION=pgsql
+            - DB_HOST=pgsql
+            - DB_PORT=5432
+            - DB_DATABASE=${DB_DATABASE:-laravel}
+            - DB_USERNAME=${DB_USERNAME:-laravel}
+            - DB_PASSWORD=${DB_PASSWORD:-secret}
+            - REDIS_HOST=redis
+            - QUEUE_CONNECTION=redis
+            - REVERB_APP_ID=${REVERB_APP_ID:-local-app-id}
+            - REVERB_APP_KEY=${REVERB_APP_KEY:-local-app-key}
+            - REVERB_APP_SECRET=${REVERB_APP_SECRET:-local-app-secret}
+            - REVERB_HOST=reverb
+            - REVERB_PORT=8080
+            - REVERB_SCHEME=http
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:8080/health']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 15s
+
+    horizon:
+        build:
+            context: .
+            dockerfile: docker/app.Dockerfile
+        command: php artisan horizon
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        environment:
+            - APP_ENV=${APP_ENV:-local}
+            - APP_DEBUG=${APP_DEBUG:-true}
+            - APP_KEY=${APP_KEY}
+            - DB_CONNECTION=pgsql
+            - DB_HOST=pgsql
+            - DB_PORT=5432
+            - DB_DATABASE=${DB_DATABASE:-laravel}
+            - DB_USERNAME=${DB_USERNAME:-laravel}
+            - DB_PASSWORD=${DB_PASSWORD:-secret}
+            - REDIS_HOST=redis
+            - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
+            - CACHE_STORE=redis
+            - QUEUE_CONNECTION=redis
+            - HORIZON_BASIC_AUTH=false
+
+    scheduler:
+        build:
+            context: .
+            dockerfile: docker/app.Dockerfile
+        command: php artisan schedule:work
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        environment:
+            - APP_ENV=${APP_ENV:-local}
+            - APP_KEY=${APP_KEY}
+            - DB_CONNECTION=pgsql
+            - DB_HOST=pgsql
+            - DB_PORT=5432
+            - DB_DATABASE=${DB_DATABASE:-laravel}
+            - DB_USERNAME=${DB_USERNAME:-laravel}
+            - DB_PASSWORD=${DB_PASSWORD:-secret}
+            - REDIS_HOST=redis
+            - QUEUE_CONNECTION=redis
+
+    selenium:
+        image: seleniarm/standalone-chromium:latest
+        ports:
+            - '4444:4444'
+            - '5900:5900'
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:4444/status']
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 30s
+
+    n8n:
+        image: n8nio/n8n:latest
+        ports:
+            - '${N8N_PORT:-5678}:5678'
+        environment:
+            - DB_TYPE=postgres
+            - DB_POSTGRES_HOST=pgsql
+            - DB_POSTGRES_PORT=5432
+            - DB_POSTGRES_DATABASE=${DB_DATABASE:-laravel}
+            - DB_POSTGRES_USER=${DB_USERNAME:-laravel}
+            - DB_POSTGRES_PASSWORD=${DB_PASSWORD:-secret}
+            - N8N_HOST=n8n
+            - N8N_PORT=5678
+            - N8N_PROTOCOL=http
+            - NODE_ENV=production
+            - WEBHOOK_URL=http://n8n:5678
+        volumes:
+            - 'n8n-data:/home/node/.n8n'
+        depends_on:
+            pgsql:
+                condition: service_healthy
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:5678/healthz']
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 45s
+
+    ml-agents:
+        build:
+            context: ./ml-service/agents
+            dockerfile: Dockerfile
+        ports:
+            - '${ML_AGENTS_PORT:-8000}:8000'
+        environment:
+            - DATABASE_URL=postgresql+asyncpg://${DB_USERNAME:-laravel}:${DB_PASSWORD:-secret}@pgsql:5432/${DB_DATABASE:-laravel}
+            - REDIS_URL=redis://redis:6379
+            - AGENT_API_KEY=${AGENT_API_KEY:-change_me}
+            - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+            - OPENAI_API_KEY=${OPENAI_API_KEY}
+            - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+            - GROQ_API_KEY=${GROQ_API_KEY}
+            - ENVIRONMENT=production
+        volumes:
+            - './ml-service/agents:/app'
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 45s
+
 volumes:
     pgsql-data:
     redis-data:
+    meilisearch-data:
+    minio-data:
+    n8n-data:
