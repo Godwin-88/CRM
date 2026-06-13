@@ -1,17 +1,95 @@
+# Render Deployment Configuration for Enterprise CRM
+# Deploy Laravel monolith + ML agents with external services
+
 services:
   - type: web
     name: enterprise-crm
-    runtime: php
+    runtime: docker
     region: frankfurt
     plan: free
-    buildCommand: composer install --no-dev --optimize-autoloader && npm install --production=false && npm run build && php artisan config:cache && php artisan route:cache && php artisan view:cache
-    startCommand: php artisan migrate --force && php artisan serve --host 0.0.0.0 --port $PORT
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /up
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_DATABASE
+        fromDatabase:
+          name: crm-db
+      - key: DB_HOST
+        fromDatabase:
+          name: crm-db
+      - key: DB_PORT
+        fromDatabase:
+          name: crm-db
+      - key: DB_USERNAME
+        fromDatabase:
+          name: crm-db
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: crm-db
+      - key: REDIS_URL
+        value: ${UPSTASH_REDIS_URL}
+      - key: QUEUE_CONNECTION
+        value: redis
+      - key: CACHE_STORE
+        value: redis
+      - key: SESSION_DRIVER
+        value: redis
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: AWS_ENDPOINT
+        value: ${CLOUDFLARE_R2_ENDPOINT}
+      - key: AWS_ACCESS_KEY_ID
+        value: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
+      - key: AWS_SECRET_ACCESS_KEY
+        value: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+      - key: AWS_BUCKET
+        value: ${CLOUDFLARE_R2_BUCKET}
+      - key: AWS_DEFAULT_REGION
+        value: auto
+      - key: AWS_USE_PATH_STYLE_ENDPOINT
+        value: true
+      - key: LOG_CHANNEL
+        value: stderr
     autoDeploy: true
+
+  - type: web
+    name: ml-agents
+    runtime: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./ml-service/Dockerfile
+    dockerContext: ./ml-service
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        value: ${SUPABASE_DATABASE_URL}
+      - key: REDIS_URL
+        value: ${UPSTASH_REDIS_URL}
+      - key: AGENT_API_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        value: ${OPENAI_API_KEY}
+    autoDeploy: true
+
+databases:
+  - name: crm-db
+    type: postgresql
+    region: frankfurt
+    plan: free
+
+# External Services (configure in Render dashboard or set as secrets):
+# - UPSTASH_REDIS_URL: Upstash Redis connection URL
+# - CLOUDFLARE_R2_ENDPOINT: Cloudflare R2 endpoint (e.g., https://<account>.r2.cloudflarestorage.com)
+# - CLOUDFLARE_R2_ACCESS_KEY_ID: R2 access key
+# - CLOUDFLARE_R2_SECRET_ACCESS_KEY: R2 secret key
+# - CLOUDFLARE_R2_BUCKET: R2 bucket name (e.g., crm-storage)
+# - OPENAI_API_KEY: For ML agents
+# - SUPABASE_DATABASE_URL: Alternative to Render PostgreSQL (optional)
