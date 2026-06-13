@@ -39,7 +39,7 @@ class TranslationController extends Controller
         ]);
 
         $locales = config('app.available_locales', ['en']);
-        if (!in_array($validated['language'], $locales)) {
+        if (! in_array($validated['language'], $locales)) {
             return response()->json(['message' => 'Unsupported language'], 422);
         }
 
@@ -52,13 +52,14 @@ class TranslationController extends Controller
     private function getTranslations(string $locale, string $group): array
     {
         $cacheKey = "translations:{$locale}:{$group}";
+
         return Cache::remember($cacheKey, 3600, function () use ($locale, $group) {
             $path = lang_path($locale);
             $files = glob("{$path}/{$group}.php");
 
             $translations = [];
             foreach ($files as $file) {
-                $key = str_replace([$path . '/', '.php'], '', $file);
+                $key = str_replace([$path.'/', '.php'], '', $file);
                 $translations[$key] = include $file;
             }
 

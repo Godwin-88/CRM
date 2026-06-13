@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\QuoteTemplate;
-use App\Models\Quote;
-use App\Models\QuoteLineItem;
 use App\Models\Contact;
 use App\Models\Deal;
+use App\Models\Quote;
+use App\Models\QuoteTemplate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

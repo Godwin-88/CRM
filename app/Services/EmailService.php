@@ -2,14 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Interaction;
-use App\Models\InteractionAttachment;
-use App\Models\UnmatchedItem;
-use App\Models\Contact;
-use App\Models\User;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Mail;
 use App\Jobs\ProcessInboundEmail;
+use App\Mail\TemplateMail;
+use App\Models\Contact;
+use App\Models\Interaction;
+use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 
 class EmailService
 {
@@ -20,7 +18,7 @@ class EmailService
         $agent = $agentId ? User::findOrFail($agentId) : User::first();
 
         $body = $this->renderTemplate($template->body, array_merge([
-            'contact_name' => $contact->first_name . ' ' . $contact->last_name,
+            'contact_name' => $contact->first_name.' '.$contact->last_name,
             'agent_name' => $agent->name,
             'account_name' => $contact->account?->name ?? '',
         ], $variables));
@@ -30,7 +28,7 @@ class EmailService
         ], $variables));
 
         // Send email
-        Mail::to($contact->email)->send(new \App\Mail\TemplateMail($subject, $body, $contact));
+        Mail::to($contact->email)->send(new TemplateMail($subject, $body, $contact));
 
         // Log interaction
         $interaction = Interaction::create([
@@ -58,8 +56,9 @@ class EmailService
     private function renderTemplate(string $content, array $variables = []): string
     {
         foreach ($variables as $key => $value) {
-            $content = str_replace('{{' . $key . '}}', $value, $content);
+            $content = str_replace('{{'.$key.'}}', $value, $content);
         }
+
         return $content;
     }
 }

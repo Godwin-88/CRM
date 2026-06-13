@@ -19,8 +19,8 @@ class CannedResponseController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%')
-                ->orWhere('body', 'like', '%' . $request->search . '%');
+            $query->where('title', 'like', '%'.$request->search.'%')
+                ->orWhere('body', 'like', '%'.$request->search.'%');
         }
 
         $sortField = $request->get('sort', 'usage_count');
@@ -70,7 +70,7 @@ class CannedResponseController extends Controller
 
     public function toggleActive(CannedResponse $cannedResponse): JsonResponse
     {
-        $cannedResponse->update(['is_active' => !$cannedResponse->is_active]);
+        $cannedResponse->update(['is_active' => ! $cannedResponse->is_active]);
 
         return response()->json($cannedResponse->fresh());
     }
@@ -101,7 +101,7 @@ class CannedResponseController extends Controller
     public static function resolveVariables(string $body, array $variables): string
     {
         return str_replace(
-            array_map(fn($v) => "{{{$v}}}", array_keys($variables)),
+            array_map(fn ($v) => "{{{$v}}}", array_keys($variables)),
             array_values($variables),
             $body
         );

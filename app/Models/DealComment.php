@@ -48,6 +48,7 @@ class DealComment extends Model
         if ($this->isDeleted()) {
             return false;
         }
+
         return $this->created_at->addMinutes($minutes)->isFuture();
     }
 }

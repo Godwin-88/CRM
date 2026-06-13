@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
-use App\Models\Deal;
-use App\Models\Pipeline;
-use App\Models\PipelineStage;
-use App\Models\Activity;
-use App\Models\DealComment;
-use App\Models\DealCommentMention;
-use App\Models\DemoTrial;
-use App\Models\WinLossReason;
 use App\Events\DealStageMoved;
 use App\Events\NewDealComment;
+use App\Http\Controllers\Controller;
+use App\Models\Deal;
+use App\Models\DealCommentMention;
+use App\Models\Pipeline;
+use App\Models\PipelineStage;
+use App\Models\WinLossReason;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -72,8 +69,8 @@ class DealController extends Controller
             $defaultPipeline = Pipeline::where('is_default', true)->first();
             $validated['pipeline_id'] = $validated['pipeline_id'] ?? $defaultPipeline?->id;
 
-            $stage = $validated['stage'] ?? $validated['pipeline_id'] 
-                ? PipelineStage::where('pipeline_id', $validated['pipeline_id'])->orderBy('position')->first()?->name 
+            $stage = $validated['stage'] ?? $validated['pipeline_id']
+                ? PipelineStage::where('pipeline_id', $validated['pipeline_id'])->orderBy('position')->first()?->name
                 : null;
             $validated['stage'] = $stage;
 
@@ -100,10 +97,18 @@ class DealController extends Controller
             'owner',
             'pipeline.stages',
             'winLossReason',
-            'activities' => function ($q) { $q->latest(); },
-            'quotes' => function ($q) { $q->latest(); },
-            'demoTrials' => function ($q) { $q->latest(); },
-            'comments' => function ($q) { $q->latest()->with('user', 'mentions'); },
+            'activities' => function ($q) {
+                $q->latest();
+            },
+            'quotes' => function ($q) {
+                $q->latest();
+            },
+            'demoTrials' => function ($q) {
+                $q->latest();
+            },
+            'comments' => function ($q) {
+                $q->latest()->with('user', 'mentions');
+            },
         ]);
 
         $deal->unread_comments_count = DealCommentMention::whereHas('comment', function ($q) use ($deal) {
@@ -251,13 +256,13 @@ class DealController extends Controller
         abort_unless($reason->type === $validated['status'], 422, 'Reason type must match close status');
 
         $deal->update([
-            'stage' => 'closed_' . $validated['status'],
+            'stage' => 'closed_'.$validated['status'],
             'win_loss_reason_id' => $validated['win_loss_reason_id'],
             'win_loss_note' => $validated['note'],
             'probability' => $validated['status'] === 'won' ? 100 : 0,
         ]);
 
-        DealStageMoved::dispatch($deal, $deal->getOriginal('stage'), 'closed_' . $validated['status']);
+        DealStageMoved::dispatch($deal, $deal->getOriginal('stage'), 'closed_'.$validated['status']);
 
         return response()->json($deal->fresh());
     }

@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Events\DealStageMoved;
+use App\Models\Account;
+use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,7 +20,7 @@ class DealController extends Controller
         $query = Deal::query()->with(['account', 'owner', 'pipeline'])->latest();
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
+            $query->where('title', 'like', '%'.$request->search.'%');
         }
         if ($request->filled('stage')) {
             $query->where('stage', $request->stage);
@@ -40,9 +43,9 @@ class DealController extends Controller
         $pipelines = Pipeline::with('stages')
             ->where('is_active', true)
             ->get(['id', 'name']);
-        
-        $accounts = \App\Models\Account::select(['id', 'name'])->get();
-        $contacts = \App\Models\Contact::select(['id', 'first_name', 'last_name'])->get();
+
+        $accounts = Account::select(['id', 'name'])->get();
+        $contacts = Contact::select(['id', 'first_name', 'last_name'])->get();
 
         return Inertia::render('Deals/Form', [
             'pipelines' => $pipelines,
@@ -53,7 +56,7 @@ class DealController extends Controller
         ]);
     }
 
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -88,10 +91,18 @@ class DealController extends Controller
             'contact',
             'owner',
             'pipeline.stages',
-            'quotes' => function ($q) { $q->latest(); },
-            'activities' => function ($q) { $q->latest()->limit(20); },
-            'demoTrials' => function ($q) { $q->latest(); },
-            'comments' => function ($q) { $q->latest()->with('user', 'mentions'); },
+            'quotes' => function ($q) {
+                $q->latest();
+            },
+            'activities' => function ($q) {
+                $q->latest()->limit(20);
+            },
+            'demoTrials' => function ($q) {
+                $q->latest();
+            },
+            'comments' => function ($q) {
+                $q->latest()->with('user', 'mentions');
+            },
         ]);
 
         $pipelines = Pipeline::where('is_active', true)->get(['id', 'name']);
@@ -106,7 +117,7 @@ class DealController extends Controller
     {
         $defaultPipeline = Pipeline::where('is_active', true)->first();
 
-        if (!$defaultPipeline) {
+        if (! $defaultPipeline) {
             return Inertia::render('Deals/Board', ['pipelines' => [], 'boardData' => null]);
         }
 
@@ -124,12 +135,13 @@ class DealController extends Controller
 
         $columns = $stages->map(function ($stage) use ($deals) {
             $stageDeals = $deals->get($stage->name, collect());
+
             return [
                 'id' => $stage->id,
                 'name' => $stage->name,
                 'probability' => $stage->probability,
                 'deal_count' => $stageDeals->count(),
-                'weighted_value' => $stageDeals->sum(fn($d) => (float) $d->value * ($d->probability ?? $stage->probability) / 100),
+                'weighted_value' => $stageDeals->sum(fn ($d) => (float) $d->value * ($d->probability ?? $stage->probability) / 100),
                 'total_value' => $stageDeals->sum('value'),
                 'deals' => $stageDeals->map(function ($deal) {
                     return [
@@ -155,7 +167,7 @@ class DealController extends Controller
         ]);
     }
 
-    public function moveStage(Request $request, Deal $deal): \Illuminate\Http\RedirectResponse
+    public function moveStage(Request $request, Deal $deal): RedirectResponse
     {
         $this->authorize('update', $deal);
 

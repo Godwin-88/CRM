@@ -14,7 +14,7 @@ class AccountController extends Controller
         $query = Account::query()->with(['accountManager', 'parentAccount']);
 
         if ($request->has('name')) {
-            $query->where('name', 'like', '%' . $request->name . '%');
+            $query->where('name', 'like', '%'.$request->name.'%');
         }
         if ($request->has('type')) {
             $query->where('type', $request->type);
@@ -50,10 +50,18 @@ class AccountController extends Controller
         $account->load([
             'accountManager',
             'parentAccount',
-            'contacts' => function ($q) { $q->withPivot('is_primary')->with(['owner']); },
-            'deals' => function ($q) { $q->latest()->limit(10)->with(['owner']); },
-            'tickets' => function ($q) { $q->latest()->limit(10); },
-            'contracts' => function ($q) { $q->latest()->limit(5); },
+            'contacts' => function ($q) {
+                $q->withPivot('is_primary')->with(['owner']);
+            },
+            'deals' => function ($q) {
+                $q->latest()->limit(10)->with(['owner']);
+            },
+            'tickets' => function ($q) {
+                $q->latest()->limit(10);
+            },
+            'contracts' => function ($q) {
+                $q->latest()->limit(5);
+            },
             'customFieldValues',
         ]);
 

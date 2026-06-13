@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Contact;
+use App\Models\User;
 use App\Services\DuplicateDetectionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,9 +20,9 @@ class ProcessContactImport implements ShouldQueue
     public $timeout = 600;
 
     /**
-     * @param string $filePath Path to uploaded file in storage
-     * @param array $fieldMapping ['csv_column' => 'contact_field']
-     * @param string $userId Who initiated the import
+     * @param  string  $filePath  Path to uploaded file in storage
+     * @param  array  $fieldMapping  ['csv_column' => 'contact_field']
+     * @param  string  $userId  Who initiated the import
      */
     public function __construct(
         protected string $filePath,
@@ -44,14 +45,18 @@ class ProcessContactImport implements ShouldQueue
             $headers = str_getcsv(array_shift($lines));
 
             foreach ($lines as $lineIndex => $line) {
-                if (empty(trim($line))) continue;
+                if (empty(trim($line))) {
+                    continue;
+                }
 
                 $row = str_getcsv($line);
                 $rowData = [];
 
                 // Map CSV columns to contact fields
                 foreach ($headers as $colIndex => $header) {
-                    if (!isset($this->fieldMapping[$header])) continue;
+                    if (! isset($this->fieldMapping[$header])) {
+                        continue;
+                    }
                     $field = $this->fieldMapping[$header];
                     $rowData[$field] = $row[$colIndex] ?? '';
                 }
@@ -59,7 +64,8 @@ class ProcessContactImport implements ShouldQueue
                 // Validate required fields
                 if (empty($rowData['first_name']) || empty($rowData['last_name']) || empty($rowData['email']) || empty($rowData['type'])) {
                     $results['skipped']++;
-                    $results['errors'][] = "Row " . ($lineIndex + 2) . ": Missing required fields (first_name, last_name, email, type)";
+                    $results['errors'][] = 'Row '.($lineIndex + 2).': Missing required fields (first_name, last_name, email, type)';
+
                     continue;
                 }
 
@@ -67,7 +73,8 @@ class ProcessContactImport implements ShouldQueue
                 $existing = $duplicateService->findByEmail($rowData['email']);
                 if ($existing) {
                     $results['skipped']++;
-                    $results['errors'][] = "Row " . ($lineIndex + 2) . ": Duplicate email '{$rowData['email']}' (existing contact: {$existing->first_name} {$existing->last_name})";
+                    $results['errors'][] = 'Row '.($lineIndex + 2).": Duplicate email '{$rowData['email']}' (existing contact: {$existing->first_name} {$existing->last_name})";
+
                     continue;
                 }
 
@@ -76,13 +83,13 @@ class ProcessContactImport implements ShouldQueue
                     $results['created']++;
                 } catch (\Exception $e) {
                     $results['failed']++;
-                    $results['errors'][] = "Row " . ($lineIndex + 2) . ": " . $e->getMessage();
+                    $results['errors'][] = 'Row '.($lineIndex + 2).': '.$e->getMessage();
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Contact import failed: ' . $e->getMessage());
+            Log::error('Contact import failed: '.$e->getMessage());
             $results['failed']++;
-            $results['errors'][] = 'File processing error: ' . $e->getMessage();
+            $results['errors'][] = 'File processing error: '.$e->getMessage();
         } finally {
             // Clean up uploaded file
             Storage::delete($this->filePath);
@@ -90,15 +97,15 @@ class ProcessContactImport implements ShouldQueue
 
         // Log import result to audit
         activity()
-            ->causedBy(\App\Models\User::find($this->userId))
+            ->causedBy(User::find($this->userId))
             ->withProperties([
                 'import_results' => $results,
                 'file' => $this->filePath,
             ])
             ->event('import')
-            ->log('Contact import completed: ' . json_encode($results));
+            ->log('Contact import completed: '.json_encode($results));
 
         // In a real app, send in-app notification to the user
-        Log::info('Import completed for user ' . $this->userId, $results);
+        Log::info('Import completed for user '.$this->userId, $results);
     }
 }

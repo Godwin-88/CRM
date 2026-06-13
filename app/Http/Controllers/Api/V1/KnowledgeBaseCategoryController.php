@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KnowledgeBaseCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class KnowledgeBaseCategoryController extends Controller
 {
@@ -15,7 +16,7 @@ class KnowledgeBaseCategoryController extends Controller
             ->with('children');
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         return response()->json($query->orderBy('sort_order')->get());
@@ -30,7 +31,7 @@ class KnowledgeBaseCategoryController extends Controller
             'sort_order' => 'sometimes|integer',
         ]);
 
-        $validated['slug'] = \Illuminate\Support\Str::slug($validated['name']);
+        $validated['slug'] = Str::slug($validated['name']);
 
         $category = KnowledgeBaseCategory::create($validated);
 
@@ -52,7 +53,7 @@ class KnowledgeBaseCategoryController extends Controller
         ]);
 
         if (isset($validated['name'])) {
-            $validated['slug'] = \Illuminate\Support\Str::slug($validated['name']);
+            $validated['slug'] = Str::slug($validated['name']);
         }
 
         $category->update($validated);

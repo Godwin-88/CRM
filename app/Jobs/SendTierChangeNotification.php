@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Contact;
+use App\Notifications\TierChangedNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -21,7 +22,7 @@ class SendTierChangeNotification implements ShouldQueue
 
     public function handle(): void
     {
-        $contact->notify(new \App\Notifications\TierChangedNotification(
+        $contact->notify(new TierChangedNotification(
             $this->oldTier,
             $this->newTier
         ));

@@ -16,7 +16,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class KnowledgeBaseArticle extends Model implements HasMedia
 {
-    use HasFactory, HasUlids, SoftDeletes, LogsActivity, InteractsWithMedia;
+    use HasFactory, HasUlids, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {

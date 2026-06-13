@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\LoyaltyProgram;
-use App\Models\LoyaltyTier;
-use App\Models\LoyaltyRule;
 use App\Models\LoyaltyRedemptionRule;
+use App\Models\LoyaltyRule;
+use App\Models\LoyaltyTier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class LoyaltyProgramController extends Controller
 {
@@ -52,6 +51,7 @@ class LoyaltyProgramController extends Controller
     public function show(LoyaltyProgram $program): JsonResponse
     {
         $program->load(['tiers', 'rules', 'redemptionRules', 'enrollments']);
+
         return response()->json($program);
     }
 
@@ -77,6 +77,7 @@ class LoyaltyProgramController extends Controller
     public function destroy(LoyaltyProgram $program): JsonResponse
     {
         $program->delete();
+
         return response()->json(null, 204);
     }
 

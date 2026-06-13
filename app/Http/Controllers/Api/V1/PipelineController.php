@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deal;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
-use App\Models\Deal;
-use App\Models\DealAutomation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +15,7 @@ class PipelineController extends Controller
     public function index(): JsonResponse
     {
         $pipelines = Pipeline::with('stages')->get();
+
         return response()->json($pipelines);
     }
 
@@ -64,6 +64,7 @@ class PipelineController extends Controller
     public function show(Pipeline $pipeline): JsonResponse
     {
         $pipeline->load('stages');
+
         return response()->json($pipeline);
     }
 
@@ -184,12 +185,13 @@ class PipelineController extends Controller
 
         $columns = $stages->map(function ($stage) use ($deals) {
             $stageDeals = $deals->get($stage->name, collect());
+
             return [
                 'id' => $stage->id,
                 'name' => $stage->name,
                 'probability' => $stage->probability,
                 'deal_count' => $stageDeals->count(),
-                'weighted_value' => $stageDeals->sum(fn($d) => $d->getWeightedValue()),
+                'weighted_value' => $stageDeals->sum(fn ($d) => $d->getWeightedValue()),
                 'total_value' => $stageDeals->sum('value'),
                 'deals' => $stageDeals->map(function ($deal) {
                     return [

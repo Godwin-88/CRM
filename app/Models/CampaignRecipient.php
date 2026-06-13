@@ -22,7 +22,7 @@ class CampaignRecipient extends Model
         'clicked_at',
         'error_message',
         'tracking_token',
-            'redirect_url',
+        'redirect_url',
         'channel_eligibility',
     ];
 

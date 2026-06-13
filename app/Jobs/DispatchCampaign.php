@@ -7,7 +7,6 @@ use App\Models\CampaignRecipient;
 use App\Models\CampaignStep;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class DispatchCampaign implements ShouldQueue
@@ -20,7 +19,7 @@ class DispatchCampaign implements ShouldQueue
     {
         $campaign = Campaign::with(['segment.contacts', 'steps.emailTemplate', 'abTest'])->find($this->campaignId);
 
-        if (!$campaign || !$campaign->isScheduled()) {
+        if (! $campaign || ! $campaign->isScheduled()) {
             return;
         }
 
@@ -71,6 +70,7 @@ class DispatchCampaign implements ShouldQueue
         }
 
         $multiplier = $step->delay_type === 'n_hours' ? 3600 : 86400; // seconds
+
         return $step->delay_value * $multiplier;
     }
 }

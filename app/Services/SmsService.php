@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\Interaction;
-use App\Models\UnmatchedItem;
 use App\Models\Contact;
 use App\Models\Integration;
+use App\Models\Interaction;
+use App\Models\UnmatchedItem;
 use Illuminate\Support\Facades\Http;
 
 class SmsService
@@ -33,7 +33,7 @@ class SmsService
             'contact_id' => $contactId,
             'type' => 'sms',
             'direction' => 'outbound',
-            'subject' => 'SMS to ' . $phone,
+            'subject' => 'SMS to '.$phone,
             'body' => $message,
             'agent_id' => $agentId,
             'metadata' => [
@@ -58,7 +58,7 @@ class SmsService
         $interactionData = [
             'type' => 'sms',
             'direction' => 'inbound',
-            'subject' => 'SMS from ' . $from,
+            'subject' => 'SMS from '.$from,
             'body' => $message,
             'agent_id' => null,
             'external_message_id' => $providerMessageId,
@@ -102,7 +102,7 @@ class SmsService
     {
         $integration = Integration::where('provider', 'africastalking')->where('is_active', true)->first();
 
-        if (!$integration) {
+        if (! $integration) {
             throw new \Exception('Africa\'s Talking integration not configured');
         }
 
@@ -125,7 +125,7 @@ class SmsService
     {
         $integration = Integration::where('provider', 'twilio')->where('is_active', true)->first();
 
-        if (!$integration) {
+        if (! $integration) {
             throw new \Exception('Twilio integration not configured');
         }
 
@@ -145,10 +145,11 @@ class SmsService
 
     private function findContactByPhone(?string $phone): ?Contact
     {
-        if (!$phone) {
+        if (! $phone) {
             return null;
         }
         $clean = preg_replace('/\D/', '', $phone);
+
         return Contact::whereRaw("REGEXP_REPLACE(phone, '\D', '') = ?", [$clean])->first();
     }
 }

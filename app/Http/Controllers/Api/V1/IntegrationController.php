@@ -41,7 +41,7 @@ class IntegrationController extends Controller
         $validated['created_by'] = auth()->id();
 
         // Encrypt sensitive config values
-        if (!empty($validated['config'])) {
+        if (! empty($validated['config'])) {
             $validated['config'] = $this->encryptConfig($validated['config']);
         }
 
@@ -60,7 +60,7 @@ class IntegrationController extends Controller
             'is_active' => 'sometimes|boolean',
         ]);
 
-        if (!empty($validated['config'])) {
+        if (! empty($validated['config'])) {
             $validated['config'] = $this->encryptConfig($validated['config']);
         }
 
@@ -97,7 +97,7 @@ class IntegrationController extends Controller
         $integration->update(['config' => $config]);
 
         return response()->json([
-            'message' => 'API key rotated. Old key valid for ' . $graceHours . ' hours.',
+            'message' => 'API key rotated. Old key valid for '.$graceHours.' hours.',
             'old_key_expires_at' => $config['old_key_expires_at'],
         ]);
     }
@@ -109,6 +109,7 @@ class IntegrationController extends Controller
                 $config[$key] = encrypt($config[$key]);
             }
         }
+
         return $config;
     }
 }

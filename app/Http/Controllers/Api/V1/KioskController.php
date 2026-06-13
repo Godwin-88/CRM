@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
+use App\Models\Interaction;
 use App\Models\KioskIntegration;
 use App\Models\UnmatchedItem;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +18,7 @@ class KioskController extends Controller
         $this->authorize('ingest', $kiosk);
 
         // Rate limit: 500 events per minute per kiosk
-        $key = 'kiosk:' . $kiosk->id . ':' . ($request->ip() ?? 'unknown');
+        $key = 'kiosk:'.$kiosk->id.':'.($request->ip() ?? 'unknown');
         if (RateLimiter::tooManyAttempts($key, 500)) {
             return response()->json(['message' => 'Rate limit exceeded'], 429);
         }
@@ -31,11 +33,11 @@ class KioskController extends Controller
 
         $contact = $this->findContact($validated['customer_identifier']);
 
-        $interaction = \App\Models\Interaction::create([
+        $interaction = Interaction::create([
             'contact_id' => $contact?->id,
             'type' => 'kiosk',
             'direction' => 'inbound',
-            'subject' => 'Kiosk event: ' . $validated['event_type'],
+            'subject' => 'Kiosk event: '.$validated['event_type'],
             'body' => json_encode($validated['event_metadata'] ?? []),
             'agent_id' => null,
             'metadata' => [
@@ -47,10 +49,10 @@ class KioskController extends Controller
             ],
         ]);
 
-        if (!$contact) {
+        if (! $contact) {
             UnmatchedItem::create([
                 'source_type' => 'kiosk',
-                'external_id' => $kiosk->id . '_' . $validated['customer_identifier'],
+                'external_id' => $kiosk->id.'_'.$validated['customer_identifier'],
                 'raw_payload' => $validated,
                 'matched_contact_id' => null,
             ]);
@@ -62,21 +64,21 @@ class KioskController extends Controller
         ], 201);
     }
 
-    private function findContact(string $identifier): ?\App\Models\Contact
+    private function findContact(string $identifier): ?Contact
     {
         // Try email
         if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
-            return \App\Models\Contact::where('email', $identifier)->first();
+            return Contact::where('email', $identifier)->first();
         }
 
         // Try phone
         $clean = preg_replace('/\D/', '', $identifier);
         if (strlen($clean) >= 10) {
-            return \App\Models\Contact::whereRaw("REGEXP_REPLACE(phone, '\D', '') = ?", [$clean])->first();
+            return Contact::whereRaw("REGEXP_REPLACE(phone, '\D', '') = ?", [$clean])->first();
         }
 
         // Try exact match on custom field (account number, etc.)
-        return \App\Models\Contact::whereHas('customFieldValues', function ($q) use ($identifier) {
+        return Contact::whereHas('customFieldValues', function ($q) use ($identifier) {
             $q->where('field_key', 'account_number')->where('value', $identifier);
         })->first();
     }

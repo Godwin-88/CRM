@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class ProcessSlaBreaches extends Command
 {
     protected $signature = 'sla:check-breaches';
+
     protected $description = 'Check for SLA breaches and send notifications';
 
     public function handle(SlaService $slaService): int

@@ -23,7 +23,7 @@ class AccountController extends Controller
         $query = Account::query()->with(['accountManager', 'parentAccount']);
 
         if ($request->has('name')) {
-            $query->where('name', 'like', '%' . $request->name . '%');
+            $query->where('name', 'like', '%'.$request->name.'%');
         }
         if ($request->has('type')) {
             $query->where('type', $request->type);
@@ -68,11 +68,19 @@ class AccountController extends Controller
             'subAccounts',
             'accountManager',
             'parentAccount',
-            'contacts' => function ($q) { $q->withPivot('is_primary'); },
+            'contacts' => function ($q) {
+                $q->withPivot('is_primary');
+            },
             'customFieldValues',
-            'deals' => function ($q) { $q->latest()->limit(10); },
-            'tickets' => function ($q) { $q->latest()->limit(10); },
-            'contracts' => function ($q) { $q->latest()->limit(5); },
+            'deals' => function ($q) {
+                $q->latest()->limit(10);
+            },
+            'tickets' => function ($q) {
+                $q->latest()->limit(10);
+            },
+            'contracts' => function ($q) {
+                $q->latest()->limit(5);
+            },
         ]);
 
         return response()->json($account);
@@ -115,6 +123,7 @@ class AccountController extends Controller
     {
         $this->authorize('delete', $account);
         $this->accountService->deleteAccount($account);
+
         return response()->json(null, 204);
     }
 

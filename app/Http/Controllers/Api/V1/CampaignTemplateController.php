@@ -61,12 +61,14 @@ class CampaignTemplateController extends Controller
     public function destroy(CampaignTemplate $template): JsonResponse
     {
         $template->delete();
+
         return response()->json(null, 204);
     }
 
     public function submitForReview(CampaignTemplate $template): JsonResponse
     {
         $template->update(['status' => 'in_review']);
+
         return response()->json($template);
     }
 
@@ -77,6 +79,7 @@ class CampaignTemplateController extends Controller
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
         ]);
+
         return response()->json($template->load('reviewer'));
     }
 }

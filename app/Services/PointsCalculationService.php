@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\PointsLedger;
+use App\Jobs\SendTierChangeNotification;
 use App\Models\LoyaltyEnrollment;
-use App\Models\Contact;
-use Illuminate\Support\Facades\DB;
+use App\Models\PointsLedger;
+use Illuminate\Contracts\Pagination\Paginator;
 
 class PointsCalculationService
 {
@@ -74,7 +74,7 @@ class PointsCalculationService
         return $lastLedger?->running_balance ?? 0;
     }
 
-    public function getLedger(LoyaltyEnrollment $enrollment, int $perPage = 25, string $sort = 'desc'): \Illuminate\Contracts\Pagination\Paginator
+    public function getLedger(LoyaltyEnrollment $enrollment, int $perPage = 25, string $sort = 'desc'): Paginator
     {
         $query = PointsLedger::where('enrollment_id', $enrollment->id)
             ->orderBy('transaction_date', $sort === 'asc' ? 'asc' : 'desc');
@@ -101,7 +101,7 @@ class PointsCalculationService
             $contact->update(['loyalty_tier' => $newTier->name]);
 
             // Dispatch tier change notification
-            \App\Jobs\SendTierChangeNotification::dispatch($contact, $oldTier, $newTier->name);
+            SendTierChangeNotification::dispatch($contact, $oldTier, $newTier->name);
         }
     }
 }

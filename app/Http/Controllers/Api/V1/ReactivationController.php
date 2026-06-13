@@ -7,7 +7,6 @@ use App\Models\ReactivationConfig;
 use App\Models\ReactivationContact;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class ReactivationController extends Controller
 {
@@ -104,7 +103,7 @@ class ReactivationController extends Controller
             'total_completed' => $completed,
             'total_dormant' => $dormant,
             're_engagement_rate' => $reEngagementRate,
-            'by_config' => ReactivationConfig::withCount('contacts')->get()->map(fn($c) => [
+            'by_config' => ReactivationConfig::withCount('contacts')->get()->map(fn ($c) => [
                 'contact_type' => $c->contact_type,
                 'total' => $c->contacts_count,
             ]),

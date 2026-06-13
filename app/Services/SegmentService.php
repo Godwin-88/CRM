@@ -62,6 +62,7 @@ class SegmentService
                         $sub->where('created_at', $operator, $value);
                     });
                 });
+
                 return;
 
             case 'custom_field':
@@ -70,29 +71,32 @@ class SegmentService
                     $q->where('field_key', $customFieldKey);
                     $q->where('value', $operator, $value);
                 });
+
                 return;
 
             case 'created_date':
                 $query->whereDate('created_at', $operator, $value);
+
                 return;
 
             case 'owner_name':
                 $query->whereHas('owner', function ($q) use ($operator, $value) {
                     if ($operator === 'contains') {
-                        $q->where('name', 'like', '%' . $value . '%');
+                        $q->where('name', 'like', '%'.$value.'%');
                     } else {
                         $q->where('name', $operator, $value);
                     }
                 });
+
                 return;
         }
 
         // Standard field matching
         match ($operator) {
-            'contains' => $query->where($field, 'like', '%' . $value . '%'),
-            'not_contains' => $query->where($field, 'not like', '%' . $value . '%'),
-            'starts_with' => $query->where($field, 'like', $value . '%'),
-            'ends_with' => $query->where($field, 'like', '%' . $value),
+            'contains' => $query->where($field, 'like', '%'.$value.'%'),
+            'not_contains' => $query->where($field, 'not like', '%'.$value.'%'),
+            'starts_with' => $query->where($field, 'like', $value.'%'),
+            'ends_with' => $query->where($field, 'like', '%'.$value),
             'in' => $query->whereIn($field, is_array($value) ? $value : explode(',', $value)),
             'not_in' => $query->whereNotIn($field, is_array($value) ? $value : explode(',', $value)),
             'between' => $query->whereBetween($field, is_array($value) ? $value : explode(',', $value)),
@@ -123,8 +127,10 @@ class SegmentService
     public function getCachedCount(Segment $segment): int
     {
         $cacheKey = "segment:{$segment->id}:count";
+
         return Cache::remember($cacheKey, 3600, function () use ($segment) {
             $criteria = $segment->criteria ?: ['rules' => []];
+
             return $this->applyCriteria(Contact::query(), $criteria)->count();
         });
     }
@@ -159,6 +165,7 @@ class SegmentService
     public function getMatchingContacts(Segment $segment)
     {
         $criteria = $segment->criteria ?: ['rules' => []];
+
         return $this->applyCriteria(Contact::query(), $criteria);
     }
 }

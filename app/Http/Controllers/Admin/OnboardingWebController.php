@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\OnboardingTemplate;
-use App\Models\OnboardingRecord;
 use App\Models\OnboardingActivity;
-use App\Models\Contact;
+use App\Models\OnboardingRecord;
+use App\Models\OnboardingTemplate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

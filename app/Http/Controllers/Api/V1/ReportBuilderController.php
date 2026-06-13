@@ -117,7 +117,7 @@ class ReportBuilderController extends Controller
 
     protected function calculateNextRun(string $frequency, ?int $dayOfWeek, ?int $dayOfMonth): ?\DateTime
     {
-        $next = match($frequency) {
+        $next = match ($frequency) {
             'daily' => Carbon::now()->addDay(),
             'weekly' => Carbon::now()->next($dayOfWeek ?? Carbon::MONDAY),
             'monthly' => Carbon::now()->addMonth()->setDay($dayOfMonth ?? 1),

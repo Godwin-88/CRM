@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contact;
 use App\Http\Requests\StoreContactRequest;
+use App\Models\Account;
+use App\Models\Contact;
+use App\Models\Deal;
+use App\Models\Pipeline;
+use App\Models\User;
 use App\Services\ContactService;
 use App\Services\TimelineService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
 
 class ContactController extends Controller
 {
@@ -38,13 +42,13 @@ class ContactController extends Controller
         $query = Contact::query()->with(['owner']);
 
         if ($request->filled('first_name')) {
-            $query->where('first_name', 'like', '%' . $request->first_name . '%');
+            $query->where('first_name', 'like', '%'.$request->first_name.'%');
         }
         if ($request->filled('last_name')) {
-            $query->where('last_name', 'like', '%' . $request->last_name . '%');
+            $query->where('last_name', 'like', '%'.$request->last_name.'%');
         }
         if ($request->filled('email')) {
-            $query->where('email', 'like', '%' . $request->email . '%');
+            $query->where('email', 'like', '%'.$request->email.'%');
         }
         if ($request->filled('type') && $request->type !== 'all') {
             $query->where('type', $request->type);
@@ -76,14 +80,18 @@ class ContactController extends Controller
     {
         $contact->load([
             'owner',
-            'accounts' => function ($q) { $q->withPivot('is_primary'); },
+            'accounts' => function ($q) {
+                $q->withPivot('is_primary');
+            },
             'customFieldValues',
-            'interactions' => function ($q) { $q->latest()->limit(5); },
+            'interactions' => function ($q) {
+                $q->latest()->limit(5);
+            },
         ]);
 
         $timeline = $this->timelineService->getTimeline($contact);
-        
-        $allAccounts = \App\Models\Account::select(['id', 'name'])->get();
+
+        $allAccounts = Account::select(['id', 'name'])->get();
         $contactDeals = $contact->deals()->with('account')->get(['id', 'title', 'stage', 'value']);
 
         return Inertia::render('Contacts/Show', [
@@ -96,13 +104,14 @@ class ContactController extends Controller
     public function store(StoreContactRequest $request): RedirectResponse
     {
         $this->contactService->createContact($request->validated());
+
         return redirect()->route('contacts.index')->with('success', 'Contact created.');
     }
 
     public function edit(Contact $contact): Response
     {
-        $users = \App\Models\User::select(['id', 'name'])->get();
-        $accounts = \App\Models\Account::select(['id', 'name'])->get();
+        $users = User::select(['id', 'name'])->get();
+        $accounts = Account::select(['id', 'name'])->get();
 
         return Inertia::render('Contacts/Edit', [
             'contact' => $contact->load(['customFieldValues']),
@@ -118,6 +127,7 @@ class ContactController extends Controller
             $request->validated(),
             $request->input('custom_fields', [])
         );
+
         return redirect()->route('contacts.show', $contact)->with('success', 'Contact updated.');
     }
 
@@ -138,16 +148,17 @@ class ContactController extends Controller
     public function unlinkAccount(Contact $contact, string $accountId): RedirectResponse
     {
         $contact->accounts()->detach($accountId);
+
         return back()->with('success', 'Account unlinked successfully.');
     }
 
     public function createDeal(Contact $contact): Response
     {
-        $pipelines = \App\Models\Pipeline::with('stages')
+        $pipelines = Pipeline::with('stages')
             ->where('is_active', true)
             ->get(['id', 'name']);
 
-        $accounts = \App\Models\Account::select(['id', 'name'])->get();
+        $accounts = Account::select(['id', 'name'])->get();
 
         return Inertia::render('Deals/Form', [
             'pipelines' => $pipelines,
@@ -168,7 +179,7 @@ class ContactController extends Controller
             'pipeline_id' => ['required', 'exists:pipelines,id'],
         ]);
 
-        $deal = \App\Models\Deal::create([
+        $deal = Deal::create([
             'title' => $validated['title'],
             'contact_id' => $contact->id,
             'account_id' => $validated['account_id'],

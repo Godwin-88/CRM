@@ -2,8 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Interaction;
 use App\Models\CallRecording;
+use App\Models\Contact;
+use App\Models\Interaction;
 use App\Models\UnmatchedItem;
 
 class CallService
@@ -22,7 +23,7 @@ class CallService
         $interactionData = [
             'type' => 'call',
             'direction' => $direction,
-            'subject' => 'Call with ' . ($contact?->first_name ?? 'Unknown'),
+            'subject' => 'Call with '.($contact?->first_name ?? 'Unknown'),
             'duration_seconds' => $duration,
             'agent_id' => null,
             'metadata' => [
@@ -55,13 +56,14 @@ class CallService
         return $interaction;
     }
 
-    private function findContactByPhone(?string $phone): ?\App\Models\Contact
+    private function findContactByPhone(?string $phone): ?Contact
     {
-        if (!$phone) {
+        if (! $phone) {
             return null;
         }
         $clean = preg_replace('/\D/', '', $phone);
-        return \App\Models\Contact::whereRaw("REGEXP_REPLACE(phone, '\D', '') = ?", [$clean])->first();
+
+        return Contact::whereRaw("REGEXP_REPLACE(phone, '\D', '') = ?", [$clean])->first();
     }
 
     private function storeRecording(Interaction $interaction, ?string $callSid, string $recordingUrl, int $duration): void

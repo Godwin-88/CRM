@@ -39,7 +39,7 @@ class AutomationAction extends Model
 
     public function getDelayInSeconds(): int
     {
-        return match($this->delay_type) {
+        return match ($this->delay_type) {
             'immediate' => 0,
             'one_hour' => 3600,
             'one_day' => 86400,

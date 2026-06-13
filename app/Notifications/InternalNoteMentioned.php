@@ -6,7 +6,6 @@ use App\Models\Ticket;
 use App\Models\TicketInternalNote;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class InternalNoteMentioned extends Notification implements ShouldQueue
@@ -31,7 +30,7 @@ class InternalNoteMentioned extends Notification implements ShouldQueue
             'ticket_id' => $this->ticket->id,
             'ticket_subject' => $this->ticket->subject,
             'note_id' => $this->note->id,
-            'url' => '/tickets/' . $this->ticket->id . '#note-' . $this->note->id,
+            'url' => '/tickets/'.$this->ticket->id.'#note-'.$this->note->id,
         ];
     }
 }

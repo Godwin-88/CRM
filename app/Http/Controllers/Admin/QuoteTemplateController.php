@@ -54,6 +54,7 @@ class QuoteTemplateController extends Controller
         }
 
         $quoteTemplate->delete();
+
         return response()->json(null, 204);
     }
 }

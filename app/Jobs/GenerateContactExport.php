@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Contact;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -30,12 +31,12 @@ class GenerateContactExport implements ShouldQueue
 
         // Apply filters
         foreach ($this->filters as $field => $value) {
-            if (!empty($value)) {
+            if (! empty($value)) {
                 if ($field === 'search') {
                     $query->where(function ($q) use ($value) {
                         $q->where('first_name', 'like', "%{$value}%")
-                          ->orWhere('last_name', 'like', "%{$value}%")
-                          ->orWhere('email', 'like', "%{$value}%");
+                            ->orWhere('last_name', 'like', "%{$value}%")
+                            ->orWhere('email', 'like', "%{$value}%");
                     });
                 } elseif (in_array($field, ['type', 'status', 'source', 'loyalty_tier'])) {
                     $query->where($field, $value);
@@ -49,7 +50,7 @@ class GenerateContactExport implements ShouldQueue
             }
         }
 
-        $filename = 'exports/contacts_' . Str::ulid() . '.csv';
+        $filename = 'exports/contacts_'.Str::ulid().'.csv';
         $filePath = Storage::path($filename);
 
         $file = fopen($filePath, 'w');
@@ -69,7 +70,7 @@ class GenerateContactExport implements ShouldQueue
 
         // Log export to audit
         activity()
-            ->causedBy(\App\Models\User::find($this->userId))
+            ->causedBy(User::find($this->userId))
             ->withProperties([
                 'filename' => $filename,
                 'record_count' => $query->count(),

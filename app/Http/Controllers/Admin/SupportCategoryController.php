@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\TicketCategory;
 use App\Models\SlaDefinition;
 use App\Models\Team;
+use App\Models\TicketCategory;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

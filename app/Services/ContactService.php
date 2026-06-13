@@ -6,6 +6,7 @@ use App\Models\Contact;
 use App\Models\CustomFieldValue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ContactService
 {
@@ -16,11 +17,11 @@ class ContactService
             if (isset($data['email'])) {
                 $existing = Contact::where('email', $data['email'])->first();
                 if ($existing) {
-                    throw new \Illuminate\Validation\ValidationException(
+                    throw new ValidationException(
                         validator([], []),
                         response()->json([
                             'message' => 'A contact with this email already exists.',
-                            'errors' => ['email' => ['Email is already in use by contact: ' . $existing->first_name . ' ' . $existing->last_name]],
+                            'errors' => ['email' => ['Email is already in use by contact: '.$existing->first_name.' '.$existing->last_name]],
                         ], 422)
                     );
                 }
@@ -65,13 +66,13 @@ class ContactService
             $this->saveCustomFieldValues($contact, $customFields);
 
             // Log audit with old and new values for changed fields
-            if (!empty($changedFields)) {
+            if (! empty($changedFields)) {
                 activity()
                     ->performedOn($contact)
                     ->causedBy(auth()->user())
                     ->withProperties([
-                        'old_values' => array_map(fn($v) => $v['old'], $changedFields),
-                        'new_values' => array_map(fn($v) => $v['new'], $changedFields),
+                        'old_values' => array_map(fn ($v) => $v['old'], $changedFields),
+                        'new_values' => array_map(fn ($v) => $v['new'], $changedFields),
                         'changed_fields' => array_keys($changedFields),
                     ])
                     ->event('updated')
@@ -82,7 +83,7 @@ class ContactService
         });
     }
 
-    public function deleteContact(Contact $contact): bool|null
+    public function deleteContact(Contact $contact): ?bool
     {
         return DB::transaction(function () use ($contact) {
             activity()

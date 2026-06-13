@@ -66,6 +66,7 @@ class WinLossReasonController extends Controller
         }
 
         $winLossReason->delete();
+
         return response()->json(null, 204);
     }
 }

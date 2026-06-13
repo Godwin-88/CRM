@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\Deal;
-use App\Models\Product;
-use App\Models\Account;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -28,7 +26,7 @@ class FinanceAnalyticsService
             ->groupBy('products.id', 'products.name', 'products.category')
             ->orderBy('total_revenue', 'desc')
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'product' => $item->name,
                 'category' => $item->category,
                 'total_revenue' => $item->total_revenue,
@@ -53,7 +51,7 @@ class FinanceAnalyticsService
             ->groupBy('accounts.id', 'accounts.name')
             ->orderBy('total_revenue', 'desc')
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'account' => $item->name,
                 'total_revenue' => $item->total_revenue,
                 'deal_count' => $item->deal_count,
@@ -71,14 +69,14 @@ class FinanceAnalyticsService
             DB::raw("TO_CHAR(updated_at, 'YYYY-MM') as month"),
             DB::raw('sum(value) as revenue')
         )
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get()
-        ->map(fn($item) => [
-            'month' => $item->month,
-            'revenue' => $item->revenue,
-        ])
-        ->toArray();
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->map(fn ($item) => [
+                'month' => $item->month,
+                'revenue' => $item->revenue,
+            ])
+            ->toArray();
     }
 
     public function getAccountsReceivableAging(array $filters = []): array
@@ -99,7 +97,7 @@ class FinanceAnalyticsService
 
         foreach ($deals as $deal) {
             $days = Carbon::parse($deal->expected_close_date)->diffInDays($now);
-            
+
             if ($days <= 30) {
                 $aging['current']['value'] += $deal->value;
                 $aging['current']['count']++;
@@ -134,14 +132,14 @@ class FinanceAnalyticsService
                 ->select('pipelines.name', DB::raw('sum(deals.value) as value'))
                 ->groupBy('pipelines.id', 'pipelines.name')
                 ->get()
-                ->map(fn($item) => ['name' => $item->name, 'value' => $item->value])
+                ->map(fn ($item) => ['name' => $item->name, 'value' => $item->value])
                 ->toArray(),
 
             'by_contact_type' => $query->join('contacts', 'contacts.id', '=', 'deals.contact_id')
                 ->select('contacts.type', DB::raw('sum(deals.value) as value'))
                 ->groupBy('contacts.type')
                 ->get()
-                ->map(fn($item) => ['type' => $item->type, 'value' => $item->value])
+                ->map(fn ($item) => ['type' => $item->type, 'value' => $item->value])
                 ->toArray(),
 
             'by_region' => $query->join('accounts', 'accounts.id', '=', 'deals.account_id')
@@ -149,7 +147,7 @@ class FinanceAnalyticsService
                 ->whereNotNull('accounts.billing_country')
                 ->groupBy('accounts.billing_country')
                 ->get()
-                ->map(fn($item) => ['country' => $item->billing_country, 'value' => $item->value])
+                ->map(fn ($item) => ['country' => $item->billing_country, 'value' => $item->value])
                 ->toArray(),
         ];
     }
@@ -167,7 +165,7 @@ class FinanceAnalyticsService
     protected function applyTeamFilters($query, array $filters): void
     {
         if (isset($filters['team_id'])) {
-            $query->whereHas('owner', fn($q) => $q->where('team_id', $filters['team_id']));
+            $query->whereHas('owner', fn ($q) => $q->where('team_id', $filters['team_id']));
         }
         if (isset($filters['owner_id'])) {
             $query->where('owner_id', $filters['owner_id']);

@@ -2,16 +2,18 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleAndPermissionSeeder extends Seeder
 {
     public function run(): void
     {
         // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // ─── Permissions ──────────────────────────────────────────
         $permissions = [
@@ -59,6 +61,23 @@ class RoleAndPermissionSeeder extends Seeder
 
             // Import/Export
             'contacts.import',
+
+            // Contracts
+            'view contracts',
+            'create contracts',
+            'edit contracts',
+            'delete contracts',
+            'manage contract_templates',
+            'view legal_matters',
+            'create legal_matters',
+            'edit legal_matters',
+            'delete legal_matters',
+
+            // Opportunities
+            'view opportunities',
+            'create opportunities',
+            'edit opportunities',
+            'delete opportunities',
         ];
 
         foreach ($permissions as $permission) {
@@ -83,6 +102,9 @@ class RoleAndPermissionSeeder extends Seeder
             'manage win_loss_reasons',
             'manage quote_templates',
             'manage scoring rules',
+            'view contracts', 'create contracts', 'edit contracts',
+            'manage contract_templates',
+            'view legal_matters', 'create legal_matters', 'edit legal_matters',
         ]);
 
         // Agent — create and edit, but not delete
@@ -106,7 +128,7 @@ class RoleAndPermissionSeeder extends Seeder
         ]);
 
         // Assign admin role to the first user (if exists)
-        if ($user = \App\Models\User::first()) {
+        if ($user = User::first()) {
             $user->assignRole('admin');
         }
     }

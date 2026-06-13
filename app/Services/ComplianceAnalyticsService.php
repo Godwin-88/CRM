@@ -60,16 +60,16 @@ class ComplianceAnalyticsService
             ->orderBy('count', 'desc')
             ->limit(10)
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'user_id' => $item->causer_id,
                 'name' => User::find($item->causer_id)?->name ?? 'Unknown',
                 'count' => $item->count,
             ]);
 
         $dailyActivity = $query->select(
-                DB::raw("TO_CHAR(created_at, 'YYYY-MM-DD') as date"),
-                DB::raw('count(*) as count')
-            )
+            DB::raw("TO_CHAR(created_at, 'YYYY-MM-DD') as date"),
+            DB::raw('count(*) as count')
+        )
             ->groupBy('date')
             ->orderBy('date')
             ->get();

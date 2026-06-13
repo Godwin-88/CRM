@@ -93,6 +93,7 @@ class SegmentController extends Controller
     {
         $this->authorize('delete', $segment);
         $segment->delete();
+
         return response()->json(null, 204);
     }
 

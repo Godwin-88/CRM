@@ -2,8 +2,10 @@
 
 namespace App\Jobs;
 
-use App\Models\Survey;
 use App\Models\Contact;
+use App\Models\Notification;
+use App\Models\Survey;
+use App\Services\SmsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,14 +24,14 @@ class SendSurveySms implements ShouldQueue
     public function handle(): void
     {
         $token = encrypt($this->contact->id);
-        $url = url('/survey/' . $this->survey->id . '/' . $token);
+        $url = url('/survey/'.$this->survey->id.'/'.$token);
 
-        app(\App\Services\SmsService::class)->send(
+        app(SmsService::class)->send(
             $this->contact->phone,
             "Complete our survey: {$url}"
         );
 
-        \App\Models\Notification::create([
+        Notification::create([
             'user_id' => $this->contact->id,
             'type' => 'survey_invitation_sms',
             'data' => [

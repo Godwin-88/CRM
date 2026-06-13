@@ -33,12 +33,14 @@ class ProcessInboundEmail implements ShouldQueue
         // Check for auto-reply headers
         if ($this->isAutoReply($headers)) {
             Log::info('Discarded auto-reply email', ['from' => $fromEmail]);
+
             return;
         }
 
         // Check for spam markers
         if ($this->isSpam($body, $headers)) {
             Log::info('Discarded spam email', ['from' => $fromEmail]);
+
             return;
         }
 
@@ -51,6 +53,7 @@ class ProcessInboundEmail implements ShouldQueue
 
             if ($ticket) {
                 $this->createTicketInteraction($ticket, $fromEmail, $subject, $body);
+
                 return;
             }
         }
@@ -61,7 +64,7 @@ class ProcessInboundEmail implements ShouldQueue
             $contact = Contact::where('email', $fromEmail)->first();
         }
 
-        if (!$contact && $fromEmail) {
+        if (! $contact && $fromEmail) {
             $contact = $this->createContactFromEmail($fromEmail, $this->emailData['from_name'] ?? null);
         }
 
@@ -81,7 +84,7 @@ class ProcessInboundEmail implements ShouldQueue
         $autoReplyHeaders = ['Auto-Submitted', 'X-Autoreply', 'X-Auto-Reply', 'Precedence'];
 
         foreach ($autoReplyHeaders as $header) {
-            if (!empty($headers[$header])) {
+            if (! empty($headers[$header])) {
                 return true;
             }
         }
@@ -94,7 +97,7 @@ class ProcessInboundEmail implements ShouldQueue
         // Basic spam check - can be extended with more sophisticated logic
         $spamIndicators = ['spam', 'viagra', 'casino', 'lottery'];
 
-        $content = strtolower($body . ' ' . ($headers['Subject'] ?? ''));
+        $content = strtolower($body.' '.($headers['Subject'] ?? ''));
         foreach ($spamIndicators as $indicator) {
             if (str_contains($content, $indicator)) {
                 return true;

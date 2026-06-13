@@ -67,6 +67,7 @@ class ScoringService
             $date = is_string($value) ? strtotime($value) : $value;
             $start = strtotime($min);
             $end = strtotime($max);
+
             return $date >= $start && $date <= $end;
         }
 
@@ -80,6 +81,7 @@ class ScoringService
     {
         $score = $this->calculateScore($contact);
         $contact->update(['score' => $score]);
+
         return $score;
     }
 
@@ -123,6 +125,7 @@ class ScoringService
         if ($score >= $thresholds['amber_min']) {
             return 'amber';
         }
+
         return 'red';
     }
 }

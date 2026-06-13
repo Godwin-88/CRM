@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\SlaDefinition;
-use App\Models\Ticket;
 use App\Models\BusinessHours;
 use App\Models\Holiday;
+use App\Models\SlaDefinition;
+use App\Models\SlaInstance;
 use App\Models\TeamMember;
+use App\Models\Ticket;
 use App\Models\User;
+use App\Notifications\SlaBreachWarning;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -17,7 +19,7 @@ class SlaService
     public function assignSlaToTicket(Ticket $ticket): ?SlaDefinition
     {
         $contact = $ticket->contact;
-        if (!$contact) {
+        if (! $contact) {
             return null;
         }
 
@@ -28,25 +30,25 @@ class SlaService
         $sla = SlaDefinition::where('loyalty_tier_id', $tier)->first();
 
         // Second try: match by account type
-        if (!$sla && $accountType) {
+        if (! $sla && $accountType) {
             $sla = SlaDefinition::where('account_type', $accountType)->first();
         }
 
         // Third try: default SLA
-        if (!$sla) {
+        if (! $sla) {
             $sla = SlaDefinition::where('is_default', true)->first();
         }
 
-        if (!$sla) {
+        if (! $sla) {
             return null;
         }
 
         $businessHours = $sla->businessHours()->first();
-        if (!$businessHours) {
+        if (! $businessHours) {
             $businessHours = BusinessHours::where('is_global', true)->first();
         }
 
-        if (!$businessHours) {
+        if (! $businessHours) {
             return $sla;
         }
 
@@ -68,7 +70,7 @@ class SlaService
 
     public function calculateDeadline(Carbon $start, ?int $businessHours, BusinessHours $bizHours): ?Carbon
     {
-        if (!$businessHours) {
+        if (! $businessHours) {
             return $start->addHours(24);
         }
 
@@ -81,6 +83,7 @@ class SlaService
         while ($hoursRemaining > 0) {
             if ($this->isHoliday($deadline)) {
                 $deadline->addDay();
+
                 continue;
             }
 
@@ -91,6 +94,7 @@ class SlaService
                     $deadline->setTime($startTime->hour, $startTime->minute);
                 } elseif ($currentTime->gte($endTime)) {
                     $deadline->addDay()->setTime($startTime->hour, $startTime->minute);
+
                     continue;
                 }
 
@@ -114,7 +118,7 @@ class SlaService
     public function pauseTimer(Ticket $ticket): void
     {
         $instance = $ticket->slaInstance;
-        if (!$instance || $instance->first_response_met_at || $instance->resolution_met_at) {
+        if (! $instance || $instance->first_response_met_at || $instance->resolution_met_at) {
             return;
         }
 
@@ -128,7 +132,7 @@ class SlaService
     public function resumeTimer(Ticket $ticket): void
     {
         $instance = $ticket->slaInstance;
-        if (!$instance || !$instance->paused_at || $instance->first_response_met_at || $instance->resolution_met_at) {
+        if (! $instance || ! $instance->paused_at || $instance->first_response_met_at || $instance->resolution_met_at) {
             return;
         }
 
@@ -145,7 +149,7 @@ class SlaService
     public function checkFirstResponseMet(Ticket $ticket): void
     {
         $instance = $ticket->slaInstance;
-        if (!$instance || $instance->first_response_met_at) {
+        if (! $instance || $instance->first_response_met_at) {
             return;
         }
 
@@ -161,7 +165,7 @@ class SlaService
     public function checkResolutionMet(Ticket $ticket): void
     {
         $instance = $ticket->slaInstance;
-        if (!$instance || $instance->resolution_met_at) {
+        if (! $instance || $instance->resolution_met_at) {
             return;
         }
 
@@ -207,8 +211,8 @@ class SlaService
             ->get();
 
         foreach ($instances as $instance) {
-            $instanceRecord = \App\Models\SlaInstance::find($instance->id);
-            if (!$instanceRecord || $instanceRecord->resolution_met_at) {
+            $instanceRecord = SlaInstance::find($instance->id);
+            if (! $instanceRecord || $instanceRecord->resolution_met_at) {
                 continue;
             }
 
@@ -233,7 +237,7 @@ class SlaService
 
         foreach ($instances as $instance) {
             $sla = SlaDefinition::find($instance->sla_definition_id);
-            if (!$sla) {
+            if (! $sla) {
                 continue;
             }
 
@@ -241,7 +245,7 @@ class SlaService
             $now = now();
             $ticket = Ticket::find($instance->ticket_id);
 
-            if ($instance->first_response_deadline && !$instance->first_response_met_at) {
+            if ($instance->first_response_deadline && ! $instance->first_response_met_at) {
                 $elapsed = $instance->assigned_at->diffInSeconds($now);
                 $total = $instance->assigned_at->diffInSeconds($instance->first_response_deadline);
                 if ($total > 0 && ($elapsed / $total) >= $warningThreshold) {
@@ -249,7 +253,7 @@ class SlaService
                 }
             }
 
-            if ($instance->resolution_deadline && !$instance->resolution_met_at) {
+            if ($instance->resolution_deadline && ! $instance->resolution_met_at) {
                 $elapsed = $instance->assigned_at->diffInSeconds($now);
                 $total = $instance->assigned_at->diffInSeconds($instance->resolution_deadline);
                 if ($total > 0 && ($elapsed / $total) >= $warningThreshold) {
@@ -286,7 +290,7 @@ class SlaService
     private function sendWarning(?Ticket $ticket, string $ticketId, string $type): void
     {
         $ticket = $ticket ?? Ticket::find($ticketId);
-        if (!$ticket) {
+        if (! $ticket) {
             return;
         }
 
@@ -294,11 +298,11 @@ class SlaService
         $manager = $this->getManagerForTicket($ticket);
 
         if ($agent) {
-            Notification::send($agent, new \App\Notifications\SlaBreachWarning($ticket, $type));
+            Notification::send($agent, new SlaBreachWarning($ticket, $type));
         }
 
         if ($manager) {
-            Notification::send($manager, new \App\Notifications\SlaBreachWarning($ticket, $type));
+            Notification::send($manager, new SlaBreachWarning($ticket, $type));
         }
     }
 
@@ -307,7 +311,7 @@ class SlaService
         $assignment = TeamMember::where('user_id', $ticket->assigned_to)
             ->first();
 
-        if (!$assignment) {
+        if (! $assignment) {
             return null;
         }
 

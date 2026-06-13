@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendSurveyInvitation;
+use App\Jobs\SendSurveySms;
+use App\Models\Contact;
 use App\Models\Survey;
 use App\Models\SurveyResponse;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class SurveyController extends Controller
 {
@@ -90,11 +93,11 @@ class SurveyController extends Controller
 
         if ($survey->channel === 'email') {
             foreach ($recipients as $contact) {
-                \App\Jobs\SendSurveyInvitation::dispatch($survey, $contact);
+                SendSurveyInvitation::dispatch($survey, $contact);
             }
         } else {
             foreach ($recipients as $contact) {
-                \App\Jobs\SendSurveySms::dispatch($survey, $contact);
+                SendSurveySms::dispatch($survey, $contact);
             }
         }
 
@@ -148,8 +151,8 @@ class SurveyController extends Controller
         ]);
 
         activity()
-            ->performedOn(\App\Models\Contact::findOrFail($validated['contact_id']))
-            ->causedBy(auth()->user() ?? \App\Models\User::find(1))
+            ->performedOn(Contact::findOrFail($validated['contact_id']))
+            ->causedBy(auth()->user() ?? User::find(1))
             ->withProperties(['survey_id' => $surveyId, 'score' => $validated['score']])
             ->event('survey_responded')
             ->log('Contact responded to survey');
@@ -167,7 +170,7 @@ class SurveyController extends Controller
         }
 
         $contactId = decrypt($token);
-        $contact = \App\Models\Contact::findOrFail($contactId);
+        $contact = Contact::findOrFail($contactId);
 
         $existingResponse = SurveyResponse::where('survey_id', $surveyId)
             ->where('contact_id', $contactId)
@@ -242,7 +245,7 @@ class SurveyController extends Controller
         }
 
         $openTextResponses = $responses->whereNotNull('open_text_answer')
-            ->map(fn($r) => [
+            ->map(fn ($r) => [
                 'contact_name' => $r->contact->full_name,
                 'response' => $r->open_text_answer,
                 'responded_at' => $r->responded_at,
@@ -263,7 +266,7 @@ class SurveyController extends Controller
     private function getRecipients(Survey $survey)
     {
         if ($survey->contact_ids && count($survey->contact_ids) > 0) {
-            return \App\Models\Contact::whereIn('id', $survey->contact_ids)->get();
+            return Contact::whereIn('id', $survey->contact_ids)->get();
         }
 
         if ($survey->segment_id) {
@@ -273,6 +276,6 @@ class SurveyController extends Controller
             }
         }
 
-        return \App\Models\Contact::all();
+        return Contact::all();
     }
 }

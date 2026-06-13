@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Activity;
 
 class Account extends Model
 {
@@ -89,6 +90,6 @@ class Account extends Model
 
     public function activitiesLog(): MorphMany
     {
-        return $this->morphMany(\Spatie\Activitylog\Models\Activity::class, 'subject');
+        return $this->morphMany(Activity::class, 'subject');
     }
 }

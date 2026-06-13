@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BusinessHours;
 use App\Models\SlaDefinition;
 use App\Models\SlaInstance;
-use App\Models\Ticket;
-use App\Models\BusinessHours;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

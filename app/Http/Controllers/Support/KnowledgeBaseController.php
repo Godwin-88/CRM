@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Support;
 
 use App\Http\Controllers\Controller;
 use App\Models\KnowledgeBaseArticle;
+use App\Models\KnowledgeBaseCategory;
+use App\Models\Ticket;
 use App\Services\KnowledgeBaseService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,8 +23,8 @@ class KnowledgeBaseController extends Controller
             ->published();
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%')
-                ->orWhere('body', 'like', '%' . $request->search . '%');
+            $query->where('title', 'like', '%'.$request->search.'%')
+                ->orWhere('body', 'like', '%'.$request->search.'%');
         }
 
         if ($request->filled('category_id')) {
@@ -30,7 +32,7 @@ class KnowledgeBaseController extends Controller
         }
 
         $articles = $query->orderBy('published_at', 'desc')->paginate(20);
-        $categories = \App\Models\KnowledgeBaseCategory::with('children')
+        $categories = KnowledgeBaseCategory::with('children')
             ->orderBy('sort_order')
             ->get();
 
@@ -66,7 +68,7 @@ class KnowledgeBaseController extends Controller
             'ticket_id' => 'required|exists:tickets,id',
         ]);
 
-        $ticket = \App\Models\Ticket::find($validated['ticket_id']);
+        $ticket = Ticket::find($validated['ticket_id']);
         $ticket->linkedArticles()->attach($article->id);
 
         return back()->with('success', 'Article linked to ticket.');

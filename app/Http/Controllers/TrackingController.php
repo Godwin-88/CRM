@@ -48,7 +48,7 @@ class TrackingController extends Controller
         }
 
         $pixel = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGU2QDhEAQAAAABJRU5ErkJggg==');
-        
+
         return response($pixel, 200)->header('Content-Type', 'image/png')->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 }

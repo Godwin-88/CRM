@@ -19,7 +19,7 @@ class CampaignWebController extends Controller
             ->get();
 
         $segments = Segment::orderBy('name')->get();
-        
+
         $templates = CampaignTemplate::where('is_active', true)->orderBy('name')->limit(100)->get();
 
         return Inertia::render('Campaigns/Index', [

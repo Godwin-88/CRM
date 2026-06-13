@@ -60,6 +60,6 @@ class Activity extends Model
 
     public function isOverdue(): bool
     {
-        return $this->due_at->isPast() && !$this->isCompleted();
+        return $this->due_at->isPast() && ! $this->isCompleted();
     }
 }

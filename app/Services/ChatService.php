@@ -2,15 +2,20 @@
 
 namespace App\Services;
 
-use App\Models\Interaction;
+use App\Events\AgentJoinedChat;
+use App\Events\ChatMessageReceived;
+use App\Events\ChatSessionClosed;
+use App\Events\ChatSessionTimeout;
+use App\Events\NewChatSession;
+use App\Models\Activity;
 use App\Models\ChatSession;
-use App\Models\UnmatchedItem;
 use App\Models\Contact;
-use Illuminate\Support\Facades\Cache;
+use App\Models\Interaction;
 
 class ChatService
 {
     private int $defaultTimeout = 180; // 3 minutes
+
     private int $maxConcurrentPerAgent = 3;
 
     public function startSession(array $data): ChatSession
@@ -18,7 +23,7 @@ class ChatService
         $visitorToken = $data['visitor_token'] ?? uniqid();
         $contact = null;
 
-        if (!empty($data['email'])) {
+        if (! empty($data['email'])) {
             $contact = Contact::where('email', $data['email'])->first();
         }
 
@@ -91,7 +96,7 @@ class ChatService
 
         // Append to interaction body
         $prefix = $isCustomer ? 'Customer' : 'Agent';
-        $session->interaction->body .= "\n[{$prefix}] " . $message;
+        $session->interaction->body .= "\n[{$prefix}] ".$message;
 
         if (strlen($session->interaction->body) > 65535) {
             $session->interaction->body = substr($session->interaction->body, -65535);
@@ -144,8 +149,8 @@ class ChatService
         ]);
 
         // Create callback task
-        \App\Models\Activity::create([
-            'subject' => 'Callback for missed chat: ' . ($session->visitor_name ?? 'Unknown'),
+        Activity::create([
+            'subject' => 'Callback for missed chat: '.($session->visitor_name ?? 'Unknown'),
             'type' => 'task',
             'contact_id' => $session->matched_contact_id,
             'assigned_to' => $session->assigned_agent_id,
@@ -158,26 +163,26 @@ class ChatService
 
     private function broadcastNewChat(ChatSession $session): void
     {
-        broadcast(new \App\Events\NewChatSession($session))->toOthers();
+        broadcast(new NewChatSession($session))->toOthers();
     }
 
     private function broadcastAgentJoined(ChatSession $session): void
     {
-        broadcast(new \App\Events\AgentJoinedChat($session))->toOthers();
+        broadcast(new AgentJoinedChat($session))->toOthers();
     }
 
     private function broadcastMessage(ChatSession $session, string $sender, string $message): void
     {
-        broadcast(new \App\Events\ChatMessageReceived($session, $sender, $message))->toOthers();
+        broadcast(new ChatMessageReceived($session, $sender, $message))->toOthers();
     }
 
     private function broadcastSessionClosed(ChatSession $session): void
     {
-        broadcast(new \App\Events\ChatSessionClosed($session))->toOthers();
+        broadcast(new ChatSessionClosed($session))->toOthers();
     }
 
     private function broadcastTimeout(ChatSession $session): void
     {
-        broadcast(new \App\Events\ChatSessionTimeout($session))->toOthers();
+        broadcast(new ChatSessionTimeout($session))->toOthers();
     }
 }

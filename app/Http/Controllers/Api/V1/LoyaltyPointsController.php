@@ -3,25 +3,24 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
 use App\Models\LoyaltyEnrollment;
 use App\Models\LoyaltyProgram;
 use App\Models\PointsLedger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class LoyaltyPointsController extends Controller
 {
     public function enroll(Request $request, $contactId): JsonResponse
     {
-        $this->authorize('update', \App\Models\Contact::class);
+        $this->authorize('update', Contact::class);
 
         $validated = $request->validate([
             'program_id' => 'required|exists:loyalty_programs,id',
         ]);
 
-        $contact = \App\Models\Contact::findOrFail($contactId);
+        $contact = Contact::findOrFail($contactId);
 
         $existing = LoyaltyEnrollment::where('contact_id', $contact->id)
             ->where('is_active', true)
@@ -55,7 +54,7 @@ class LoyaltyPointsController extends Controller
 
     public function unenroll(Request $request, $contactId): JsonResponse
     {
-        $this->authorize('update', \App\Models\Contact::class);
+        $this->authorize('update', Contact::class);
 
         $validated = $request->validate([
             'reason' => 'nullable|string|max:500',
@@ -75,7 +74,7 @@ class LoyaltyPointsController extends Controller
         ]);
 
         activity()
-            ->performedOn(\App\Models\Contact::findOrFail($contactId))
+            ->performedOn(Contact::findOrFail($contactId))
             ->causedBy(auth()->user())
             ->withProperties(['reason' => $validated['reason'] ?? null])
             ->event('unenrolled')
@@ -86,7 +85,7 @@ class LoyaltyPointsController extends Controller
 
     public function ledger(Request $request, $contactId): JsonResponse
     {
-        $this->authorize('view', \App\Models\Contact::findOrFail($contactId));
+        $this->authorize('view', Contact::findOrFail($contactId));
 
         $query = PointsLedger::where('contact_id', $contactId)
             ->with(['program', 'enrollment'])
@@ -101,7 +100,7 @@ class LoyaltyPointsController extends Controller
 
     public function balance(Request $request, $contactId): JsonResponse
     {
-        $this->authorize('view', \App\Models\Contact::findOrFail($contactId));
+        $this->authorize('view', Contact::findOrFail($contactId));
 
         $enrollment = LoyaltyEnrollment::where('contact_id', $contactId)
             ->where('is_active', true)
@@ -176,7 +175,7 @@ class LoyaltyPointsController extends Controller
         ]);
 
         activity()
-            ->performedOn(\App\Models\Contact::findOrFail($contactId))
+            ->performedOn(Contact::findOrFail($contactId))
             ->causedBy(auth()->user())
             ->withProperties([
                 'program_id' => $validated['program_id'],

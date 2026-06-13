@@ -3,43 +3,36 @@
 namespace App\Services;
 
 use App\Models\Interaction;
-use App\Models\InteractionAttachment;
-use App\Models\EmailTemplate;
-use App\Models\UnmatchedItem;
-use App\Models\Contact;
-use App\Models\Integration;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class InteractionService
 {
-    public function getInbox(string $agentId, bool $teamView = false, array $filters = [], int $perPage = 50): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function getInbox(string $agentId, bool $teamView = false, array $filters = [], int $perPage = 50): LengthAwarePaginator
     {
         $query = Interaction::query()
             ->with(['contact', 'agent', 'channel']);
 
-        if (!$teamView && $agentId !== 'all') {
+        if (! $teamView && $agentId !== 'all') {
             $query->where('agent_id', $agentId);
         }
 
         // Filters
-        if (!empty($filters['channel'])) {
+        if (! empty($filters['channel'])) {
             $query->where('type', $filters['channel']);
         }
-        if (!empty($filters['direction'])) {
+        if (! empty($filters['direction'])) {
             $query->where('direction', $filters['direction']);
         }
-        if (!empty($filters['contact_id'])) {
+        if (! empty($filters['contact_id'])) {
             $query->where('contact_id', $filters['contact_id']);
         }
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);
         }
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
-        if (!empty($filters['is_reviewed'])) {
+        if (! empty($filters['is_reviewed'])) {
             $query->where('is_reviewed', $filters['is_reviewed']);
         }
 
@@ -51,7 +44,7 @@ class InteractionService
         $interaction = Interaction::where('id', $interactionId)
             ->where(function ($q) use ($agentId) {
                 $q->where('agent_id', $agentId)
-                  ->orWhere('is_locked', false);
+                    ->orWhere('is_locked', false);
             })
             ->firstOrFail();
 

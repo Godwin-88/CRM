@@ -2,8 +2,11 @@
 
 namespace App\Jobs;
 
-use App\Models\GuidedJourney;
-use App\Models\JourneyCompletion;
+use App\Mail\LoyaltyCommunicationMail;
+use App\Models\LoyaltyCommunicationLog;
+use App\Models\LoyaltyCommunicationPreference;
+use App\Models\Notification;
+use App\Services\SmsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,22 +28,24 @@ class SendLoyaltyCommunication implements ShouldQueue
         $channel = $this->template->channel;
 
         // Respect opt-out preferences
-        $pref = \App\Models\LoyaltyCommunicationPreference::where('contact_id', $this->contact->id)->first();
+        $pref = LoyaltyCommunicationPreference::where('contact_id', $this->contact->id)->first();
         if ($pref && $pref->loyalty_opt_out) {
             $this->logDelivery('skipped');
+
             return;
         }
 
         // Check contact general marketing opt-out
         if (method_exists($this->contact, 'marketing_opt_out') && $this->contact->marketing_opt_out) {
             $this->logDelivery('skipped');
+
             return;
         }
 
         // Render template with variables
         $content = $this->renderTemplate();
 
-        $log = \App\Models\LoyaltyCommunicationLog::create([
+        $log = LoyaltyCommunicationLog::create([
             'template_id' => $this->template->id,
             'contact_id' => $this->contact->id,
             'channel' => $channel,
@@ -51,14 +56,14 @@ class SendLoyaltyCommunication implements ShouldQueue
         try {
             switch ($channel) {
                 case 'email':
-                    \Mail::to($this->contact->email)->send(new \App\Mail\LoyaltyCommunicationMail($content, $this->template));
+                    \Mail::to($this->contact->email)->send(new LoyaltyCommunicationMail($content, $this->template));
                     break;
                 case 'sms':
                     // Use Twilio/SMS provider
-                    app(\App\Services\SmsService::class)->send($this->contact->phone, $content);
+                    app(SmsService::class)->send($this->contact->phone, $content);
                     break;
                 case 'inapp':
-                    \App\Models\Notification::create([
+                    Notification::create([
                         'user_id' => $this->contact->id,
                         'type' => 'loyalty_communication',
                         'data' => ['template_id' => $this->template->id, 'content' => $content],
@@ -88,7 +93,7 @@ class SendLoyaltyCommunication implements ShouldQueue
 
         // Replace template variables
         $variables = [
-            '{{contact_name}}' => $contact->first_name . ' ' . $contact->last_name,
+            '{{contact_name}}' => $contact->first_name.' '.$contact->last_name,
             '{{current_tier}}' => $contact->loyalty_tier ?? 'Bronze',
             '{{program_name}}' => $this->template->program?->name ?? 'Loyalty Program',
             '{{points_balance}}' => method_exists($contact, 'getLoyaltyPointsBalance') ? $contact->getLoyaltyPointsBalance() : 0,
@@ -105,6 +110,7 @@ class SendLoyaltyCommunication implements ShouldQueue
     {
         $currentTier = $contact->loyalty_tier ?? 'bronze';
         $tiers = ['bronze' => 'Silver', 'silver' => 'Gold', 'gold' => 'Platinum', 'platinum' => 'Max Tier'];
+
         return $tiers[$currentTier] ?? 'Unknown';
     }
 
@@ -123,12 +129,13 @@ class SendLoyaltyCommunication implements ShouldQueue
         if (method_exists($contact, 'getPointsExpiryDate')) {
             return $contact->getPointsExpiryDate()?->format('Y-m-d');
         }
+
         return null;
     }
 
     private function logDelivery(string $status): void
     {
-        \App\Models\LoyaltyCommunicationLog::create([
+        LoyaltyCommunicationLog::create([
             'template_id' => $this->template->id,
             'contact_id' => $this->contact->id,
             'channel' => $this->template->channel,

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Interaction;
 use App\Models\InteractionChannel;
 use App\Models\UnmatchedItem;
-use App\Models\Contact;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

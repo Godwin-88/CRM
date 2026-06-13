@@ -58,12 +58,14 @@ class ScoringRuleController extends Controller
     public function destroy(ScoringRule $scoringRule): JsonResponse
     {
         $scoringRule->delete();
+
         return response()->json(null, 204);
     }
 
     public function toggle(ScoringRule $scoringRule): JsonResponse
     {
-        $scoringRule->update(['is_enabled' => !$scoringRule->is_enabled]);
+        $scoringRule->update(['is_enabled' => ! $scoringRule->is_enabled]);
+
         return response()->json($scoringRule);
     }
 }

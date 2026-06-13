@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Deal;
 use App\Models\Quote;
 use App\Models\QuoteTemplate;
-use App\Models\QuoteLineItem;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -39,7 +38,7 @@ class QuoteService
         }
 
         $pdf = $this->generatePdf($quote, $template, $validityDays);
-        $path = "quotes/{$quote->id}/" . Str::slug($deal->title) . '.pdf';
+        $path = "quotes/{$quote->id}/".Str::slug($deal->title).'.pdf';
         Storage::disk('s3')->put($path, $pdf->output());
 
         $quote->update([
@@ -63,7 +62,7 @@ class QuoteService
 
         $replacements = [
             '{{deal_value}}' => number_format($quote->deal->value, 2),
-            '{{contact_name}}' => $quote->deal->contact->first_name . ' ' . $quote->deal->contact->last_name,
+            '{{contact_name}}' => $quote->deal->contact->first_name.' '.$quote->deal->contact->last_name,
             '{{account_name}}' => $quote->deal->account->name,
             '{{validity_date}}' => $validityDays ? now()->addDays($validityDays)->format('M j, Y') : null,
             '{{agent_name}}' => $quote->deal->owner->name,

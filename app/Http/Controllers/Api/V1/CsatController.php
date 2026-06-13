@@ -43,7 +43,7 @@ class CsatController extends Controller
     {
         $rating = $ticket->rating;
 
-        if (!$rating) {
+        if (! $rating) {
             return response()->json([
                 'message' => 'No rating found for this ticket.',
             ], 404);
@@ -57,11 +57,11 @@ class CsatController extends Controller
         $query = TicketRating::query()->with('ticket.assignee', 'ticket.category');
 
         if ($request->filled('agent_id')) {
-            $query->whereHas('ticket', fn($q) => $q->where('assigned_to', $request->agent_id));
+            $query->whereHas('ticket', fn ($q) => $q->where('assigned_to', $request->agent_id));
         }
 
         if ($request->filled('category_id')) {
-            $query->whereHas('ticket', fn($q) => $q->where('category_id', $request->category_id));
+            $query->whereHas('ticket', fn ($q) => $q->where('category_id', $request->category_id));
         }
 
         if ($request->filled('from_date')) {

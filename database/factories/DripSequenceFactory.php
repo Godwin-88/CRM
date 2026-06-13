@@ -13,7 +13,7 @@ class DripSequenceFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->words(3, true) . ' Sequence',
+            'name' => $this->faker->words(3, true).' Sequence',
             'description' => $this->faker->paragraph,
             'trigger' => $this->faker->randomElement(['contact_created', 'contact_stage_changed', 'manual_enrolment']),
             'status' => 'active',

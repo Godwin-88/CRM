@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\ReactivationConfig;
 use App\Models\Contact;
-use App\Models\ReactivationContact;
 use App\Models\DripEnrolment;
 use App\Models\DripSequence;
-use Illuminate\Support\Facades\DB;
+use App\Models\Notification;
+use App\Models\ReactivationConfig;
+use App\Models\ReactivationContact;
 
 class ReactivationService
 {
@@ -28,7 +28,7 @@ class ReactivationService
         $contacts = Contact::where('type', $config->contact_type)
             ->where(function ($query) use ($cutoffDate) {
                 $query->where('updated_at', '<', $cutoffDate)
-                      ->orWhereNull('updated_at');
+                    ->orWhereNull('updated_at');
             })
             ->whereDoesntHave('reactivationContacts', function ($query) {
                 $query->whereIn('status', ['enrolled', 're_engaged']);
@@ -42,12 +42,12 @@ class ReactivationService
 
     public function enrollContact(Contact $contact, ReactivationConfig $config): void
     {
-        if (!$config->drip_sequence_id) {
+        if (! $config->drip_sequence_id) {
             return;
         }
 
         $sequence = DripSequence::find($config->drip_sequence_id);
-        if (!$sequence || !$sequence->isActive()) {
+        if (! $sequence || ! $sequence->isActive()) {
             return;
         }
 
@@ -80,7 +80,7 @@ class ReactivationService
             ->where('status', 'enrolled')
             ->first();
 
-        if (!$reactivation) {
+        if (! $reactivation) {
             return;
         }
 
@@ -98,12 +98,12 @@ class ReactivationService
 
         $contact = Contact::find($contactId);
         if ($contact && $contact->owner_id) {
-            \App\Models\Notification::create([
+            Notification::create([
                 'user_id' => $contact->owner_id,
                 'type' => 'contact_reengaged',
                 'data' => [
                     'contact_id' => $contactId,
-                    'contact_name' => $contact->first_name . ' ' . $contact->last_name,
+                    'contact_name' => $contact->first_name.' '.$contact->last_name,
                 ],
             ]);
         }
@@ -122,7 +122,7 @@ class ReactivationService
                 $contact = Contact::find($contactId);
                 if ($contact) {
                     $tags = $contact->tags ?? [];
-                    if (!in_array($dormantTag, $tags)) {
+                    if (! in_array($dormantTag, $tags)) {
                         $tags[] = $dormantTag;
                         $contact->update(['tags' => $tags]);
                     }

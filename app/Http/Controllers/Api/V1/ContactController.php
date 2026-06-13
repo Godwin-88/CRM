@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreContactRequest;
+use App\Jobs\GenerateContactExport;
+use App\Jobs\ProcessContactImport;
 use App\Models\Contact;
 use App\Services\ContactService;
 use App\Services\DuplicateDetectionService;
@@ -11,7 +13,7 @@ use App\Services\ScoringService;
 use App\Services\TimelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class ContactController extends Controller
 {
@@ -36,18 +38,18 @@ class ContactController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
         if ($request->filled('first_name')) {
-            $query->where('first_name', 'like', '%' . $request->first_name . '%');
+            $query->where('first_name', 'like', '%'.$request->first_name.'%');
         }
         if ($request->filled('last_name')) {
-            $query->where('last_name', 'like', '%' . $request->last_name . '%');
+            $query->where('last_name', 'like', '%'.$request->last_name.'%');
         }
         if ($request->filled('email')) {
-            $query->where('email', 'like', '%' . $request->email . '%');
+            $query->where('email', 'like', '%'.$request->email.'%');
         }
         if ($request->filled('type')) {
             $query->where('type', $request->type);
@@ -94,7 +96,7 @@ class ContactController extends Controller
             $this->scoringService->updateContactScore($contact);
 
             return response()->json($contact->load(['owner', 'customFieldValues']), 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return $e->getResponse();
         }
     }
@@ -108,12 +110,22 @@ class ContactController extends Controller
 
         $contact->load([
             'owner',
-            'accounts' => function ($q) { $q->withPivot('is_primary'); },
+            'accounts' => function ($q) {
+                $q->withPivot('is_primary');
+            },
             'customFieldValues',
-            'interactions' => function ($q) { $q->latest()->limit(5); },
-            'deals' => function ($q) { $q->latest()->limit(5); },
-            'tickets' => function ($q) { $q->latest()->limit(5); },
-            'contracts' => function ($q) { $q->latest()->limit(5); },
+            'interactions' => function ($q) {
+                $q->latest()->limit(5);
+            },
+            'deals' => function ($q) {
+                $q->latest()->limit(5);
+            },
+            'tickets' => function ($q) {
+                $q->latest()->limit(5);
+            },
+            'contracts' => function ($q) {
+                $q->latest()->limit(5);
+            },
         ]);
 
         return response()->json($contact);
@@ -129,7 +141,7 @@ class ContactController extends Controller
         $validated = $request->validate([
             'first_name' => 'sometimes|string|max:255',
             'last_name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:contacts,email,' . $contact->id,
+            'email' => 'sometimes|email|unique:contacts,email,'.$contact->id,
             'phone' => 'nullable|string|max:20',
             'type' => 'sometimes|in:lead,prospect,customer,partner',
             'status' => 'sometimes|in:active,inactive,churned,reactivated',
@@ -156,6 +168,7 @@ class ContactController extends Controller
     {
         $this->authorize('delete', $contact);
         $this->contactService->deleteContact($contact);
+
         return response()->json(null, 204);
     }
 
@@ -165,7 +178,7 @@ class ContactController extends Controller
     public function bulkDelete(Request $request): JsonResponse
     {
         $this->authorize('delete', Contact::class);
-        
+
         $validated = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:contacts,id',
@@ -209,7 +222,7 @@ class ContactController extends Controller
         $fieldMapping = $request->input('field_mapping', []);
 
         // Dispatch async import job
-        \App\Jobs\ProcessContactImport::dispatch(
+        ProcessContactImport::dispatch(
             $file->store('imports'),
             $fieldMapping,
             auth()->id()
@@ -237,18 +250,19 @@ class ContactController extends Controller
 
         if ($recordCount > 500) {
             // Queue for large exports
-            \App\Jobs\GenerateContactExport::dispatch(
+            GenerateContactExport::dispatch(
                 $filters,
                 $selectedFields,
                 auth()->id()
             );
+
             return response()->json([
                 'message' => 'Export queued for large dataset. You will receive a notification when ready.',
             ], 202);
         }
 
         // Small export - generate and return immediately
-        $exportService = app(\App\Services\ContactService::class);
+        $exportService = app(ContactService::class);
         // Build a simple CSV response
         $contacts = Contact::where($filters)->get($selectedFields);
         $csv = $this->generateCsv($contacts, $selectedFields);
@@ -256,7 +270,7 @@ class ContactController extends Controller
         return response()->json([
             'message' => 'Export ready',
             'data' => $csv,
-            'filename' => 'contacts_export_' . now()->format('Ymd_His') . '.csv',
+            'filename' => 'contacts_export_'.now()->format('Ymd_His').'.csv',
         ]);
     }
 
@@ -282,7 +296,7 @@ class ContactController extends Controller
 
         return response()->json([
             'has_duplicates' => $duplicates->isNotEmpty(),
-            'duplicates' => $duplicates->map(fn($c) => [
+            'duplicates' => $duplicates->map(fn ($c) => [
                 'id' => $c->id,
                 'first_name' => $c->first_name,
                 'last_name' => $c->last_name,
@@ -325,6 +339,7 @@ class ContactController extends Controller
     {
         $contact = Contact::findOrFail($id);
         $this->authorize('view', $contact);
+
         return response()->json($contact->deals()->with('owner')->paginate());
     }
 
@@ -335,6 +350,7 @@ class ContactController extends Controller
     {
         $contact = Contact::findOrFail($id);
         $this->authorize('view', $contact);
+
         return response()->json($contact->tickets()->with('assignee')->paginate());
     }
 
@@ -414,6 +430,7 @@ class ContactController extends Controller
         rewind($output);
         $csv = stream_get_contents($output);
         fclose($output);
+
         return $csv;
     }
 }

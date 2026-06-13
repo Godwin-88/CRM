@@ -42,14 +42,15 @@ class TicketInternalNote extends Model
 
     public function isDeleted(): bool
     {
-        return !is_null($this->deleted_at);
+        return ! is_null($this->deleted_at);
     }
 
     public function isLocked(): bool
     {
-        if (!$this->created_at) {
+        if (! $this->created_at) {
             return false;
         }
+
         return $this->created_at->addMinutes(30)->isPast();
     }
 }

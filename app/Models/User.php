@@ -18,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasUlids, HasRoles, HasApiTokens;
+    use HasApiTokens, HasFactory, HasRoles, HasUlids, Notifiable;
 
     /**
      * Get the attributes that should be cast.

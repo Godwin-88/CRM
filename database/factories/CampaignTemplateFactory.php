@@ -15,7 +15,7 @@ class CampaignTemplateFactory extends Factory
         return [
             'name' => $this->faker->words(3, true),
             'subject' => $this->faker->sentence,
-            'html_content' => '<div>' . $this->faker->paragraph . '</div>',
+            'html_content' => '<div>'.$this->faker->paragraph.'</div>',
             'status' => 'draft',
             'created_by' => User::inRandomOrder()->first()?->id ?? User::factory(),
             'version' => 1,

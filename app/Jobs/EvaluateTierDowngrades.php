@@ -2,15 +2,13 @@
 
 namespace App\Jobs;
 
-use App\Models\PointsLedger;
 use App\Models\LoyaltyEnrollment;
-use App\Models\Contact;
+use App\Models\PointsLedger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Carbon\Carbon;
 
 class EvaluateTierDowngrades implements ShouldQueue
 {
@@ -30,7 +28,7 @@ class EvaluateTierDowngrades implements ShouldQueue
             $contact = $enrollment->contact;
             $program = $enrollment->program;
 
-            if (!$contact || !$program) {
+            if (! $contact || ! $program) {
                 continue;
             }
 
@@ -38,7 +36,7 @@ class EvaluateTierDowngrades implements ShouldQueue
                 ->where('name', $contact->loyalty_tier)
                 ->first();
 
-            if (!$currentTier) {
+            if (! $currentTier) {
                 continue;
             }
 
@@ -52,7 +50,7 @@ class EvaluateTierDowngrades implements ShouldQueue
                     $oldTier = $contact->loyalty_tier;
                     $contact->update(['loyalty_tier' => $newTier->name]);
 
-                    \App\Jobs\SendTierChangeNotification::dispatch($contact, $oldTier, $newTier->name);
+                    SendTierChangeNotification::dispatch($contact, $oldTier, $newTier->name);
                 }
             }
         }

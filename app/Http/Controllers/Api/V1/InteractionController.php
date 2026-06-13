@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
 use App\Models\Interaction;
 use App\Models\InteractionChannel;
-use App\Models\ChatSession;
 use App\Models\UnmatchedItem;
-use App\Services\InteractionService;
-use App\Services\EmailService;
 use App\Services\CallService;
 use App\Services\ChatService;
+use App\Services\EmailService;
+use App\Services\InteractionService;
 use App\Services\SmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -149,7 +149,7 @@ class InteractionController extends Controller
         $interaction = $this->callService->handleTwilioWebhook([
             'From' => $validated['direction'] === 'inbound' ? 'manual' : 'agent',
             'To' => $validated['direction'] === 'outbound' ? 'manual' : 'agent',
-            'CallSid' => 'manual_' . uniqid(),
+            'CallSid' => 'manual_'.uniqid(),
             'CallDuration' => $validated['duration_seconds'] ?? 0,
             'call_date' => $callDate,
             'outcome' => $validated['outcome'] ?? null,
@@ -192,7 +192,7 @@ class InteractionController extends Controller
             'resolution_note' => 'nullable|string|max:1000',
         ]);
 
-        $contact = \App\Models\Contact::findOrFail($validated['contact_id']);
+        $contact = Contact::findOrFail($validated['contact_id']);
 
         // Create inbound interaction from the unmatched item
         Interaction::create([
@@ -200,7 +200,7 @@ class InteractionController extends Controller
             'account_id' => $contact->account_id,
             'type' => $item->source_type,
             'direction' => 'inbound',
-            'subject' => $item->raw_payload['subject'] ?? $item->raw_payload['from'] ?? 'Unmatched ' . $item->source_type,
+            'subject' => $item->raw_payload['subject'] ?? $item->raw_payload['from'] ?? 'Unmatched '.$item->source_type,
             'body' => $item->raw_payload['body'] ?? $item->raw_payload['message'] ?? '',
             'agent_id' => auth()->id(),
             'metadata' => $item->raw_payload,

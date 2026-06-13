@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Deal;
 use App\Services\AnalyticsService;
-use App\Services\GrowthAnalyticsService;
 use App\Services\FinanceAnalyticsService;
+use App\Services\GrowthAnalyticsService;
 use App\Services\PredictiveScoringService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -72,14 +72,14 @@ class AnalyticsApiController extends Controller
             'deal_id' => $deal->id,
             'score' => $deal->manual_score ?? $deal->predicted_score ?? $scoring['score'],
             'label' => $this->getScoreLabel($deal->manual_score ?? $deal->predicted_score ?? $scoring['score']),
-            'is_manual' => !is_null($deal->manual_score),
+            'is_manual' => ! is_null($deal->manual_score),
             'signals' => $scoring['signals'],
         ]);
     }
 
     protected function getScoreLabel(int $score): string
     {
-        return match(true) {
+        return match (true) {
             $score <= 25 => 'cold',
             $score <= 50 => 'warm',
             $score <= 75 => 'hot',

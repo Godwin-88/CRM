@@ -17,7 +17,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Ticket extends Model implements HasMedia
 {
-    use HasFactory, HasUlids, SoftDeletes, LogsActivity, InteractsWithMedia;
+    use HasFactory, HasUlids, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -62,10 +62,10 @@ class Ticket extends Model implements HasMedia
         parent::boot();
 
         static::creating(function ($ticket) {
-            if (!$ticket->priority) {
+            if (! $ticket->priority) {
                 $ticket->priority = 'medium';
             }
-            if (!$ticket->status) {
+            if (! $ticket->status) {
                 $ticket->status = 'open';
             }
         });
@@ -150,7 +150,7 @@ class Ticket extends Model implements HasMedia
 
     public function canBeReopened(): bool
     {
-        if (!$this->resolved_at) {
+        if (! $this->resolved_at) {
             return false;
         }
 
@@ -159,7 +159,7 @@ class Ticket extends Model implements HasMedia
 
     public function isMerged(): bool
     {
-        return !is_null($this->merged_at);
+        return ! is_null($this->merged_at);
     }
 
     public function scopeOpen($query)

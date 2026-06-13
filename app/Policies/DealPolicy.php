@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Deal;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class DealPolicy
 {
@@ -18,6 +17,7 @@ class DealPolicy
         if ($user->hasRole('admin') || $user->hasRole('manager')) {
             return true;
         }
+
         return $user->id === $deal->owner_id;
     }
 
@@ -31,6 +31,7 @@ class DealPolicy
         if ($user->hasRole('admin') || $user->hasRole('manager')) {
             return true;
         }
+
         return $user->id === $deal->owner_id;
     }
 

@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\QuoteTemplate;
 use App\Models\Quote;
-use App\Models\User;
+use App\Models\QuoteTemplate;
 use Inertia\Inertia;
 use Inertia\Response;
 

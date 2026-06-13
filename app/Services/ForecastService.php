@@ -3,9 +3,7 @@
 namespace App\Services;
 
 use App\Models\Deal;
-use App\Models\Pipeline;
 use App\Models\PipelineStage;
-use App\Models\WinLossReason;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -21,19 +19,19 @@ class ForecastService
             $join->on('pipeline_stages.name', '=', 'deals.stage')
                 ->whereColumn('pipeline_stages.pipeline_id', 'deals.pipeline_id');
         })
-        ->select('deals.stage', DB::raw('sum(deals.value) as total_value'), DB::raw('sum(deals.value * pipeline_stages.probability / 100) as weighted_value'))
-        ->groupBy('deals.stage')
-        ->get()
-        ->mapWithKeys(fn($item) => [
-            $item->stage => [
-                'total_value' => (float) $item->total_value,
-                'weighted_value' => (float) $item->weighted_value,
-            ],
-        ])
-        ->toArray();
+            ->select('deals.stage', DB::raw('sum(deals.value) as total_value'), DB::raw('sum(deals.value * pipeline_stages.probability / 100) as weighted_value'))
+            ->groupBy('deals.stage')
+            ->get()
+            ->mapWithKeys(fn ($item) => [
+                $item->stage => [
+                    'total_value' => (float) $item->total_value,
+                    'weighted_value' => (float) $item->weighted_value,
+                ],
+            ])
+            ->toArray();
 
         $totalUnweighted = $query->sum('value');
-        $totalWeighted = $query->get()->sum(fn($d) => $d->getWeightedValue());
+        $totalWeighted = $query->get()->sum(fn ($d) => $d->getWeightedValue());
 
         return [
             'total_unweighted' => (float) $totalUnweighted,
@@ -53,12 +51,12 @@ class ForecastService
             DB::raw('sum(value) as total_value'),
             DB::raw('sum(value * probability / 100) as weighted_value')
         )
-        ->whereNotNull('expected_close_date')
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get();
+            ->whereNotNull('expected_close_date')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
 
-        return $buckets->map(fn($bucket) => [
+        return $buckets->map(fn ($bucket) => [
             'month' => $bucket->month,
             'total_value' => (float) $bucket->total_value,
             'weighted_value' => (float) $bucket->weighted_value,
@@ -83,7 +81,7 @@ class ForecastService
 
         $allStages = PipelineStage::with('pipeline')->get();
 
-        return $allStages->map(fn($stage) => [
+        return $allStages->map(fn ($stage) => [
             'stage' => $stage->name,
             'configured_probability' => $stage->probability,
             'historical_win_rate' => $rates->get($stage->name)?->won_count ? round($rates->get($stage->name)->won_count / max(Deal::where('created_at', '>=', $cutoff)->count(), 1) * 100, 2) : 0,
@@ -107,12 +105,12 @@ class ForecastService
             ->get();
 
         return [
-            'won' => $results->where('type', 'won')->map(fn($r) => [
+            'won' => $results->where('type', 'won')->map(fn ($r) => [
                 'label' => $r->label,
                 'count' => $r->count,
                 'total_value' => (float) $r->total_value,
             ])->toArray(),
-            'lost' => $results->where('type', 'lost')->map(fn($r) => [
+            'lost' => $results->where('type', 'lost')->map(fn ($r) => [
                 'label' => $r->label,
                 'count' => $r->count,
                 'total_value' => (float) $r->total_value,
@@ -126,7 +124,7 @@ class ForecastService
             $query->where('owner_id', $filters['owner_id']);
         }
         if (isset($filters['team_id'])) {
-            $query->whereHas('owner', fn($q) => $q->where('team_id', $filters['team_id']));
+            $query->whereHas('owner', fn ($q) => $q->where('team_id', $filters['team_id']));
         }
         if (isset($filters['pipeline_id'])) {
             $query->where('pipeline_id', $filters['pipeline_id']);

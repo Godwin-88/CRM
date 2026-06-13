@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\NotifyAgentOfJourneyCompletion;
 use App\Models\GuidedJourney;
 use App\Models\JourneyCompletion;
+use App\Models\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -57,7 +59,7 @@ class GuidedJourneyController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'slug' => 'sometimes|string|max:255|unique:guided_journeys,slug,' . $journey->id,
+            'slug' => 'sometimes|string|max:255|unique:guided_journeys,slug,'.$journey->id,
             'description' => 'nullable|string',
             'steps' => 'sometimes|array',
             'steps.*.title' => 'required|string|max:255',
@@ -156,10 +158,10 @@ class GuidedJourneyController extends Controller
 
             // If step creates a ticket, create it
             $step = $journey->steps[$stepIndex];
-            if (($step['creates_ticket'] ?? false) && !empty($inputs[$stepIndex])) {
-                \App\Models\Ticket::create([
+            if (($step['creates_ticket'] ?? false) && ! empty($inputs[$stepIndex])) {
+                Ticket::create([
                     'contact_id' => $completion->contact_id,
-                    'subject' => 'Journey completion: ' . $journey->name,
+                    'subject' => 'Journey completion: '.$journey->name,
                     'description' => json_encode($inputs[$stepIndex]),
                     'status' => 'open',
                 ]);
@@ -169,7 +171,7 @@ class GuidedJourneyController extends Controller
             if ($journey->notify_agent_on_completion) {
                 $contact = $completion->contact;
                 if ($contact->owner_id) {
-                    \App\Jobs\NotifyAgentOfJourneyCompletion::dispatch($completion, $contact->owner_id);
+                    NotifyAgentOfJourneyCompletion::dispatch($completion, $contact->owner_id);
                 }
             }
 

@@ -8,7 +8,6 @@ use App\Models\Deal;
 use App\Models\Interaction;
 use App\Models\SurveyResponse;
 use App\Models\Ticket;
-use Carbon\Carbon;
 
 class ClvCalculationService
 {
@@ -115,6 +114,7 @@ class ClvCalculationService
         if ($score >= 40) {
             return 'medium';
         }
+
         return 'low';
     }
 
@@ -147,7 +147,7 @@ class ClvCalculationService
 
     private function estimateLifespan(Contact $contact): float
     {
-        return match($contact->type) {
+        return match ($contact->type) {
             'customer' => 3.0,
             'partner' => 5.0,
             'prospect' => 0.5,

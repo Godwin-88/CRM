@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\AnalyticsService;
-use App\Services\GrowthAnalyticsService;
-use App\Services\FinanceAnalyticsService;
 use App\Services\ComplianceAnalyticsService;
+use App\Services\FinanceAnalyticsService;
+use App\Services\GrowthAnalyticsService;
 use App\Services\PredictiveScoringService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

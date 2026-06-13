@@ -2,25 +2,21 @@
 
 namespace App\Services;
 
-use App\Models\Deal;
-use App\Models\Ticket;
-use App\Models\User;
-use App\Models\Contact;
 use App\Models\Activity;
+use App\Models\Contact;
+use App\Models\Deal;
 use App\Models\Interaction;
-use App\Models\Pipeline;
-use App\Models\Product;
-use App\Models\RevenueTarget;
+use App\Models\Ticket;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class AnalyticsService
 {
     public function getDashboardMetrics(string $role, ?int $userId = null, ?int $teamId = null): array
     {
         $cacheKey = "dashboard_metrics_{$role}_{$userId}_{$teamId}";
-        
+
         return Cache::remember($cacheKey, 900, function () use ($role, $userId, $teamId) {
             $filters = $this->buildTeamFilters($teamId, $userId);
 
@@ -44,12 +40,12 @@ class AnalyticsService
     protected function buildTeamFilters(?int $teamId, ?int $userId): array
     {
         $filters = [];
-        
+
         if ($teamId) {
             $filters['team_id'] = $teamId;
         }
-        
-        if ($userId && !$teamId) {
+
+        if ($userId && ! $teamId) {
             $filters['owner_id'] = $userId;
         }
 
@@ -61,7 +57,7 @@ class AnalyticsService
         $query = Deal::query()->whereNotIn('stage', ['closed_won', 'closed_lost']);
 
         if (isset($filters['team_id'])) {
-            $query->whereHas('owner', fn($q) => $q->where('team_id', $filters['team_id']));
+            $query->whereHas('owner', fn ($q) => $q->where('team_id', $filters['team_id']));
         }
         if (isset($filters['owner_id'])) {
             $query->where('owner_id', $filters['owner_id']);
@@ -69,19 +65,17 @@ class AnalyticsService
 
         $openDeals = $query->get();
         $totalValue = $openDeals->sum('value');
-        $weightedValue = $openDeals->sum(fn($d) => $d->value * $d->probability / 100);
+        $weightedValue = $openDeals->sum(fn ($d) => $d->value * $d->probability / 100);
 
-        $byStage = $openDeals->groupBy('stage')->map(fn($deals, $stage) => [
+        $byStage = $openDeals->groupBy('stage')->map(fn ($deals, $stage) => [
             'stage' => $stage,
             'count' => $deals->count(),
             'value' => $deals->sum('value'),
-            'weighted_value' => $deals->sum(fn($d) => $d->value * $d->probability / 100),
+            'weighted_value' => $deals->sum(fn ($d) => $d->value * $d->probability / 100),
         ])->values();
 
-        $recentInteractions = Interaction::when(isset($filters['team_id']), fn($q) => 
-            $q->whereHas('agent', fn($qq) => $qq->where('team_id', $filters['team_id']))
-        )->when(isset($filters['owner_id']), fn($q) => 
-            $q->where('agent_id', $filters['owner_id'])
+        $recentInteractions = Interaction::when(isset($filters['team_id']), fn ($q) => $q->whereHas('agent', fn ($qq) => $qq->where('team_id', $filters['team_id']))
+        )->when(isset($filters['owner_id']), fn ($q) => $q->where('agent_id', $filters['owner_id'])
         )->latest()->take(5)->get();
 
         return [
@@ -89,7 +83,7 @@ class AnalyticsService
             'open_deal_value' => $totalValue,
             'weighted_pipeline_value' => $weightedValue,
             'by_stage' => $byStage,
-            'recent_interactions' => $recentInteractions->map(fn($i) => [
+            'recent_interactions' => $recentInteractions->map(fn ($i) => [
                 'id' => $i->id,
                 'type' => $i->type,
                 'direction' => $i->direction,
@@ -103,7 +97,7 @@ class AnalyticsService
         $query = Activity::query();
 
         if (isset($filters['team_id'])) {
-            $query->whereHas('assignedTo', fn($q) => $q->where('team_id', $filters['team_id']));
+            $query->whereHas('assignedTo', fn ($q) => $q->where('team_id', $filters['team_id']));
         }
         if (isset($filters['owner_id'])) {
             $query->where('assigned_to', $filters['owner_id']);
@@ -124,7 +118,7 @@ class AnalyticsService
         $query = Ticket::query();
 
         if (isset($filters['team_id'])) {
-            $query->whereHas('assignee', fn($q) => $q->where('team_id', $filters['team_id']));
+            $query->whereHas('assignee', fn ($q) => $q->where('team_id', $filters['team_id']));
         }
         if (isset($filters['owner_id'])) {
             $query->where('assignee_id', $filters['owner_id']);
@@ -145,7 +139,7 @@ class AnalyticsService
             ->whereMonth('updated_at', Carbon::now()->month);
 
         if (isset($filters['team_id'])) {
-            $query->whereHas('owner', fn($q) => $q->where('team_id', $filters['team_id']));
+            $query->whereHas('owner', fn ($q) => $q->where('team_id', $filters['team_id']));
         }
         if (isset($filters['owner_id'])) {
             $query->where('owner_id', $filters['owner_id']);
@@ -156,10 +150,10 @@ class AnalyticsService
 
         $wonDeals = Deal::query()->where('stage', 'closed_won')
             ->whereMonth('updated_at', Carbon::now()->month);
-        
+
         $allDeals = Deal::query()->whereMonth('created_at', Carbon::now()->month);
-        $winRate = $allDeals->count() > 0 
-            ? round($wonDeals->count() / $allDeals->count() * 100, 2) 
+        $winRate = $allDeals->count() > 0
+            ? round($wonDeals->count() / $allDeals->count() * 100, 2)
             : 0;
 
         return [
@@ -173,7 +167,7 @@ class AnalyticsService
     {
         $jobCount = DB::table('jobs')->count();
         $failedJobs = DB::table('failed_jobs')->count();
-        
+
         $lastSchedulerRun = Cache::get('last_scheduler_run', now()->toIso8601String());
 
         return [
@@ -186,14 +180,14 @@ class AnalyticsService
     public function getCohortRetention(): array
     {
         $cohorts = [];
-        
+
         for ($month = 1; $month <= 12; $month++) {
             $contacts = Contact::where('created_at', '<=', now()->subMonths($month))
                 ->where('created_at', '>', now()->subMonths($month + 1))
                 ->get();
 
             $total = $contacts->count();
-            $active = $contacts->filter(fn($c) => $c->interactions()->exists())->count();
+            $active = $contacts->filter(fn ($c) => $c->interactions()->exists())->count();
 
             $cohorts[] = [
                 'month' => $month,

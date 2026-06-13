@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\AutomationJob;
 use App\Models\Deal;
 use App\Models\DealAutomation;
-use App\Models\AutomationJob;
 use App\Models\PipelineStage;
 use Illuminate\Support\Facades\DB;
 
@@ -38,7 +38,7 @@ class DealService
             ->where('name', $deal->stage)
             ->first();
 
-        if (!$stage) {
+        if (! $stage) {
             return;
         }
 
@@ -47,15 +47,15 @@ class DealService
             ->with('actions')
             ->get();
 
-foreach ($automations as $automation) {
-             foreach ($automation->actions as $action) {
-                 $scheduledAt = match($action->delay_type) {
-                     'immediate' => now(),
-                     'one_hour' => now()->addHour(),
-                     'one_day' => now()->addDay(),
-                     'n_business_days' => now()->addDays(($action->delay_days ?? 1) * 2),
-                     default => now(),
-                 };
+        foreach ($automations as $automation) {
+            foreach ($automation->actions as $action) {
+                $scheduledAt = match ($action->delay_type) {
+                    'immediate' => now(),
+                    'one_hour' => now()->addHour(),
+                    'one_day' => now()->addDay(),
+                    'n_business_days' => now()->addDays(($action->delay_days ?? 1) * 2),
+                    default => now(),
+                };
 
                 AutomationJob::create([
                     'deal_automation_id' => $automation->id,
@@ -85,7 +85,7 @@ foreach ($automations as $automation) {
         }
 
         $totalValue = $query->sum('value');
-        $totalWeighted = $query->get()->sum(fn($d) => $d->getWeightedValue());
+        $totalWeighted = $query->get()->sum(fn ($d) => $d->getWeightedValue());
 
         return [
             'total_value' => $totalValue,

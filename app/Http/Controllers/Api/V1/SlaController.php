@@ -121,12 +121,12 @@ class SlaController extends Controller
             ->unique('id')
             ->count();
 
-        $avgFirstResponse = $instances->filter(fn($i) => $i->first_response_met_at && $i->assigned_at)
-            ->map(fn($i) => $i->assigned_at->diffInHours($i->first_response_met_at))
+        $avgFirstResponse = $instances->filter(fn ($i) => $i->first_response_met_at && $i->assigned_at)
+            ->map(fn ($i) => $i->assigned_at->diffInHours($i->first_response_met_at))
             ->avg();
 
-        $avgResolution = $instances->filter(fn($i) => $i->resolution_met_at && $i->assigned_at)
-            ->map(fn($i) => $i->assigned_at->diffInHours($i->resolution_met_at))
+        $avgResolution = $instances->filter(fn ($i) => $i->resolution_met_at && $i->assigned_at)
+            ->map(fn ($i) => $i->assigned_at->diffInHours($i->resolution_met_at))
             ->avg();
 
         return response()->json([
@@ -135,7 +135,7 @@ class SlaController extends Controller
             'breach_rate' => $total > 0 ? round(($breached / $total) * 100, 2) : 0,
             'avg_first_response_hours' => round($avgFirstResponse ?? 0, 2),
             'avg_resolution_hours' => round($avgResolution ?? 0, 2),
-            'by_definition' => SlaDefinition::withCount('instances')->get()->map(fn($d) => [
+            'by_definition' => SlaDefinition::withCount('instances')->get()->map(fn ($d) => [
                 'name' => $d->name,
                 'total' => $d->instances_count,
             ]),

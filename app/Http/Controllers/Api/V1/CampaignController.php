@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
-use App\Models\CampaignTemplate;
 use App\Models\CampaignStep;
 use App\Models\Segment;
 use App\Services\SegmentService;
@@ -88,6 +87,7 @@ class CampaignController extends Controller
         }
 
         $campaign->delete();
+
         return response()->json(null, 204);
     }
 
@@ -123,6 +123,7 @@ class CampaignController extends Controller
         }
 
         $campaign->update(['status' => 'paused']);
+
         return response()->json($campaign->load(['segment', 'creator']));
     }
 
@@ -133,6 +134,7 @@ class CampaignController extends Controller
         }
 
         $campaign->update(['status' => 'sending']);
+
         return response()->json($campaign->load(['segment', 'creator']));
     }
 

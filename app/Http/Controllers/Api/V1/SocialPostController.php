@@ -65,6 +65,7 @@ class SocialPostController extends Controller
     public function destroy(SocialPost $socialPost): JsonResponse
     {
         $socialPost->delete();
+
         return response()->json(null, 204);
     }
 }

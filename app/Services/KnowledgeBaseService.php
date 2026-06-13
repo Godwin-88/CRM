@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\KnowledgeBaseArticle;
 use App\Models\KnowledgeBaseArticleVersion;
 use App\Models\User;
-use Illuminate\Support\Str;
 
 class KnowledgeBaseService
 {

@@ -3,19 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Ticket;
-use App\Models\TicketInternalNote;
-use App\Models\CannedResponse;
 use App\Models\KnowledgeBaseArticle;
-use App\Models\TicketCategory;
-use App\Models\Team;
+use App\Models\Ticket;
 use App\Models\User;
-use App\Services\TicketService;
 use App\Services\SlaService;
+use App\Services\TicketService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
 {
@@ -187,7 +182,7 @@ class TicketController extends Controller
     public function merge(Request $request, Ticket $ticket): JsonResponse
     {
         $validated = $request->validate([
-            'target_ticket_id' => 'required|exists:tickets,id|different:' . $ticket->id,
+            'target_ticket_id' => 'required|exists:tickets,id|different:'.$ticket->id,
         ]);
 
         $targetTicket = Ticket::find($validated['target_ticket_id']);

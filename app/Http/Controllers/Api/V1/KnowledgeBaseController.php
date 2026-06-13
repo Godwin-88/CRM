@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\KnowledgeBaseArticle;
-use App\Models\KnowledgeBaseCategory;
 use App\Services\KnowledgeBaseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,8 +22,8 @@ class KnowledgeBaseController extends Controller
             ->with(['category', 'author']);
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%')
-                ->orWhere('body', 'like', '%' . $request->search . '%');
+            $query->where('title', 'like', '%'.$request->search.'%')
+                ->orWhere('body', 'like', '%'.$request->search.'%');
         }
 
         if ($request->filled('category_id')) {
@@ -89,7 +88,7 @@ class KnowledgeBaseController extends Controller
 
         $article->update($validated);
 
-        if ($validated['status'] ?? null === 'published' && !$article->published_at) {
+        if ($validated['status'] ?? null === 'published' && ! $article->published_at) {
             $article->update(['published_at' => now()]);
             $this->knowledgeBaseService->createVersion($article, Auth::user());
         }

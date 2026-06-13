@@ -13,7 +13,7 @@ class CampaignFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->words(3, true) . ' Campaign',
+            'name' => $this->faker->words(3, true).' Campaign',
             'description' => $this->faker->paragraph,
             'type' => $this->faker->randomElement(['email', 'sms', 'multi_channel']),
             'status' => $this->faker->randomElement(['draft', 'scheduled', 'sending', 'sent']),

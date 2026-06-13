@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Support;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendCsatRequest;
+use App\Models\CannedResponse;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
-use App\Services\TicketService;
+use App\Models\User;
 use App\Services\SlaService;
+use App\Services\TicketService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -60,7 +63,7 @@ class TicketController extends Controller
             'interactions',
         ]);
 
-        $cannedResponses = \App\Models\CannedResponse::active()
+        $cannedResponses = CannedResponse::active()
             ->orderBy('usage_count', 'desc')
             ->limit(50)
             ->get(['id', 'title', 'body']);
@@ -74,7 +77,7 @@ class TicketController extends Controller
     public function create()
     {
         $categories = TicketCategory::active()->get();
-        $agents = \App\Models\User::role('agent')->get(['id', 'name']);
+        $agents = User::role('agent')->get(['id', 'name']);
 
         return Inertia::render('Support/Tickets/Create', [
             'categories' => $categories,
@@ -106,7 +109,7 @@ class TicketController extends Controller
             'agent_id' => 'required|exists:users,id',
         ]);
 
-        $agent = \App\Models\User::find($validated['agent_id']);
+        $agent = User::find($validated['agent_id']);
         $this->ticketService->assignTicket($ticket, $agent, $request->user());
 
         return back()->with('success', 'Ticket assigned successfully.');
@@ -135,7 +138,7 @@ class TicketController extends Controller
         $this->ticketService->resolveTicket($ticket, $validated['resolution_note'], $request->user());
 
         // Dispatch CSAT job
-        \App\Jobs\SendCsatRequest::dispatch($ticket)->delay(now()->addHour());
+        SendCsatRequest::dispatch($ticket)->delay(now()->addHour());
 
         return back()->with('success', 'Ticket resolved successfully.');
     }

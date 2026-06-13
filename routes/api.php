@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\QuoteTemplateController;
+use App\Http\Controllers\Admin\ScoringRuleController;
+use App\Http\Controllers\Admin\WinLossReasonController;
 use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\AnalyticsApiController;
+use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\CampaignAnalyticsController;
 use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\CampaignTemplateController;
@@ -11,20 +15,23 @@ use App\Http\Controllers\Api\V1\ComplianceAnalyticsController;
 use App\Http\Controllers\Api\V1\ContactCentreController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CsatController;
+use App\Http\Controllers\Api\V1\DealController;
 use App\Http\Controllers\Api\V1\DripSequenceController;
 use App\Http\Controllers\Api\V1\IntegrationController;
 use App\Http\Controllers\Api\V1\InteractionController;
 use App\Http\Controllers\Api\V1\KioskController;
+use App\Http\Controllers\Api\V1\KnowledgeBaseCategoryController;
 use App\Http\Controllers\Api\V1\KnowledgeBaseController;
 use App\Http\Controllers\Api\V1\PipelineController;
 use App\Http\Controllers\Api\V1\ReportBuilderController;
 use App\Http\Controllers\Api\V1\SegmentController;
+use App\Http\Controllers\Api\V1\SlaController;
 use App\Http\Controllers\Api\V1\SocialPostController;
+use App\Http\Controllers\Api\V1\TicketCategoryController;
 use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\TranslationController;
-use App\Http\Controllers\Api\V1\DealController;
-use App\Http\Controllers\Api\V1\AnalyticsController;
-use App\Http\Controllers\Admin\ScoringRuleController;
+use App\Http\Controllers\ContractController;
+use App\Http\Controllers\LegalMatterController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
@@ -34,7 +41,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('contacts/{contact}', [ContactController::class, 'show']);
     Route::put('contacts/{contact}', [ContactController::class, 'update']);
     Route::delete('contacts/{contact}', [ContactController::class, 'destroy']);
-    
+
     Route::post('contacts/check-duplicates', [ContactController::class, 'checkDuplicates']);
     Route::post('contacts/merge', [ContactController::class, 'merge']);
     Route::post('contacts/bulk-delete', [ContactController::class, 'bulkDelete']);
@@ -52,7 +59,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('accounts/{account}', [AccountController::class, 'show']);
     Route::put('accounts/{account}', [AccountController::class, 'update']);
     Route::delete('accounts/{account}', [AccountController::class, 'destroy']);
-    
+
     Route::get('accounts/{account}/contacts', [AccountController::class, 'getAccountContacts']);
     Route::post('accounts/{account}/primary-contact', [AccountController::class, 'setPrimaryContact']);
 
@@ -62,7 +69,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('segments/{segment}', [SegmentController::class, 'show']);
     Route::put('segments/{segment}', [SegmentController::class, 'update']);
     Route::delete('segments/{segment}', [SegmentController::class, 'destroy']);
-    
+
     Route::post('segments/preview', [SegmentController::class, 'preview']);
     Route::get('segments/{segment}/preview', [SegmentController::class, 'previewSegment']);
 
@@ -95,11 +102,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('analytics/growth', [AnalyticsApiController::class, 'growthMetrics']);
     Route::get('analytics/finance', [AnalyticsApiController::class, 'financeMetrics']);
     Route::get('analytics/deal-score/{deal}', [AnalyticsApiController::class, 'dealScore']);
-    Route::get('analytics/campaign-performance', [\App\Http\Controllers\Api\V1\CampaignAnalyticsController::class, 'performance']);
+    Route::get('analytics/campaign-performance', [CampaignAnalyticsController::class, 'performance']);
     Route::get('analytics/campaign-time-series/{campaign}', [CampaignAnalyticsController::class, 'timeSeries']);
     Route::get('analytics/campaign-per-contact/{campaign}', [CampaignAnalyticsController::class, 'perContact']);
     Route::get('analytics/campaign-per-link/{campaign}', [CampaignAnalyticsController::class, 'perLink']);
-    
+
     // Reports
     Route::get('reports', [ReportBuilderController::class, 'index']);
     Route::post('reports', [ReportBuilderController::class, 'store']);
@@ -107,11 +114,19 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::put('reports/{report}', [ReportBuilderController::class, 'update']);
     Route::delete('reports/{report}', [ReportBuilderController::class, 'destroy']);
     Route::post('reports/{report}/schedule', [ReportBuilderController::class, 'schedule']);
-    
+
     // Compliance
     Route::get('audit-trail', [ComplianceAnalyticsController::class, 'auditTrail']);
     Route::get('audit-stats', [ComplianceAnalyticsController::class, 'auditStats']);
     Route::get('audit-anomalies', [ComplianceAnalyticsController::class, 'anomalies']);
+
+    // Contracts
+    Route::get('contracts', [ContractController::class, 'indexApi']);
+    Route::get('contracts/{contract}', [ContractController::class, 'showApi']);
+
+    // Legal Matters
+    Route::get('legal', [LegalMatterController::class, 'indexApi']);
+    Route::get('legal/{legalMatter}', [LegalMatterController::class, 'show']);
 
     // Support Routes
     Route::get('tickets', [TicketController::class, 'index']);
@@ -130,15 +145,15 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('tickets/{ticket}/link-article', [TicketController::class, 'linkArticle']);
     Route::get('tickets/breached', [TicketController::class, 'breached']);
 
-    Route::get('ticket-categories', [\App\Http\Controllers\Api\V1\TicketCategoryController::class, 'index']);
-    Route::post('ticket-categories', [\App\Http\Controllers\Api\V1\TicketCategoryController::class, 'store']);
-    Route::put('ticket-categories/{ticketCategory}', [\App\Http\Controllers\Api\V1\TicketCategoryController::class, 'update']);
-    Route::delete('ticket-categories/{ticketCategory}', [\App\Http\Controllers\Api\V1\TicketCategoryController::class, 'destroy']);
+    Route::get('ticket-categories', [TicketCategoryController::class, 'index']);
+    Route::post('ticket-categories', [TicketCategoryController::class, 'store']);
+    Route::put('ticket-categories/{ticketCategory}', [TicketCategoryController::class, 'update']);
+    Route::delete('ticket-categories/{ticketCategory}', [TicketCategoryController::class, 'destroy']);
 
     Route::get('knowledge-base/search', [KnowledgeBaseController::class, 'search']);
     Route::post('knowledge-base/{knowledge_base}/rate', [KnowledgeBaseController::class, 'rate']);
     Route::post('knowledge-base/{knowledge_base}/restore-version', [KnowledgeBaseController::class, 'restoreVersion']);
-    Route::get('knowledge-base/categories', [\App\Http\Controllers\Api\V1\KnowledgeBaseCategoryController::class, 'index']);
+    Route::get('knowledge-base/categories', [KnowledgeBaseCategoryController::class, 'index']);
     Route::apiResource('knowledge-base', KnowledgeBaseController::class);
 
     Route::get('canned-responses', [CannedResponseController::class, 'index']);
@@ -156,22 +171,22 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Admin routes (manager+ access)
     Route::middleware('role:manager|admin')->group(function () {
         // Pipeline Management
-        Route::post('pipelines', [\App\Http\Controllers\Admin\PipelineController::class, 'store']);
-        Route::put('pipelines/{pipeline}', [\App\Http\Controllers\Admin\PipelineController::class, 'update']);
-        Route::delete('pipelines/{pipeline}', [\App\Http\Controllers\Admin\PipelineController::class, 'destroy']);
-        Route::patch('pipelines/{pipeline}/archive', [\App\Http\Controllers\Admin\PipelineController::class, 'archive']);
+        Route::post('pipelines', [App\Http\Controllers\Admin\PipelineController::class, 'store']);
+        Route::put('pipelines/{pipeline}', [App\Http\Controllers\Admin\PipelineController::class, 'update']);
+        Route::delete('pipelines/{pipeline}', [App\Http\Controllers\Admin\PipelineController::class, 'destroy']);
+        Route::patch('pipelines/{pipeline}/archive', [App\Http\Controllers\Admin\PipelineController::class, 'archive']);
 
         // Win/Loss Reasons
-        Route::get('win-loss-reasons', [\App\Http\Controllers\Admin\WinLossReasonController::class, 'index']);
-        Route::post('win-loss-reasons', [\App\Http\Controllers\Admin\WinLossReasonController::class, 'store']);
-        Route::put('win-loss-reasons/{winLossReason}', [\App\Http\Controllers\Admin\WinLossReasonController::class, 'update']);
-        Route::delete('win-loss-reasons/{winLossReason}', [\App\Http\Controllers\Admin\WinLossReasonController::class, 'destroy']);
+        Route::get('win-loss-reasons', [WinLossReasonController::class, 'index']);
+        Route::post('win-loss-reasons', [WinLossReasonController::class, 'store']);
+        Route::put('win-loss-reasons/{winLossReason}', [WinLossReasonController::class, 'update']);
+        Route::delete('win-loss-reasons/{winLossReason}', [WinLossReasonController::class, 'destroy']);
 
         // Quote Templates
-        Route::get('quote-templates', [\App\Http\Controllers\Admin\QuoteTemplateController::class, 'index']);
-        Route::post('quote-templates', [\App\Http\Controllers\Admin\QuoteTemplateController::class, 'store']);
-        Route::put('quote-templates/{quoteTemplate}', [\App\Http\Controllers\Admin\QuoteTemplateController::class, 'update']);
-        Route::delete('quote-templates/{quoteTemplate}', [\App\Http\Controllers\Admin\QuoteTemplateController::class, 'destroy']);
+        Route::get('quote-templates', [QuoteTemplateController::class, 'index']);
+        Route::post('quote-templates', [QuoteTemplateController::class, 'store']);
+        Route::put('quote-templates/{quoteTemplate}', [QuoteTemplateController::class, 'update']);
+        Route::delete('quote-templates/{quoteTemplate}', [QuoteTemplateController::class, 'destroy']);
 
         // Campaigns
         Route::get('campaigns', [CampaignController::class, 'index']);
@@ -237,14 +252,14 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         // Kiosk
         Route::post('kiosk/{kiosk}/ingest', [KioskController::class, 'ingest']);
 
-        Route::get('sla', [\App\Http\Controllers\Api\V1\SlaController::class, 'index']);
-        Route::post('sla', [\App\Http\Controllers\Api\V1\SlaController::class, 'store']);
-        Route::get('sla/{slaDefinition}', [\App\Http\Controllers\Api\V1\SlaController::class, 'show']);
-        Route::put('sla/{slaDefinition}', [\App\Http\Controllers\Api\V1\SlaController::class, 'update']);
-        Route::delete('sla/{slaDefinition}', [\App\Http\Controllers\Api\V1\SlaController::class, 'destroy']);
-        Route::get('tickets/{ticket}/sla', [\App\Http\Controllers\Api\V1\SlaController::class, 'ticketSla']);
-        Route::get('analytics/sla', [\App\Http\Controllers\Api\V1\SlaController::class, 'analytics']);
-        
+        Route::get('sla', [SlaController::class, 'index']);
+        Route::post('sla', [SlaController::class, 'store']);
+        Route::get('sla/{slaDefinition}', [SlaController::class, 'show']);
+        Route::put('sla/{slaDefinition}', [SlaController::class, 'update']);
+        Route::delete('sla/{slaDefinition}', [SlaController::class, 'destroy']);
+        Route::get('tickets/{ticket}/sla', [SlaController::class, 'ticketSla']);
+        Route::get('analytics/sla', [SlaController::class, 'analytics']);
+
         // Integrations
         Route::get('integrations', [IntegrationController::class, 'index']);
         Route::post('integrations', [IntegrationController::class, 'store']);

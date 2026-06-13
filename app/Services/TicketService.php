@@ -8,11 +8,8 @@ use App\Events\TicketSplit;
 use App\Events\TicketStatusChanged;
 use App\Models\Activity;
 use App\Models\BusinessHours;
-use App\Models\CannedResponse;
 use App\Models\Interaction;
-use App\Models\InternalNoteMention;
 use App\Models\KnowledgeBaseArticle;
-use App\Models\SupportEmailAddress;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\Ticket;
@@ -20,6 +17,9 @@ use App\Models\TicketCategory;
 use App\Models\TicketInternalNote;
 use App\Models\TicketRating;
 use App\Models\User;
+use App\Notifications\InternalNoteMentioned;
+use App\Notifications\ManagerEscalation;
+use App\Notifications\TicketAssigned;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -27,14 +27,21 @@ use Illuminate\Support\Facades\Notification;
 class TicketService
 {
     public const STATUS_OPEN = 'open';
+
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_WAITING_ON_CUSTOMER = 'waiting_on_customer';
+
     public const STATUS_RESOLVED = 'resolved';
+
     public const STATUS_CLOSED = 'closed';
 
     public const PRIORITY_LOW = 'low';
+
     public const PRIORITY_MEDIUM = 'medium';
+
     public const PRIORITY_HIGH = 'high';
+
     public const PRIORITY_URGENT = 'urgent';
 
     protected array $statusTransitions = [
@@ -71,7 +78,7 @@ class TicketService
         });
     }
 
-    public function assignTicket(Ticket $ticket, User $agent, User $assigner = null): void
+    public function assignTicket(Ticket $ticket, User $agent, ?User $assigner = null): void
     {
         if ($ticket->assigned_to === $agent->id) {
             return;
@@ -80,12 +87,12 @@ class TicketService
         $oldAssignee = $ticket->assignee;
         $ticket->update(['assigned_to' => $agent->id]);
 
-        Notification::send($agent, new \App\Notifications\TicketAssigned($ticket, $assigner));
+        Notification::send($agent, new TicketAssigned($ticket, $assigner));
     }
 
     public function escalateTicket(Ticket $ticket, User $escalatedBy, string $reason): void
     {
-        if (!$ticket->escalation_reason) {
+        if (! $ticket->escalation_reason) {
             throw new \InvalidArgumentException('Escalation reason is required.');
         }
 
@@ -100,7 +107,7 @@ class TicketService
         TicketEscalated::dispatch($ticket, $escalatedBy, $manager);
 
         if ($manager) {
-            Notification::send($manager, new \App\Notifications\ManagerEscalation($ticket, $escalatedBy));
+            Notification::send($manager, new ManagerEscalation($ticket, $escalatedBy));
         }
     }
 
@@ -139,7 +146,7 @@ class TicketService
 
     public function reopenTicket(Ticket $ticket): void
     {
-        if (!$ticket->canBeReopened()) {
+        if (! $ticket->canBeReopened()) {
             throw new \InvalidArgumentException('Ticket cannot be reopened after 7 days of resolution.');
         }
 
@@ -159,14 +166,15 @@ class TicketService
             return;
         }
 
-        if (!isset($this->statusTransitions[$oldStatus]) || 
-            !in_array($newStatus, $this->statusTransitions[$oldStatus])) {
+        if (! isset($this->statusTransitions[$oldStatus]) ||
+            ! in_array($newStatus, $this->statusTransitions[$oldStatus])) {
             throw new \InvalidArgumentException("Invalid status transition from {$oldStatus} to {$newStatus}");
         }
 
         // Handle reopening resolved tickets
         if ($newStatus === self::STATUS_OPEN && $oldStatus === self::STATUS_RESOLVED) {
             $this->reopenTicket($ticket);
+
             return;
         }
 
@@ -177,7 +185,7 @@ class TicketService
 
     public function mergeTickets(Ticket $sourceTicket, Ticket $targetTicket): void
     {
-        if (!auth()->user()?->hasRole(['manager', 'admin'])) {
+        if (! auth()->user()?->hasRole(['manager', 'admin'])) {
             throw new \AuthorizationException('Only managers and admins can merge tickets.');
         }
 
@@ -206,11 +214,11 @@ class TicketService
 
     public function splitTicket(Ticket $originalTicket, array $interactionIds, User $agent): Ticket
     {
-        if (!auth()->user()?->hasRole(['manager', 'admin'])) {
+        if (! auth()->user()?->hasRole(['manager', 'admin'])) {
             throw new \AuthorizationException('Only managers and admins can split tickets.');
         }
 
-        return DB::transaction(function () use ($originalTicket, $interactionIds, $agent) {
+        return DB::transaction(function () use ($originalTicket, $interactionIds) {
             $newTicket = Ticket::create([
                 'subject' => $originalTicket->subject,
                 'description' => $originalTicket->description,
@@ -266,7 +274,7 @@ class TicketService
             $note->mentions()->create(['user_id' => $userId]);
             $mentionedUser = User::find($userId);
             if ($mentionedUser) {
-                Notification::send($mentionedUser, new \App\Notifications\InternalNoteMentioned($ticket, $note, $mentionedUser));
+                Notification::send($mentionedUser, new InternalNoteMentioned($ticket, $note, $mentionedUser));
             }
         }
 
@@ -275,7 +283,7 @@ class TicketService
 
     public function editInternalNote(TicketInternalNote $note, string $newBody, User $editor): void
     {
-        if ($note->author_id !== $editor->id && !$editor->hasRole(['manager', 'admin'])) {
+        if ($note->author_id !== $editor->id && ! $editor->hasRole(['manager', 'admin'])) {
             throw new \AuthorizationException('Only the author or managers can edit notes.');
         }
 
@@ -291,7 +299,7 @@ class TicketService
 
     public function deleteInternalNote(TicketInternalNote $note, User $deleter): void
     {
-        if ($note->author_id !== $deleter->id && !$deleter->hasRole(['manager', 'admin'])) {
+        if ($note->author_id !== $deleter->id && ! $deleter->hasRole(['manager', 'admin'])) {
             throw new \AuthorizationException('Only the author or managers can delete notes.');
         }
 
@@ -327,7 +335,7 @@ class TicketService
         $ticket = $rating->ticket;
         $agent = $ticket->assignee;
 
-        if (!$agent) {
+        if (! $agent) {
             return null;
         }
 
@@ -344,10 +352,10 @@ class TicketService
     {
         $team = Team::whereHas('members', function ($query) use ($user) {
             $query->where('user_id', $user->id)
-                  ->where('role', 'manager');
+                ->where('role', 'manager');
         })->first();
 
-        if (!$team) {
+        if (! $team) {
             return null;
         }
 
@@ -375,16 +383,17 @@ class TicketService
         $date = Carbon::tomorrow();
         $businessHours = BusinessHours::where('is_global', true)->first();
 
-        if (!$businessHours) {
+        if (! $businessHours) {
             return $date->setHour(9)->setMinute(0);
         }
 
         $daysOfWeek = $businessHours->days_of_week ?? [1, 2, 3, 4, 5];
-        while (!in_array($date->dayOfWeek, $daysOfWeek)) {
+        while (! in_array($date->dayOfWeek, $daysOfWeek)) {
             $date->addDay();
         }
 
         $startTime = Carbon::createFromFormat('H:i', $businessHours->start_time);
+
         return $date->setTime($startTime->hour, $startTime->minute);
     }
 }

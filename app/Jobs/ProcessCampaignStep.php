@@ -16,7 +16,7 @@ class ProcessCampaignStep implements ShouldQueue
     {
         $recipient = CampaignRecipient::with(['contact', 'step.emailTemplate'])->find($this->recipientId);
 
-        if (!$recipient || !$recipient->isPending()) {
+        if (! $recipient || ! $recipient->isPending()) {
             return;
         }
 
@@ -42,7 +42,7 @@ class ProcessCampaignStep implements ShouldQueue
         if ($template) {
             $html = str_replace(
                 '<a href',
-                '<a href="' . route('tracking.redirect', $recipient->tracking_token) . '" data-original-href',
+                '<a href="'.route('tracking.redirect', $recipient->tracking_token).'" data-original-href',
                 $template->html_content ?? ''
             );
 

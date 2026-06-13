@@ -3,10 +3,7 @@
 namespace App\Services;
 
 use App\Models\Deal;
-use App\Models\Interaction;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 
 class PredictiveScoringService
 {
@@ -31,7 +28,7 @@ class PredictiveScoringService
 
         $totalScore = (int) round($totalScore);
 
-        $label = match(true) {
+        $label = match (true) {
             $totalScore <= 25 => 'cold',
             $totalScore <= 50 => 'warm',
             $totalScore <= 75 => 'hot',
@@ -59,17 +56,17 @@ class PredictiveScoringService
         $demoTrialScore = $deal->demoTrials()->exists() ? 100 : 0;
 
         $avgDealValue = Deal::avg('value') ?: 1;
-        $dealValueScore = $deal->value > $avgDealValue 
-            ? min(100, ($deal->value / $avgDealValue) * 50) 
+        $dealValueScore = $deal->value > $avgDealValue
+            ? min(100, ($deal->value / $avgDealValue) * 50)
             : ($deal->value / $avgDealValue) * 100;
 
         $contactEngagementScore = $deal->contact->score ?? 0;
 
-        $daysToClose = $deal->expected_close_date 
-            ? Carbon::parse($deal->expected_close_date)->diffInDays(Carbon::now()) 
+        $daysToClose = $deal->expected_close_date
+            ? Carbon::parse($deal->expected_close_date)->diffInDays(Carbon::now())
             : 365;
-        $daysToCloseScore = $daysToClose > 0 
-            ? min(100, 365 / $daysToClose * 100) 
+        $daysToCloseScore = $daysToClose > 0
+            ? min(100, 365 / $daysToClose * 100)
             : 100;
 
         return [
@@ -92,7 +89,7 @@ class PredictiveScoringService
             return 30;
         }
 
-        return $closedDeals->avg(fn($d) => \Carbon\Carbon::parse($d->created_at)->diffInDays(\Carbon::parse($d->updated_at ?: now())));
+        return $closedDeals->avg(fn ($d) => Carbon::parse($d->created_at)->diffInDays(\Carbon::parse($d->updated_at ?: now())));
     }
 
     protected function getDaysInCurrentStage(Deal $deal): int
@@ -107,8 +104,8 @@ class PredictiveScoringService
         }
 
         $ratio = $daysInProgress / $avgDays;
-        
-        return match(true) {
+
+        return match (true) {
             $ratio >= 2 => 75,
             $ratio >= 1 => 50,
             $ratio >= 0.5 => 25,

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Interaction;
+use App\Models\QueueStat;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\RateLimiter;
-use App\Models\Interaction;
-use App\Models\UnmatchedItem;
-use App\Models\QueueStat;
+use Illuminate\Support\Facades\DB;
 
 class ContactCentreController extends Controller
 {
@@ -20,7 +20,7 @@ class ContactCentreController extends Controller
         $user = $request->user();
         $teamId = $user->team_id ?? null;
 
-        $cacheKey = "queue:stats:" . ($teamId ?? 'all');
+        $cacheKey = 'queue:stats:'.($teamId ?? 'all');
         $stats = Cache::remember($cacheKey, 10, function () use ($teamId) {
             return $this->computeStats($teamId);
         });
@@ -38,7 +38,7 @@ class ContactCentreController extends Controller
             return QueueStat::where('recorded_at', '>=', now()->subHours($hours))
                 ->orderBy('recorded_at')
                 ->get()
-                ->map(fn($s) => [
+                ->map(fn ($s) => [
                     'recorded_at' => $s->recorded_at,
                     'total_open' => $s->total_open,
                     'by_channel' => json_decode($s->by_channel, true),
@@ -77,35 +77,35 @@ class ContactCentreController extends Controller
         $query = Interaction::query();
 
         if ($teamId) {
-            $agentIds = \App\Models\User::where('team_id', $teamId)->pluck('id');
+            $agentIds = User::where('team_id', $teamId)->pluck('id');
             $query->whereIn('agent_id', $agentIds);
         }
 
         $totalOpen = (clone $query)->whereIn('status', ['waiting', 'active'])->count();
 
         $byChannel = (clone $query)
-            ->select('type', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->select('type', DB::raw('count(*) as count'))
             ->groupBy('type')
             ->get()
-            ->map(fn($row) => ['channel' => $row->type, 'count' => (int) $row->count])
+            ->map(fn ($row) => ['channel' => $row->type, 'count' => (int) $row->count])
             ->values()
             ->all();
 
         $avgWait = (clone $query)
             ->whereNull('agent_id')
             ->where('created_at', '<', now()->subMinutes(5))
-            ->avg(\Illuminate\Support\Facades\DB::raw('extract(epoch from now() - created_at)')) ?? 0;
+            ->avg(DB::raw('extract(epoch from now() - created_at)')) ?? 0;
 
-        $perAgent = \App\Models\User::query()
-            ->select('users.id', 'users.name', \Illuminate\Support\Facades\DB::raw('count(interactions.id) as open_count'))
+        $perAgent = User::query()
+            ->select('users.id', 'users.name', DB::raw('count(interactions.id) as open_count'))
             ->leftJoin('interactions', function ($join) {
                 $join->on('users.id', '=', 'interactions.agent_id')
-                     ->whereIn('interactions.status', ['waiting', 'active']);
+                    ->whereIn('interactions.status', ['waiting', 'active']);
             })
-            ->when($teamId, fn($q) => $q->where('users.team_id', $teamId))
+            ->when($teamId, fn ($q) => $q->where('users.team_id', $teamId))
             ->groupBy('users.id', 'users.name')
             ->get()
-            ->map(fn($row) => [
+            ->map(fn ($row) => [
                 'agent_id' => $row->id,
                 'agent_name' => $row->name,
                 'open_count' => (int) $row->open_count,
@@ -114,7 +114,7 @@ class ContactCentreController extends Controller
             ->all();
 
         $slaBreachRisk = (clone $query)
-            ->whereHas('ticket', fn($q) => $q->where('sla_breached_at', '>', now()))
+            ->whereHas('ticket', fn ($q) => $q->where('sla_breached_at', '>', now()))
             ->count();
 
         return [

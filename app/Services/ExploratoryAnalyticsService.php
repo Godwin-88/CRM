@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\Contact;
 use App\Models\Account;
+use App\Models\Campaign;
+use App\Models\Contact;
+use App\Models\Contract;
 use App\Models\Deal;
 use App\Models\Interaction;
-use App\Models\Ticket;
-use App\Models\Campaign;
-use App\Models\Contract;
 use App\Models\ReportDefinition;
+use App\Models\Ticket;
 use Illuminate\Support\Facades\DB;
 
 class ExploratoryAnalyticsService
@@ -67,13 +67,13 @@ class ExploratoryAnalyticsService
         $aggregateFn = $report->fields['aggregate_fn'] ?? 'count';
 
         $results = $query->select(
-            $groupBy . ' as group',
+            $groupBy.' as group',
             DB::raw("{$aggregateFn}({$aggregateField}) as value")
         )
-        ->groupBy($groupBy)
-        ->get();
+            ->groupBy($groupBy)
+            ->get();
 
-        return $results->map(fn($row) => [
+        return $results->map(fn ($row) => [
             'group' => $row->group,
             'value' => $row->value,
         ])->toArray();
@@ -82,14 +82,14 @@ class ExploratoryAnalyticsService
     protected function applyFilters($query, array $filters): void
     {
         foreach ($filters as $field => $condition) {
-            if (!is_array($condition)) {
+            if (! is_array($condition)) {
                 continue;
             }
 
             foreach ($condition as $operator => $value) {
                 $column = is_int($operator) ? $field : "{$field} {$operator}";
-                
-                match($operator) {
+
+                match ($operator) {
                     'gte', '>=' => $query->where($field, '>=', $value),
                     'lte', '<=' => $query->where($field, '<=', $value),
                     'gt', '>' => $query->where($field, '>', $value),

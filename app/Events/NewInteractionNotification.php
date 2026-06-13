@@ -17,6 +17,6 @@ class NewInteractionNotification implements ShouldBroadcast
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('interactions.' . $this->interaction->agent_id);
+        return new PrivateChannel('interactions.'.$this->interaction->agent_id);
     }
 }

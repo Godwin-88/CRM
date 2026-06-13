@@ -4,14 +4,13 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChatSession;
-use App\Models\Interaction;
+use App\Services\ChatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Broadcast;
 
 class ChatController extends Controller
 {
-    public function __construct(protected \App\Services\ChatService $chatService) {}
+    public function __construct(protected ChatService $chatService) {}
 
     public function start(Request $request): JsonResponse
     {

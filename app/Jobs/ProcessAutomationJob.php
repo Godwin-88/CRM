@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Models\AutomationJob;
+use App\Mail\DealStageNotification;
 use App\Models\Activity;
-use App\Models\User;
+use App\Models\AutomationJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
@@ -19,7 +19,7 @@ class ProcessAutomationJob implements ShouldQueue
     {
         $job = AutomationJob::with(['action.deal', 'action.automation.stage'])->find($this->automationJobId);
 
-        if (!$job || !$job->isPending()) {
+        if (! $job || ! $job->isPending()) {
             return;
         }
 
@@ -53,7 +53,7 @@ class ProcessAutomationJob implements ShouldQueue
         $assignedTo = $job->action->assigned_to ?? $job->action->deal->owner_id;
 
         $activity = Activity::create([
-            'subject' => $job->action->deal->stage . ' Stage Reminder',
+            'subject' => $job->action->deal->stage.' Stage Reminder',
             'type' => 'task',
             'due_at' => now()->addDays(1),
             'assigned_to' => $assignedTo,
@@ -69,7 +69,7 @@ class ProcessAutomationJob implements ShouldQueue
         $emailTo = $job->action->email_to ?? $job->action->deal->owner->email;
 
         \Mail::to($emailTo)->send(
-            new \App\Mail\DealStageNotification($job->action->deal, $job->action->deal->stage)
+            new DealStageNotification($job->action->deal, $job->action->deal->stage)
         );
     }
 
@@ -84,7 +84,7 @@ class ProcessAutomationJob implements ShouldQueue
 
     protected function getDelayForRetry(int $retryCount): int
     {
-        return match($retryCount) {
+        return match ($retryCount) {
             1 => 60,
             2 => 300,
             default => 900,

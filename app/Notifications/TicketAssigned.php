@@ -25,11 +25,11 @@ class TicketAssigned extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
-        return (new MailMessage())
-            ->subject('Ticket Assigned: ' . $this->ticket->subject)
+        return (new MailMessage)
+            ->subject('Ticket Assigned: '.$this->ticket->subject)
             ->line('A ticket has been assigned to you:')
             ->line($this->ticket->subject)
-            ->action('View Ticket', url('/tickets/' . $this->ticket->id))
+            ->action('View Ticket', url('/tickets/'.$this->ticket->id))
             ->line('Please respond to this ticket within the SLA timeframe.');
     }
 

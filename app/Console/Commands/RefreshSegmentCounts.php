@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class RefreshSegmentCounts extends Command
 {
     protected $signature = 'segments:refresh-counts';
+
     protected $description = 'Refresh cached contact counts for all segments';
 
     public function handle(SegmentService $segmentService): void

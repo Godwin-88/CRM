@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Deal;
 use App\Models\Pipeline;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\Request;
 
 class PipelineController extends Controller
 {
@@ -22,19 +22,20 @@ class PipelineController extends Controller
     {
         $stages = $pipeline->stages()->withCount('deals')->get();
 
-        $deals = \App\Models\Deal::where('pipeline_id', $pipeline->id)
+        $deals = Deal::where('pipeline_id', $pipeline->id)
             ->with(['account', 'contact', 'owner'])
             ->get()
             ->groupBy('stage');
 
         $columns = $stages->map(function ($stage) use ($deals) {
             $stageDeals = $deals->get($stage->name, collect());
+
             return [
                 'id' => $stage->id,
                 'name' => $stage->name,
                 'probability' => $stage->probability,
                 'deal_count' => $stageDeals->count(),
-                'weighted_value' => $stageDeals->sum(fn($d) => (float) $d->value * ($d->probability ?? $stage->probability) / 100),
+                'weighted_value' => $stageDeals->sum(fn ($d) => (float) $d->value * ($d->probability ?? $stage->probability) / 100),
                 'total_value' => $stageDeals->sum('value'),
                 'deals' => $stageDeals->map(function ($deal) {
                     return [

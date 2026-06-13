@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CampaignTemplate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -10,7 +11,7 @@ class CampaignTemplateWebController extends Controller
 {
     public function index(): Response
     {
-        $templates = \App\Models\CampaignTemplate::orderBy('created_at', 'desc')
+        $templates = CampaignTemplate::orderBy('created_at', 'desc')
             ->limit(100)
             ->get();
 

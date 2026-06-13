@@ -15,7 +15,7 @@ class TicketCategoryController extends Controller
             ->with(['parent', 'children', 'slaPolicy', 'defaultTeam']);
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         if ($request->filled('is_active')) {

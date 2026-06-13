@@ -1,12 +1,13 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use App\Models\ClvCalculation;
 use App\Models\Contact;
-use App\Models\PointsLedger;
-use App\Models\LoyaltyEnrollment;
 use App\Models\Deal;
-use App\Models\Ticket;
+use App\Models\LoyaltyEnrollment;
+use App\Models\PointsLedger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -145,7 +146,7 @@ class ClvAnalyticsWebController extends Controller
 
     public function metrics(): JsonResponse
     {
-        $totalRevenue = \App\Models\Deal::where('status', 'won')->sum('value') ?? 0;
+        $totalRevenue = Deal::where('status', 'won')->sum('value') ?? 0;
         $totalContacts = Contact::count();
         $avgDealSize = Deals::where('status', 'won')->avg('value') ?? 0;
         $winRate = Deal::count() > 0 ? round((Deal::where('status', 'won')->count() / Deal::count()) * 100, 2) : 0;

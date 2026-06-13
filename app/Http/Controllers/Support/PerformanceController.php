@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Support;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketRating;
-use App\Models\SlaInstance;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Carbon\Carbon;
 
 class PerformanceController extends Controller
 {
@@ -73,20 +72,20 @@ class PerformanceController extends Controller
         $totalResolved = $resolvedTickets->count();
         $totalClosed = $closedTickets->count();
 
-        $avgFirstResponse = $tickets->avg(fn($t) => $t->slaInstance?->first_response_met_at
+        $avgFirstResponse = $tickets->avg(fn ($t) => $t->slaInstance?->first_response_met_at
             ? $t->slaInstance->assigned_at->diffInMinutes($t->slaInstance->first_response_met_at) / 60
             : null);
 
-        $avgResolution = $resolvedTickets->avg(fn($t) => $t->resolved_at
+        $avgResolution = $resolvedTickets->avg(fn ($t) => $t->resolved_at
             ? $t->created_at->diffInMinutes($t->resolved_at) / 60
             : null);
 
-        $breachedTickets = $tickets->filter(fn($t) => $t->slaInstance &&
+        $breachedTickets = $tickets->filter(fn ($t) => $t->slaInstance &&
             ($t->slaInstance->first_response_breached || $t->slaInstance->resolution_breached));
 
         $breachRate = $totalCreated > 0 ? ($breachedTickets->count() / $totalCreated) * 100 : 0;
 
-        $avgCsat = TicketRating::whereHas('ticket', fn($q) => $q->whereBetween('resolved_at', [$startDate, $endDate]))
+        $avgCsat = TicketRating::whereHas('ticket', fn ($q) => $q->whereBetween('resolved_at', [$startDate, $endDate]))
             ->avg('score');
 
         return [

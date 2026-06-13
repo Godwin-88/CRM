@@ -6,9 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Interaction;
 use App\Models\InteractionChannel;
 use App\Models\KioskIntegration;
-use App\Models\CallRecording;
 use App\Models\Ticket;
-use App\Models\Contact;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,7 +46,7 @@ class OmniChannelWebController extends Controller
     public function contactCenter(): Response
     {
         $channels = InteractionChannel::all();
-        $agents = \App\Models\User::whereHas('roles', function ($q) {
+        $agents = User::whereHas('roles', function ($q) {
             $q->whereIn('name', ['agent', 'admin', 'manager']);
         })->get();
 

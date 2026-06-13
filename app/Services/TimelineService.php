@@ -4,17 +4,13 @@ namespace App\Services;
 
 use App\Models\Contact;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 
 class TimelineService
 {
     /**
      * Get paginated timeline entries for a contact.
      *
-     * @param Contact $contact
-     * @param array $filters ['types' => string[]]  // e.g. ['interaction', 'deal', 'activity', 'ticket', 'contract']
-     * @param int $perPage
-     * @return LengthAwarePaginator
+     * @param  array  $filters  ['types' => string[]]  // e.g. ['interaction', 'deal', 'activity', 'ticket', 'contract']
      */
     public function getTimeline(Contact $contact, array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
@@ -63,8 +59,8 @@ class TimelineService
                     'id' => $item->id,
                     'type' => 'deal',
                     'type_label' => 'Deal',
-                    'summary' => $item->title . ' (' . $item->stage . ')',
-                    'detail' => 'Value: ' . ($item->currency ?? 'USD') . ' ' . number_format($item->value ?? 0, 2),
+                    'summary' => $item->title.' ('.$item->stage.')',
+                    'detail' => 'Value: '.($item->currency ?? 'USD').' '.number_format($item->value ?? 0, 2),
                     'date' => $item->created_at,
                     'agent' => $item->owner?->name ?? 'System',
                     'outcome' => $item->stage,
@@ -81,7 +77,7 @@ class TimelineService
                     'type' => 'ticket',
                     'type_label' => 'Support Ticket',
                     'summary' => $item->subject,
-                    'detail' => 'Priority: ' . $item->priority,
+                    'detail' => 'Priority: '.$item->priority,
                     'date' => $item->created_at,
                     'agent' => $item->assignee?->name ?? 'System',
                     'outcome' => $item->status,
@@ -98,7 +94,7 @@ class TimelineService
                     'type' => 'contract',
                     'type_label' => 'Contract',
                     'summary' => $item->title,
-                    'detail' => 'Status: ' . $item->status,
+                    'detail' => 'Status: '.$item->status,
                     'date' => $item->created_at,
                     'agent' => 'System',
                     'outcome' => $item->status,

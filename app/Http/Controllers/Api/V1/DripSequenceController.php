@@ -61,6 +61,7 @@ class DripSequenceController extends Controller
     public function destroy(DripSequence $sequence): JsonResponse
     {
         $sequence->delete();
+
         return response()->json(null, 204);
     }
 

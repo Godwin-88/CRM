@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ReactivationConfig;
 use App\Models\ReactivationContact;
-use App\Models\Contact;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

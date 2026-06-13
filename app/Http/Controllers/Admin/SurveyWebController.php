@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
+use App\Models\Segment;
 use App\Models\Survey;
 use App\Models\SurveyResponse;
-use App\Models\Contact;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,8 +16,8 @@ class SurveyWebController extends Controller
     public function index(): Response
     {
         $surveys = Survey::orderBy('created_at', 'desc')->get();
-        $segments = \App\Models\Segment::orderBy('name')->get(['id', 'name']);
-        $contacts = \App\Models\Contact::orderBy('first_name')->get(['id', 'first_name', 'last_name', 'email']);
+        $segments = Segment::orderBy('name')->get(['id', 'name']);
+        $contacts = Contact::orderBy('first_name')->get(['id', 'first_name', 'last_name', 'email']);
 
         return Inertia::render('Admin/Surveys', [
             'surveys' => $surveys,

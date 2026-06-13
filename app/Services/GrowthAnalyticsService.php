@@ -3,11 +3,10 @@
 namespace App\Services;
 
 use App\Models\Campaign;
+use App\Models\ClvCalculation;
 use App\Models\Contact;
 use App\Models\Deal;
-use App\Models\ClvCalculation;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class GrowthAnalyticsService
 {
@@ -19,9 +18,9 @@ class GrowthAnalyticsService
         $this->applyTeamFilters($query, $filters);
 
         $totalLeads = $query->where('type', 'lead')->count();
-        
+
         $leadsToDeals = Contact::where('type', 'lead')
-            ->whereHas('deals', fn($q) => $q->where('created_at', '>=', $this->getStartDate($filters)))
+            ->whereHas('deals', fn ($q) => $q->where('created_at', '>=', $this->getStartDate($filters)))
             ->count();
 
         $dealsToWon = Deal::query()
@@ -36,8 +35,8 @@ class GrowthAnalyticsService
             'total_leads' => $totalLeads,
             'lead_to_opportunity_rate' => $totalLeads > 0 ? round($leadsToDeals / $totalLeads * 100, 2) : 0,
             'opportunity_to_won_rate' => $totalDeals > 0 ? round($dealsToWon->count() / $totalDeals * 100, 2) : 0,
-            'lead_to_customer_rate' => $totalLeads > 0 && $dealsToWon->count() > 0 
-                ? round($dealsToWon->count() / $totalLeads * 100, 2) 
+            'lead_to_customer_rate' => $totalLeads > 0 && $dealsToWon->count() > 0
+                ? round($dealsToWon->count() / $totalLeads * 100, 2)
                 : 0,
             'conversion_funnel' => $this->getConversionFunnel($filters),
         ];
@@ -72,8 +71,7 @@ class GrowthAnalyticsService
         $cacData = $this->getCACMetrics($filters);
         $cac = $cacData['cac'];
 
-        $avgLTV = ClvCalculation::whereHas('contact', fn($q) => 
-            $q->where('created_at', '>=', $this->getStartDate($filters))
+        $avgLTV = ClvCalculation::whereHas('contact', fn ($q) => $q->where('created_at', '>=', $this->getStartDate($filters))
         )->avg('predicted_ltv') ?? 0;
 
         $ratio = $cac > 0 ? round($avgLTV / $cac, 2) : 0;
@@ -103,7 +101,7 @@ class GrowthAnalyticsService
     protected function getCACTrend(array $filters = []): array
     {
         $trend = [];
-        
+
         for ($i = 2; $i >= 0; $i--) {
             $start = Carbon::now()->subMonths($i + 2)->startOfMonth();
             $end = Carbon::now()->subMonths($i + 1)->endOfMonth();
@@ -139,7 +137,7 @@ class GrowthAnalyticsService
     protected function applyTeamFilters($query, array $filters): void
     {
         if (isset($filters['team_id'])) {
-            $query->whereHas('owner', fn($q) => $q->where('team_id', $filters['team_id']));
+            $query->whereHas('owner', fn ($q) => $q->where('team_id', $filters['team_id']));
         }
         if (isset($filters['owner_id'])) {
             $query->where('owner_id', $filters['owner_id']);
@@ -148,8 +146,8 @@ class GrowthAnalyticsService
 
     protected function getStartDate(array $filters): Carbon
     {
-        return isset($filters['date_from']) 
-            ? Carbon::parse($filters['date_from']) 
+        return isset($filters['date_from'])
+            ? Carbon::parse($filters['date_from'])
             : Carbon::now()->subMonth();
     }
 

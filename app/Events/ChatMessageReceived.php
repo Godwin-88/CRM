@@ -21,6 +21,6 @@ class ChatMessageReceived implements ShouldBroadcast
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('chat-sessions.' . $this->session->id);
+        return new PrivateChannel('chat-sessions.'.$this->session->id);
     }
 }

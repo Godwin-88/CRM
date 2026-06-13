@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\TriggerWelcomeSequence;
+use App\Models\Account;
+use App\Models\Contact;
 use App\Models\OnboardingRecord;
 use App\Models\OnboardingTemplate;
 use Illuminate\Http\JsonResponse;
@@ -91,7 +94,7 @@ class OnboardingController extends Controller
         $template = OnboardingTemplate::findOrFail($validated['template_id']);
 
         if ($validated['is_contact']) {
-            $contact = \App\Models\Contact::findOrFail($contactOrAccountId);
+            $contact = Contact::findOrFail($contactOrAccountId);
             $record = OnboardingRecord::create([
                 'template_id' => $template->id,
                 'contact_id' => $contact->id,
@@ -101,7 +104,7 @@ class OnboardingController extends Controller
                 'enroled_by' => auth()->id(),
             ]);
         } else {
-            $account = \App\Models\Account::findOrFail($contactOrAccountId);
+            $account = Account::findOrFail($contactOrAccountId);
             $record = OnboardingRecord::create([
                 'template_id' => $template->id,
                 'account_id' => $account->id,
@@ -158,7 +161,7 @@ class OnboardingController extends Controller
 
             // Auto-advance contact from prospect to customer if applicable
             if ($record->contact_id) {
-                $contact = \App\Models\Contact::find($record->contact_id);
+                $contact = Contact::find($record->contact_id);
                 if ($contact && $contact->type === 'prospect') {
                     $contact->update(['type' => 'customer']);
                 }
@@ -171,6 +174,7 @@ class OnboardingController extends Controller
     public function show(OnboardingRecord $record): JsonResponse
     {
         $this->authorize('view', $record);
+
         return response()->json($record->load(['template', 'contact', 'account', 'activities.assignedTo']));
     }
 
@@ -197,7 +201,7 @@ class OnboardingController extends Controller
     {
         // Integration hook: trigger welcome email sequence from campaign module
         // This is implemented as a queued job
-        \App\Jobs\TriggerWelcomeSequence::dispatch($record);
+        TriggerWelcomeSequence::dispatch($record);
     }
 
     public function analytics(): JsonResponse
@@ -230,13 +234,13 @@ class OnboardingController extends Controller
 
     private function calculateAvgCompletionDays($records): ?float
     {
-        $completed = $records->where('status', 'completed')->filter(fn($r) => $r->enrolled_at && $r->completed_at);
+        $completed = $records->where('status', 'completed')->filter(fn ($r) => $r->enrolled_at && $r->completed_at);
 
         if ($completed->isEmpty()) {
             return null;
         }
 
-        $totalDays = $completed->sum(fn($r) => $r->enrolled_at->diffInDays($r->completed_at));
+        $totalDays = $completed->sum(fn ($r) => $r->enrolled_at->diffInDays($r->completed_at));
 
         return round($totalDays / $completed->count(), 2);
     }

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\LoyaltyCommunicationTemplate;
+use App\Jobs\SendLoyaltyCommunication;
+use App\Models\Contact;
+use App\Models\LoyaltyCommunicationLog;
 use App\Models\LoyaltyCommunicationPreference;
+use App\Models\LoyaltyCommunicationTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -163,11 +166,11 @@ class LoyaltyCommunicationController extends Controller
             'contact_ids.*' => 'exists:contacts,id',
         ]);
 
-        $contacts = \App\Models\Contact::whereIn('id', $validated['contact_ids'])->get();
+        $contacts = Contact::whereIn('id', $validated['contact_ids'])->get();
         $queued = 0;
 
         foreach ($contacts as $contact) {
-            \App\Jobs\SendLoyaltyCommunication::dispatch($template, $contact);
+            SendLoyaltyCommunication::dispatch($template, $contact);
             $queued++;
         }
 
@@ -177,7 +180,7 @@ class LoyaltyCommunicationController extends Controller
     // Contact preferences
     public function getPreference($contactId): JsonResponse
     {
-        $contact = \App\Models\Contact::findOrFail($contactId);
+        $contact = Contact::findOrFail($contactId);
         $this->authorize('view', $contact);
 
         $pref = LoyaltyCommunicationPreference::firstOrCreate(
@@ -190,7 +193,7 @@ class LoyaltyCommunicationController extends Controller
 
     public function updatePreference(Request $request, $contactId): JsonResponse
     {
-        $contact = \App\Models\Contact::findOrFail($contactId);
+        $contact = Contact::findOrFail($contactId);
         $this->authorize('update', $contact);
 
         $validated = $request->validate([
@@ -210,7 +213,7 @@ class LoyaltyCommunicationController extends Controller
     {
         $this->authorize('viewAny', LoyaltyCommunicationTemplate::class);
 
-        $query = \App\Models\LoyaltyCommunicationLog::query()
+        $query = LoyaltyCommunicationLog::query()
             ->with(['contact', 'template']);
 
         if ($request->filled('contact_id')) {

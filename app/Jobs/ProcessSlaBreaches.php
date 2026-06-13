@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\Ticket;
 use App\Services\SlaService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
 use App\Models\ReactivationConfig;
 use App\Models\ReactivationContact;
-use App\Models\Contact;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -53,7 +55,7 @@ class GuidedJourneyWebController extends Controller
 
     public function toggleActive(ReactivationConfig $reactivationConfig)
     {
-        $reactivationConfig->update(['is_active' => !$reactivationConfig->is_active]);
+        $reactivationConfig->update(['is_active' => ! $reactivationConfig->is_active]);
 
         return back()->with('success', 'Campaign status updated');
     }
@@ -67,7 +69,7 @@ class GuidedJourneyWebController extends Controller
 
     public function run(ReactivationConfig $reactivationConfig)
     {
-        if (!$reactivationConfig->is_active) {
+        if (! $reactivationConfig->is_active) {
             return back()->with('error', 'Cannot run inactive campaign');
         }
 
@@ -98,7 +100,7 @@ class GuidedJourneyWebController extends Controller
                 ->where('contact_id', $contactId)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 ReactivationContact::create([
                     'config_id' => $reactivationConfig->id,
                     'contact_id' => $contactId,

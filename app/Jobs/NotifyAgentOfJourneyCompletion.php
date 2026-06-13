@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\GuidedJourney;
 use App\Models\JourneyCompletion;
+use App\Notifications\JourneyCompletedNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -24,9 +24,11 @@ class NotifyAgentOfJourneyCompletion implements ShouldQueue
         $contact = $this->completion->contact;
         $journey = $this->completion->journey;
 
-        if (!$contact || !$journey) return;
+        if (! $contact || ! $journey) {
+            return;
+        }
 
-        $contact->owner?->notify(new \App\Notifications\JourneyCompletedNotification(
+        $contact->owner?->notify(new JourneyCompletedNotification(
             $contact,
             $journey
         ));

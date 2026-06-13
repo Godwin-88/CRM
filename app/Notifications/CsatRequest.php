@@ -25,12 +25,12 @@ class CsatRequest extends Notification implements ShouldQueue
     {
         $baseUrl = config('app.url');
 
-        return (new MailMessage())
-            ->subject('How was your support experience? Ticket #' . $this->ticket->id)
+        return (new MailMessage)
+            ->subject('How was your support experience? Ticket #'.$this->ticket->id)
             ->line('Your ticket has been resolved. Please rate your support experience:')
             ->line('Click a score below to submit your rating (no login required):')
             ->line('1 (Poor) | 2 (Fair) | 3 (Good) | 4 (Very Good) | 5 (Excellent)')
-            ->action('Rate Your Experience', $baseUrl . '/tickets/' . $this->ticket->id . '/rate')
+            ->action('Rate Your Experience', $baseUrl.'/tickets/'.$this->ticket->id.'/rate')
             ->line('Thank you for your feedback!');
     }
 

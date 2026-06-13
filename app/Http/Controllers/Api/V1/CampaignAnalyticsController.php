@@ -3,24 +3,22 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Campaign;
 use App\Models\CampaignRecipient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class CampaignAnalyticsController extends Controller
 {
     public function performance(Request $request): JsonResponse
     {
         $campaignId = $request->query('campaign_id');
-        
+
         $query = CampaignRecipient::query();
-        
+
         if ($campaignId) {
             $query->where('campaign_id', $campaignId);
         }
-        
+
         $stats = $query->selectRaw('
             COUNT(*) as total_sent,
             SUM(CASE WHEN status = "delivered" THEN 1 ELSE 0 END) as delivered,

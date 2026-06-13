@@ -47,13 +47,13 @@ class AccountService
             // Save custom field values
             $this->saveCustomFieldValues($account, $customFields);
 
-            if (!empty($changedFields)) {
+            if (! empty($changedFields)) {
                 activity()
                     ->performedOn($account)
                     ->causedBy(auth()->user())
                     ->withProperties([
-                        'old_values' => array_map(fn($v) => $v['old'], $changedFields),
-                        'new_values' => array_map(fn($v) => $v['new'], $changedFields),
+                        'old_values' => array_map(fn ($v) => $v['old'], $changedFields),
+                        'new_values' => array_map(fn ($v) => $v['new'], $changedFields),
                         'changed_fields' => array_keys($changedFields),
                     ])
                     ->event('updated')
@@ -64,7 +64,7 @@ class AccountService
         });
     }
 
-    public function deleteAccount(Account $account): bool|null
+    public function deleteAccount(Account $account): ?bool
     {
         return DB::transaction(function () use ($account) {
             activity()

@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\LoyaltyProgram;
-use App\Models\LoyaltyTier;
-use App\Models\LoyaltyRule;
-use App\Models\LoyaltyRedemptionRule;
-use App\Models\PointsLedger;
 use App\Models\LoyaltyEnrollment;
-use App\Models\Contact;
+use App\Models\LoyaltyProgram;
+use App\Models\LoyaltyRedemptionRule;
+use App\Models\LoyaltyRule;
+use App\Models\LoyaltyTier;
+use App\Models\PointsLedger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
