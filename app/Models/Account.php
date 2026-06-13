@@ -83,6 +83,26 @@ class Account extends Model
         return $this->hasMany(Contract::class);
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function getTotalInvoicedAttribute(): float
+    {
+        return (float) $this->invoices()->sum('total');
+    }
+
+    public function getTotalPaidAttribute(): float
+    {
+        return (float) Payment::whereHas('invoice', fn ($q) => $q->where('account_id', $this->id))->sum('amount');
+    }
+
+    public function getOutstandingBalanceAttribute(): float
+    {
+        return $this->getTotalInvoicedAttribute() - $this->getTotalPaidAttribute();
+    }
+
     public function customFieldValues(): MorphMany
     {
         return $this->morphMany(CustomFieldValue::class, 'customizable');

@@ -78,6 +78,38 @@ class RoleAndPermissionSeeder extends Seeder
             'create opportunities',
             'edit opportunities',
             'delete opportunities',
+
+            // Invoices
+            'invoices.view',
+            'invoices.manage',
+            'invoices.payments',
+
+            // Procurement
+            'procurement.create',
+            'procurement.approve',
+
+            // Vendors
+            'vendors.view',
+            'vendors.manage',
+            'vendors.financials',
+
+            // Assets
+            'assets.view',
+            'assets.manage',
+
+            // HR
+            'hr.view',
+            'hr.manage',
+            'hr.documents',
+
+            // Banking
+            'banking.view',
+            'banking.manage',
+            'banking.financials',
+            'banking.documents',
+
+            // Finance Analytics
+            'analytics.finance',
         ];
 
         foreach ($permissions as $permission) {
@@ -105,6 +137,29 @@ class RoleAndPermissionSeeder extends Seeder
             'view contracts', 'create contracts', 'edit contracts',
             'manage contract_templates',
             'view legal_matters', 'create legal_matters', 'edit legal_matters',
+            // Finance
+            'invoices.view', 'invoices.manage', 'invoices.payments',
+            'procurement.create', 'procurement.approve',
+            'vendors.view', 'vendors.manage',
+            'analytics.finance',
+        ]);
+
+        // Finance Manager — all finance and procurement permissions
+        $financeManager = Role::create(['name' => 'finance-manager']);
+        $financeManager->givePermissionTo([
+            'invoices.view', 'invoices.manage', 'invoices.payments',
+            'procurement.create', 'procurement.approve',
+            'vendors.view', 'vendors.manage', 'vendors.financials',
+            'banking.view', 'banking.financials', 'banking.documents',
+            'analytics.finance',
+        ]);
+
+        // Operations Manager — assets and HR view
+        $operationsManager = Role::create(['name' => 'operations-manager']);
+        $operationsManager->givePermissionTo([
+            'assets.view', 'assets.manage',
+            'hr.view', 'hr.manage',
+            'hr.documents',
         ]);
 
         // Agent — create and edit, but not delete

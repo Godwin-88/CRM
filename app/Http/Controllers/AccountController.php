@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -62,11 +63,23 @@ class AccountController extends Controller
             'contracts' => function ($q) {
                 $q->latest()->limit(5);
             },
+            'invoices' => function ($q) {
+                $q->latest()->limit(20)->with(['payments', 'contact']);
+            },
             'customFieldValues',
         ]);
 
+        $financialSummary = [
+            'total_invoiced' => (float) $account->invoices()->sum('total'),
+            'total_paid' => (float) Payment::whereHas('invoice', fn ($q) => $q->where('account_id', $account->id))->sum('amount'),
+            'outstanding_balance' => (float) $account->invoices()->whereIn('status', ['sent', 'partially_paid', 'overdue'])->sum('total') - (float) Payment::whereHas('invoice', fn ($q) => $q->where('account_id', $account->id))->sum('amount'),
+            'overdue_count' => $account->invoices()->where('status', 'overdue')->count(),
+            'avg_payment_delay' => $account->invoices()->where('status', 'paid')->avg('paid_at') ? now()->diffInDays($account->invoices()->where('status', 'paid')->latest('paid_at')->first()?->paid_at) : 0,
+        ];
+
         return Inertia::render('Accounts/Show', [
             'account' => $account,
+            'financialSummary' => $financialSummary,
         ]);
     }
 }

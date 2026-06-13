@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Contract;
 use App\Models\Account;
 use App\Models\Contact;
+use App\Models\Contract;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -15,7 +15,7 @@ class ContractFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => $this->faker->words(3, true) . ' Agreement',
+            'title' => $this->faker->words(3, true).' Agreement',
             'contact_id' => Contact::inRandomOrder()->first()?->id ?? Contact::factory(),
             'account_id' => Account::inRandomOrder()->first()?->id ?? Account::factory(),
             'type' => $this->faker->randomElement(['msa', 'nda', 'sla', 'renewal', 'upsell', 'custom']),

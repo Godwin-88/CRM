@@ -3,10 +3,20 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const props = defineProps<{
   account: any;
+  financialSummary?: {
+    total_invoiced: number;
+    total_paid: number;
+    outstanding_balance: number;
+    overdue_count: number;
+    avg_payment_delay: number;
+  };
 }>();
+
+const summary = props.financialSummary || {};
 </script>
 
 <template>
@@ -68,6 +78,37 @@ const props = defineProps<{
               </dl>
             </CardContent>
           </Card>
+
+          <!-- Financial Summary -->
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">Financial Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl class="grid grid-cols-3 gap-4">
+                <div>
+                  <dt class="text-sm text-gray-500">Total Invoiced</dt>
+                  <dd class="font-medium">${{ Number(summary.total_invoiced || 0).toLocaleString() }}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm text-gray-500">Total Paid</dt>
+                  <dd class="font-medium">${{ Number(summary.total_paid || 0).toLocaleString() }}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm text-gray-500">Outstanding</dt>
+                  <dd class="font-medium">${{ Number(summary.outstanding_balance || 0).toLocaleString() }}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm text-gray-500">Overdue Invoices</dt>
+                  <dd class="font-medium">{{ summary.overdue_count || 0 }}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm text-gray-500">Avg Payment Delay</dt>
+                  <dd class="font-medium">{{ summary.avg_payment_delay || 0 }} days</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
         </div>
 
         <!-- Sidebar -->
@@ -109,34 +150,6 @@ const props = defineProps<{
                 </div>
               </div>
               <p v-else class="text-gray-400 text-sm">No deals</p>
-            </CardContent>
-          </Card>
-
-          <!-- Tickets -->
-          <Card>
-            <CardHeader><CardTitle class="text-lg">Tickets</CardTitle></CardHeader>
-            <CardContent>
-              <div v-if="account.tickets?.length" class="space-y-2">
-                <div v-for="ticket in account.tickets" :key="ticket.id" class="p-2 bg-gray-50 rounded">
-                  <p class="text-sm font-medium">{{ ticket.subject }}</p>
-                  <p class="text-xs text-gray-500">{{ ticket.status }} / {{ ticket.priority }}</p>
-                </div>
-              </div>
-              <p v-else class="text-gray-400 text-sm">No tickets</p>
-            </CardContent>
-          </Card>
-
-          <!-- Contracts -->
-          <Card>
-            <CardHeader><CardTitle class="text-lg">Contracts</CardTitle></CardHeader>
-            <CardContent>
-              <div v-if="account.contracts?.length" class="space-y-2">
-                <div v-for="contract in account.contracts" :key="contract.id" class="p-2 bg-gray-50 rounded">
-                  <p class="text-sm font-medium">{{ contract.title }}</p>
-                  <p class="text-xs text-gray-500">{{ contract.status }}</p>
-                </div>
-              </div>
-              <p v-else class="text-gray-400 text-sm">No contracts</p>
             </CardContent>
           </Card>
         </div>

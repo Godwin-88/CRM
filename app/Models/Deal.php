@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Models\Invoice;
+
 class Deal extends Model
 {
     use HasFactory, HasUlids, SoftDeletes;
@@ -112,5 +114,10 @@ class Deal extends Model
     public function isClosed(): bool
     {
         return $this->isClosedWon() || $this->isClosedLost();
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
     }
 }
