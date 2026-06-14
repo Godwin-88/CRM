@@ -17,10 +17,10 @@ class PurchaseOrderController extends Controller
         $this->authorize('viewAny', PurchaseOrder::class);
 
         $po = QueryBuilder::for(PurchaseOrder::query())
-            ->allowedFilters([
+            ->allowedFilters(
                 AllowedFilter::exact('status'),
-                AllowedFilter::exact('vendor_id'),
-            ])
+                AllowedFilter::exact('vendor_id')
+            )
             ->with(['vendor', 'approver'])
             ->when($request->filled('search'), function ($query, $search) {
                 $query->where('po_number', 'like', "%{$search}%");

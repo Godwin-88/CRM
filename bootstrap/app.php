@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\PrivilegedSession;
+use App\Http\Middleware\RequireMfaVerified;
 use App\Http\Middleware\SetTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,10 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'privileged' => PrivilegedSession::class,
+            'mfa_verified' => RequireMfaVerified::class,
         ]);
         $middleware->web(append: [
             HandleInertiaRequests::class,
             SetTenantContext::class,
+            PrivilegedSession::class,
         ]);
         $middleware->api(append: [
             SetTenantContext::class,

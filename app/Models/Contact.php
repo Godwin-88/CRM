@@ -25,14 +25,24 @@ class Contact extends Model
         'source',
         'owner_id',
         'clv_score',
+        'ltv',
+        'churn_risk_score',
+        'last_activity_at',
         'loyalty_tier',
         'preferred_channel',
-        'score', // computed scoring field
+        'score',
+        'marketing_consent',
+        'data_processing_consent',
+        'consent_timestamp',
+        'national_id',
     ];
 
     protected $casts = [
         'clv_score' => 'decimal:2',
         'score' => 'integer',
+        'marketing_consent' => 'boolean',
+        'data_processing_consent' => 'boolean',
+        'consent_timestamp' => 'datetime',
     ];
 
     // ─── Scopes ───────────────────────────────────────────────

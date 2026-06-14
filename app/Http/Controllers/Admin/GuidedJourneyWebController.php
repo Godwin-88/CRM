@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\ReactivationConfig;
 use App\Models\ReactivationContact;
+use App\Models\LoyaltyTier;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -14,7 +15,7 @@ class GuidedJourneyWebController extends Controller
 {
     public function index(): Response
     {
-        $configs = ReactivationConfig::withCount('reactivationContacts')
+        $configs = ReactivationConfig::withCount('contacts')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -73,23 +74,24 @@ class GuidedJourneyWebController extends Controller
             return back()->with('error', 'Cannot run inactive campaign');
         }
 
-        $criteria = json_decode($reactivationConfig->criteria, true) ?? [];
+        $criteria = $reactivationConfig->criteria ?? [];
         $contacts = Contact::query();
 
         if (isset($criteria['min_inactivity_days'])) {
-            $contacts->where('last_activity_at', '<=', now()->subDays($criteria['min_inactivity_days']));
+            $contacts->where('last_activity_at', '<=', now()->subDays((int)$criteria['min_inactivity_days']));
         }
 
-        if (isset($criteria['segment_id'])) {
+        if (!empty($criteria['segment_id'])) {
             $contacts->whereIn('id', function ($query) use ($criteria) {
-                $query->select('contact_id')->from('segment_contact')->where('segment_id', $criteria['segment_id']);
+                $query->select('contact_id')->from('contact_segments')->where('segment_id', $criteria['segment_id']);
             });
         }
 
-        if (isset($criteria['loyalty_tier_id'])) {
-            $contacts->whereHas('loyaltyEnrollment', function ($query) use ($criteria) {
-                $query->where('loyalty_tier_id', $criteria['loyalty_tier_id']);
-            });
+        if (!empty($criteria['loyalty_tier_id'])) {
+            $tier = \App\Models\LoyaltyTier::find($criteria['loyalty_tier_id']);
+            if ($tier) {
+                $contacts->where('loyalty_tier', $tier->name);
+            }
         }
 
         $contactIds = $contacts->pluck('contacts.id');
@@ -104,8 +106,7 @@ class GuidedJourneyWebController extends Controller
                 ReactivationContact::create([
                     'config_id' => $reactivationConfig->id,
                     'contact_id' => $contactId,
-                    'status' => 'queued',
-                    'queued_at' => now(),
+                    'status' => 'enrolled',
                 ]);
                 $addedCount++;
             }
@@ -131,10 +132,10 @@ class GuidedJourneyWebController extends Controller
         $campaigns = ReactivationConfig::all(['id', 'name']);
 
         $stats = [
-            'queued' => ReactivationContact::where('status', 'queued')->count(),
-            'sent' => ReactivationContact::where('status', 'sent')->count(),
-            'responded' => ReactivationContact::where('status', 'responded')->count(),
-            'reactivated' => ReactivationContact::where('status', 'reactivated')->count(),
+            'queued' => ReactivationContact::where('status', 'enrolled')->count(),
+            'sent' => ReactivationContact::where('status', 're_engaged')->count(),
+            'responded' => ReactivationContact::where('status', 're_engaged')->count(),
+            'reactivated' => ReactivationContact::where('status', 'completed')->count(),
         ];
 
         return Inertia::render('Admin/ReactivationContacts', [
@@ -147,22 +148,22 @@ class GuidedJourneyWebController extends Controller
 
     public function stats(): Response
     {
-        $campaigns = ReactivationConfig::withCount('reactivationContacts')->get();
+        $campaigns = ReactivationConfig::withCount('contacts')->get();
 
         $stats = [
             'total_campaigns' => $campaigns->count(),
             'active_campaigns' => $campaigns->where('is_active', true)->count(),
-            'total_contacts_queued' => ReactivationContact::where('status', 'queued')->count(),
-            'total_contacts_sent' => ReactivationContact::where('status', 'sent')->count(),
-            'total_contacts_responded' => ReactivationContact::where('status', 'responded')->count(),
-            'total_reactivated' => ReactivationContact::where('status', 'reactivated')->count(),
+            'total_contacts_queued' => ReactivationContact::where('status', 'enrolled')->count(),
+            'total_contacts_sent' => ReactivationContact::where('status', 're_engaged')->count(),
+            'total_contacts_responded' => ReactivationContact::where('status', 're_engaged')->count(),
+            'total_reactivated' => ReactivationContact::where('status', 'completed')->count(),
             'campaign_performance' => [],
         ];
 
         foreach ($campaigns as $campaign) {
             $stats['campaign_performance'][] = [
                 'name' => $campaign->name,
-                'queued' => $campaign->reactivation_contacts_count,
+                'queued' => $campaign->contacts_count,
                 'is_active' => $campaign->is_active,
             ];
         }

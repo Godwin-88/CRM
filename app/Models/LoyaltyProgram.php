@@ -15,8 +15,12 @@ class LoyaltyProgram extends Model
 
     protected $fillable = [
         'name',
+        'program_type',
         'description',
         'currency_label',
+        'currency_symbol',
+        'earn_rate',
+        'min_redemption_threshold',
         'is_active',
         'expiry_policy',
         'expiry_inactivity_months',
@@ -27,6 +31,8 @@ class LoyaltyProgram extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'earn_rate' => 'decimal:2',
+        'min_redemption_threshold' => 'integer',
         'matching_rules' => 'array',
         'expiry_inactivity_months' => 'integer',
         'expiry_fixed_date' => 'date',

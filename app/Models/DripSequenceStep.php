@@ -15,6 +15,9 @@ class DripSequenceStep extends Model
         'drip_sequence_id',
         'position',
         'action_type',
+        'config',
+        'delay_days',
+        'sort_order',
         'email_template_id',
         'sms_content',
         'in_app_title',
@@ -31,6 +34,9 @@ class DripSequenceStep extends Model
 
     protected $casts = [
         'position' => 'integer',
+        'config' => 'array',
+        'delay_days' => 'integer',
+        'sort_order' => 'integer',
         'delay_value' => 'integer',
         'exit_conditions' => 'array',
     ];

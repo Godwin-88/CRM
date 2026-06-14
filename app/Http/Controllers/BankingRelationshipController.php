@@ -16,9 +16,7 @@ class BankingRelationshipController extends Controller
         $this->authorize('viewAny', BankingRelationship::class);
 
         $relationships = QueryBuilder::for(BankingRelationship::query())
-            ->allowedFilters([
-                AllowedFilter::exact('relationship_type'),
-            ])
+            ->allowedFilters(AllowedFilter::exact('relationship_type'))
             ->when($request->filled('search'), function ($query, $search) {
                 $query->where('institution_name', 'like', "%{$search}%");
             })

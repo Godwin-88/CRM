@@ -34,6 +34,7 @@ class DripSequenceController extends Controller
             'trigger' => 'required|in:contact_created,contact_stage_changed,deal_stage_changed,contact_field_changed,form_submission,manual_enrolment',
             'trigger_conditions' => 'nullable|array',
             'allow_re_enrolment' => 'boolean',
+            'status' => 'required|in:draft,active,inactive',
         ]);
 
         $sequence = DripSequence::create([

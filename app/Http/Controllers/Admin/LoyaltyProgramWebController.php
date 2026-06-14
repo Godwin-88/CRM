@@ -26,43 +26,51 @@ class LoyaltyProgramWebController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'program_type' => 'required|string|in:points_based,cashback,tiered',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
-            'currency_name' => 'required|string|max:50',
+            'currency_label' => 'required|string|max:50',
             'currency_symbol' => 'required|string|max:10',
             'earn_rate' => 'required|numeric|min:0',
-            'redemption_rate' => 'required|numeric|min:0',
-            'min_points_redemption' => 'required|integer|min:0',
+            'min_redemption_threshold' => 'required|integer|min:0',
+            'expiry_policy' => 'required|string|in:never,inactivity_months,fixed_date',
+            'expiry_inactivity_months' => 'nullable|required_if:expiry_policy,inactivity_months|integer|min:1',
+            'expiry_fixed_date' => 'nullable|required_if:expiry_policy,fixed_date|date',
         ]);
 
-        $program = LoyaltyProgram::create($request->all());
+        $validated['created_by'] = auth()->id();
+
+        LoyaltyProgram::create($validated);
 
         return redirect()->route('admin.loyalty.index')->with('success', 'Loyalty program created successfully.');
     }
 
     public function update(Request $request, LoyaltyProgram $loyaltyProgram)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'program_type' => 'required|string|in:points_based,cashback,tiered',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
-            'currency_name' => 'required|string|max:50',
+            'currency_label' => 'required|string|max:50',
             'currency_symbol' => 'required|string|max:10',
             'earn_rate' => 'required|numeric|min:0',
-            'redemption_rate' => 'required|numeric|min:0',
-            'min_points_redemption' => 'required|integer|min:0',
+            'min_redemption_threshold' => 'required|integer|min:0',
+            'expiry_policy' => 'required|string|in:never,inactivity_months,fixed_date',
+            'expiry_inactivity_months' => 'nullable|required_if:expiry_policy,inactivity_months|integer|min:1',
+            'expiry_fixed_date' => 'nullable|required_if:expiry_policy,fixed_date|date',
         ]);
 
-        $loyaltyProgram->update($request->all());
+        $loyaltyProgram->update($validated);
 
         return redirect()->route('admin.loyalty.index')->with('success', 'Loyalty program updated successfully.');
     }
 
     public function tiers(): Response
     {
-        $tiers = LoyaltyTier::orderBy('min_points')->get();
+        $tiers = LoyaltyTier::orderBy('min_points_threshold')->get();
 
         return Inertia::render('Admin/LoyaltyTiers', [
             'tiers' => $tiers,
@@ -72,27 +80,28 @@ class LoyaltyProgramWebController extends Controller
     public function storeTier(Request $request)
     {
         $request->validate([
+            'program_id' => 'required|exists:loyalty_programs,id',
             'name' => 'required|string|max:255',
-            'min_points' => 'required|integer|min:0',
+            'min_points_threshold' => 'required|integer|min:0',
             'benefits' => 'nullable|array',
         ]);
 
         LoyaltyTier::create($request->all());
 
-        return redirect()->route('admin.loyalty.tiers')->with('success', 'Tier created successfully.');
+        return redirect()->route('admin.loyalty.index')->with('success', 'Tier created successfully.');
     }
 
     public function updateTier(Request $request, LoyaltyTier $loyaltyTier)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'min_points' => 'required|integer|min:0',
+            'min_points_threshold' => 'required|integer|min:0',
             'benefits' => 'nullable|array',
         ]);
 
         $loyaltyTier->update($request->all());
 
-        return redirect()->route('admin.loyalty.tiers')->with('success', 'Tier updated successfully.');
+        return redirect()->route('admin.loyalty.index')->with('success', 'Tier updated successfully.');
     }
 
     public function rules(): Response

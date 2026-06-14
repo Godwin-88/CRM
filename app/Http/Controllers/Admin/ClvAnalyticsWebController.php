@@ -17,8 +17,8 @@ class ClvAnalyticsWebController extends Controller
 {
     public function index(): Response
     {
-        $totalPointsIssued = PointsLedger::where('type', 'earn')->sum('points');
-        $totalPointsRedeemed = PointsLedger::where('type', 'redeem')->sum('points');
+        $totalPointsIssued = PointsLedger::where('type', 'credit')->sum('points_amount');
+        $totalPointsRedeemed = PointsLedger::where('type', 'debit')->sum('points_amount');
         $redemptionRate = $totalPointsIssued > 0 ? round(($totalPointsRedeemed / $totalPointsIssued) * 100, 2) : 0;
         $totalEnrollments = LoyaltyEnrollment::count();
         $activeEnrollments = LoyaltyEnrollment::where('is_active', true)->count();
@@ -148,7 +148,7 @@ class ClvAnalyticsWebController extends Controller
     {
         $totalRevenue = Deal::where('status', 'won')->sum('value') ?? 0;
         $totalContacts = Contact::count();
-        $avgDealSize = Deals::where('status', 'won')->avg('value') ?? 0;
+        $avgDealSize = Deal::where('status', 'won')->avg('value') ?? 0;
         $winRate = Deal::count() > 0 ? round((Deal::where('status', 'won')->count() / Deal::count()) * 100, 2) : 0;
 
         $ltvByYear = [];

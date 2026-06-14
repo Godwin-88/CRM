@@ -29,13 +29,16 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BankingRelationshipController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\DsrController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\DripSequenceWebController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LegalMatterController;
+use App\Http\Controllers\MfaController;
 use App\Http\Controllers\PipelineController;
+use App\Http\Controllers\PrivilegedSessionController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\SegmentController;
 use App\Http\Controllers\Support\KnowledgeBaseController;
@@ -53,6 +56,15 @@ Route::get('/register', [AuthController::class, 'registerForm'])->name('register
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// MFA Routes
+Route::get('/mfa/setup', [MfaController::class, 'showSetup'])->name('mfa.setup');
+Route::post('/mfa/setup/generate', [MfaController::class, 'generateSecret'])->name('mfa.setup.generate');
+Route::post('/mfa/setup', [MfaController::class, 'enable'])->name('mfa.enable');
+Route::get('/mfa/verify', [MfaController::class, 'showVerify'])->name('mfa.verify');
+Route::post('/mfa/verify', [MfaController::class, 'verify'])->name('mfa.verify.submit');
+Route::post('/mfa/disable', [MfaController::class, 'disable'])->name('mfa.disable');
+Route::post('/admin/users/{user}/mfa/reset', [MfaController::class, 'adminReset'])->name('admin.mfa.reset');
+
 // Email tracking redirect
 Route::get('/t/{token}', [TrackingController::class, 'redirect'])->name('tracking.redirect');
 Route::get('/open/{token}', [TrackingController::class, 'openPixel'])->name('tracking.open');
@@ -63,7 +75,31 @@ Route::get('/', function () {
 });
 
 // ─── Auth required routes ─────────────────────────────────────────────────────
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'mfa_verified'])->group(function () {
+
+    // ─── Security Events ───────────────────────────────────────────────────────────
+    Route::middleware(['permission:security.events'])->group(function () {
+        Route::get('/admin/security/events', [\App\Http\Controllers\SecurityEventController::class, 'index'])
+            ->name('admin.security.events');
+    });
+
+    // ─── Privileged Session ───────────────────────────────────────────────────────
+    Route::get('/admin/privileged/challenge', [PrivilegedSessionController::class, 'showChallenge'])
+        ->name('admin.privileged.challenge');
+    Route::post('/admin/privileged/enter', [PrivilegedSessionController::class, 'enter'])
+        ->name('admin.privileged.enter');
+    Route::post('/admin/privileged/exit', [PrivilegedSessionController::class, 'exit'])
+        ->name('admin.privileged.exit');
+
+    // ─── DSR Module ──────────────────────────────────────────────────────────────
+    Route::middleware(['permission:dsr.manage'])->group(function () {
+        Route::get('/admin/dsr', [DsrController::class, 'index'])->name('admin.dsr.index');
+        Route::get('/admin/dsr/create', [DsrController::class, 'create'])->name('admin.dsr.create');
+        Route::post('/admin/dsr', [DsrController::class, 'store'])->name('admin.dsr.store');
+        Route::get('/admin/dsr/{dsrRequest}', [DsrController::class, 'show'])->name('admin.dsr.show');
+        Route::post('/admin/dsr/{dsrRequest}/execute', [DsrController::class, 'execute'])->name('admin.dsr.execute');
+        Route::post('/admin/dsr/{dsrRequest}/override', [DsrController::class, 'override'])->name('admin.dsr.override');
+    });
 
     // Contacts
     Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
@@ -150,8 +186,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Contracts
     Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
-    Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/create', [ContractController::class, 'create'])->name('contracts.create');
+    Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::post('/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}/edit', [ContractController::class, 'edit'])->name('contracts.edit');
     Route::put('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
@@ -163,8 +199,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Legal Matters
     Route::get('/legal', [LegalMatterController::class, 'index'])->name('legal.index');
-    Route::get('/legal/{legalMatter}', [LegalMatterController::class, 'show'])->name('legal.show');
     Route::get('/legal/create', [LegalMatterController::class, 'create'])->name('legal.create');
+    Route::get('/legal/{legalMatter}', [LegalMatterController::class, 'show'])->name('legal.show');
     Route::post('/legal', [LegalMatterController::class, 'store'])->name('legal.store');
     Route::get('/legal/{legalMatter}/edit', [LegalMatterController::class, 'edit'])->name('legal.edit');
     Route::put('/legal/{legalMatter}', [LegalMatterController::class, 'update'])->name('legal.update');
@@ -256,6 +292,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/reactivation', [ReactivationWebController::class, 'store'])->name('admin.reactivation.store');
         Route::put('/admin/reactivation/{reactivationConfig}', [ReactivationWebController::class, 'update'])->name('admin.reactivation.update');
         Route::get('/admin/reactivation/contacts', [ReactivationWebController::class, 'contacts'])->name('admin.reactivation.contacts');
+        Route::post('/admin/reactivation/{reactivationConfig}/run', [GuidedJourneyWebController::class, 'run'])->name('admin.reactivation.run');
 
         // CLV Analytics
         Route::get('/admin/clv-analytics', [ClvAnalyticsWebController::class, 'index'])->name('admin.clv-analytics.index');
@@ -282,11 +319,6 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // Assets
-        Route::middleware(['permission:assets.view'])->group(function () {
-            Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
-            Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
-        });
-
         Route::middleware(['permission:assets.manage'])->group(function () {
             Route::get('/assets/create', [AssetController::class, 'create'])->name('assets.create');
             Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
@@ -295,13 +327,12 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/assets/export', [AssetController::class, 'export'])->name('assets.export');
         });
 
-        // Invoices
-        Route::middleware(['permission:invoices.view'])->group(function () {
-            Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-            Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
-            Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
+        Route::middleware(['permission:assets.view'])->group(function () {
+            Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
+            Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
         });
 
+        // Invoices
         Route::middleware(['permission:invoices.manage'])->group(function () {
             Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
             Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
@@ -311,16 +342,17 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
         });
 
+        Route::middleware(['permission:invoices.view'])->group(function () {
+            Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+            Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+            Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
+        });
+
         Route::middleware(['permission:invoices.payments'])->group(function () {
             Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store');
         });
 
         // Vendors
-        Route::middleware(['permission:vendors.view'])->group(function () {
-            Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
-            Route::get('/vendors/{vendor}', [VendorController::class, 'show'])->name('vendors.show');
-        });
-
         Route::middleware(['permission:vendors.manage'])->group(function () {
             Route::get('/vendors/create', [VendorController::class, 'create'])->name('vendors.create');
             Route::post('/vendors', [VendorController::class, 'store'])->name('vendors.store');
@@ -330,14 +362,16 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/vendors/{vendor}/rate', [VendorController::class, 'addRating'])->name('vendors.rate');
         });
 
+        Route::middleware(['permission:vendors.view'])->group(function () {
+            Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
+            Route::get('/vendors/{vendor}', [VendorController::class, 'show'])->name('vendors.show');
+        });
+
         // Purchase Orders
         Route::middleware(['permission:procurement.create'])->group(function () {
             Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
-            Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
-        });
-
-        Route::middleware(['permission:procurement.create'])->group(function () {
             Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+            Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
             Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
             Route::post('/purchase-orders/{purchaseOrder}/submit', [PurchaseOrderController::class, 'submit'])->name('purchase-orders.submit');
             Route::post('/purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
@@ -355,11 +389,6 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // Banking Relationships
-        Route::middleware(['permission:banking.view'])->group(function () {
-            Route::get('/banking', [BankingRelationshipController::class, 'index'])->name('banking.index');
-            Route::get('/banking/{bankingRelationship}', [BankingRelationshipController::class, 'show'])->name('banking.show');
-        });
-
         Route::middleware(['permission:banking.manage'])->group(function () {
             Route::get('/banking/create', [BankingRelationshipController::class, 'create'])->name('banking.create');
             Route::post('/banking', [BankingRelationshipController::class, 'store'])->name('banking.store');
@@ -368,17 +397,22 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/banking/{bankingRelationship}', [BankingRelationshipController::class, 'destroy'])->name('banking.destroy');
         });
 
-        // Employees
-        Route::middleware(['permission:hr.view'])->group(function () {
-            Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
-            Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+        Route::middleware(['permission:banking.view'])->group(function () {
+            Route::get('/banking', [BankingRelationshipController::class, 'index'])->name('banking.index');
+            Route::get('/banking/{bankingRelationship}', [BankingRelationshipController::class, 'show'])->name('banking.show');
         });
 
+        // Employees
         Route::middleware(['permission:hr.manage'])->group(function () {
             Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
             Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
             Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
             Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+        });
+
+        Route::middleware(['permission:hr.view'])->group(function () {
+            Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+            Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
         });
     });
 });

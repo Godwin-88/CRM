@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Plus, Workflow, Zap, Target } from 'lucide-vue-next';
 
 interface DripSequence {
   id: string;
@@ -16,43 +20,35 @@ interface DripSequence {
   trigger: string;
   status: string;
   allow_re_enrolment: boolean;
-  created_by?: { name: string };
+  steps: any[];
 }
 
-const props = defineProps<{
-  sequences: DripSequence[];
-}>();
-
+const props = defineProps<{ sequences: DripSequence[] }>();
 const sequences = ref(props.sequences);
 const isCreateOpen = ref(false);
 
 const newSequence = ref({
   name: '',
+  description: '',
   trigger: 'contact_created',
+  status: 'draft',
   allow_re_enrolment: false,
 });
 
 const createSequence = async () => {
-  const response = await fetch('/api/v1/drip-sequences', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
-    },
-    body: JSON.stringify(newSequence.value),
+  router.post('/api/v1/drip-sequences', newSequence.value, {
+    onSuccess: () => {
+      isCreateOpen.value = false;
+      router.reload();
+    }
   });
-  
-  if (response.ok) {
-    isCreateOpen.value = false;
-    router.reload();
-  }
 };
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
-    draft: 'outline',
+    draft: 'secondary',
     active: 'default',
-    inactive: 'secondary',
+    inactive: 'outline',
   };
   return colors[status] || 'outline';
 };
@@ -72,47 +68,49 @@ const triggerLabel = (trigger: string) => {
 
 <template>
   <AppLayout>
-    <Head title="Drip Sequences" />
-    <div class="max-w-7xl mx-auto">
-      <div class="flex justify-between items-center mb-6">
+    <Head title="Drip Sequences Engine" />
+    <div class="max-w-7xl mx-auto space-y-6">
+      <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-bold">Drip Sequences</h1>
-          <p class="text-gray-500">Automated multi-step workflows triggered by contact events.</p>
+          <h1 class="text-3xl font-bold tracking-tight">Drip Sequences Engine</h1>
+          <p class="text-gray-500">Design complex automated customer journeys.</p>
         </div>
         <Dialog v-model:open="isCreateOpen">
           <DialogTrigger as-child>
-            <Button>+ New Sequence</Button>
+            <Button size="lg"><Plus class="h-5 w-5 mr-2" />New Sequence</Button>
           </DialogTrigger>
-          <DialogContent class="max-w-2xl">
+          <DialogContent class="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Create Drip Sequence</DialogTitle>
+              <DialogTitle>Configure New Workflow</DialogTitle>
             </DialogHeader>
-            <div class="space-y-4">
-              <div>
-                <label class="text-sm font-medium">Sequence Name</label>
-                <Input v-model="newSequence.name" placeholder="e.g., Welcome Series" />
+            <div class="space-y-4 py-4">
+              <div class="space-y-2">
+                <Label>Name</Label>
+                <Input v-model="newSequence.name" placeholder="e.g. Welcome Series" />
               </div>
-              <div>
-                <label class="text-sm font-medium">Trigger</label>
+              <div class="space-y-2">
+                <Label>Description</Label>
+                <Textarea v-model="newSequence.description" placeholder="Internal workflow notes..." />
+              </div>
+              <div class="space-y-2">
+                <Label>Primary Trigger</Label>
                 <Select v-model="newSequence.trigger">
                   <SelectTrigger>
-                    <SelectValue placeholder="Select trigger" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="contact_created">Contact Created</SelectItem>
                     <SelectItem value="contact_stage_changed">Contact Stage Changed</SelectItem>
                     <SelectItem value="deal_stage_changed">Deal Stage Changed</SelectItem>
-                    <SelectItem value="contact_field_changed">Contact Field Changed</SelectItem>
                     <SelectItem value="form_submission">Form Submission</SelectItem>
-                    <SelectItem value="manual_enrolment">Manual Enrolment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div class="flex items-center gap-2">
-                <input type="checkbox" v-model="newSequence.allow_re_enrolment" id="allow_re_enrolment" />
-                <label for="allow_re_enrolment" class="text-sm">Allow re-enrolment after completion</label>
+                <Checkbox v-model="newSequence.allow_re_enrolment" id="re-enrol" />
+                <Label for="re-enrol" class="text-sm">Allow re-enrolment</Label>
               </div>
-              <Button @click="createSequence">Create Sequence</Button>
+              <Button @click="createSequence" class="w-full">Create Workflow</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -121,25 +119,30 @@ const triggerLabel = (trigger: string) => {
       <Card>
         <CardContent class="p-0">
           <table class="w-full">
-            <thead class="border-b">
-              <tr class="text-left">
+            <thead class="bg-gray-50 border-b">
+              <tr class="text-left text-xs uppercase tracking-wider text-gray-500">
                 <th class="p-4">Name</th>
                 <th class="p-4">Trigger</th>
                 <th class="p-4">Status</th>
-                <th class="p-4">Re-enrolment</th>
-                <th class="p-4"></th>
+                <th class="p-4">Steps</th>
+                <th class="p-4">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="sequence in sequences" :key="sequence.id" class="border-b">
-                <td class="p-4 font-medium">{{ sequence.name }}</td>
-                <td class="p-4">{{ triggerLabel(sequence.trigger) }}</td>
+              <tr v-for="sequence in sequences" :key="sequence.id" class="border-b hover:bg-gray-50/50">
+                <td class="p-4">
+                  <div class="font-bold">{{ sequence.name }}</div>
+                  <div class="text-xs text-gray-500">{{ sequence.description }}</div>
+                </td>
+                <td class="p-4 flex items-center gap-2 text-sm"><Target class="h-4 w-4 text-blue-500" /> {{ triggerLabel(sequence.trigger) }}</td>
                 <td class="p-4">
                   <Badge :variant="statusColor(sequence.status)">{{ sequence.status }}</Badge>
                 </td>
-                <td class="p-4">{{ sequence.allow_re_enrolment ? 'Allowed' : 'Not allowed' }}</td>
+                <td class="p-4 text-sm">{{ sequence.steps?.length ?? 0 }} steps</td>
                 <td class="p-4">
-                  <Button variant="ghost" size="sm">Manage Steps</Button>
+                  <Button variant="outline" size="sm" class="flex gap-2">
+                    <Workflow class="h-4 w-4" /> Manage Steps
+                  </Button>
                 </td>
               </tr>
             </tbody>

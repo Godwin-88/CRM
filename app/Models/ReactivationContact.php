@@ -27,7 +27,7 @@ class ReactivationContact extends Model
 
     public function config(): BelongsTo
     {
-        return $this->belongsTo(ReactivationConfig::class);
+        return $this->belongsTo(ReactivationConfig::class, 'config_id');
     }
 
     public function contact(): BelongsTo

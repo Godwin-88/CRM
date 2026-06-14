@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm, Link } from '@inertiajs/vue3';
+import { useForm, Link, Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

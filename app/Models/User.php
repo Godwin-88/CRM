@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -32,6 +33,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'mfa_enabled' => 'boolean',
+            'mfa_lockout_until' => 'datetime',
+            'locked_until' => 'datetime',
+            'password_expires_at' => 'datetime',
         ];
     }
 
@@ -43,5 +48,36 @@ class User extends Authenticatable
     public function subordinates(): HasMany
     {
         return $this->hasMany(Employee::class, 'reporting_manager_id');
+    }
+
+    public function passwordHistory(): HasMany
+    {
+        return $this->hasMany(PasswordHistory::class);
+    }
+
+    public function securityEvents(): HasMany
+    {
+        return $this->hasMany(SecurityEvent::class);
+    }
+
+    public function isLockedOut(): bool
+    {
+        return $this->mfa_lockout_until && now()->isBefore($this->mfa_lockout_until);
+    }
+
+    public function mfaSecretKey(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => null,
+            set: fn ($value) => ['mfa_secret_encrypted' => encrypt($value)]
+        );
+    }
+
+    public function mfaRecoveryCodes(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->mfa_recovery_codes_encrypted ? decrypt($this->mfa_recovery_codes_encrypted) : [],
+            set: fn ($value) => ['mfa_recovery_codes_encrypted' => encrypt($value)]
+        );
     }
 }

@@ -81,7 +81,7 @@ return new class extends Migration {
             $table->index(['contact_id', 'is_active']);
         });
 
-        Schema::create('points_ledger', function (Blueprint $table) {
+        Schema::create('points_ledgers', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->foreignUlid('enrollment_id')->constrained('loyalty_enrollments')->cascadeOnDelete();
             $table->foreignUlid('contact_id')->constrained('contacts')->cascadeOnDelete();
@@ -105,7 +105,7 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('points_ledger');
+        Schema::dropIfExists('points_ledgers');
         Schema::dropIfExists('loyalty_enrollments');
         Schema::dropIfExists('loyalty_redemption_rules');
         Schema::dropIfExists('loyalty_rules');

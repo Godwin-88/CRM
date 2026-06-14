@@ -23,13 +23,13 @@ class ContractController extends Controller
         $perPage = $request->get('per_page', 25);
 
         $contracts = QueryBuilder::for(Contract::query())
-            ->allowedFilters([
+            ->allowedFilters(
                 AllowedFilter::exact('status'),
                 AllowedFilter::exact('type'),
                 AllowedFilter::exact('account_id'),
-                AllowedFilter::exact('account_manager_id'),
-            ])
-            ->allowedIncludes(['account', 'contact', 'template'])
+                AllowedFilter::exact('account_manager_id')
+            )
+            ->allowedIncludes('account', 'contact', 'template')
             ->when($request->filled('search'), function ($q, $search) {
                 $q->where(function ($qb) use ($search) {
                     $qb->where('title', 'like', "%{$search}%")
@@ -309,12 +309,12 @@ class ContractController extends Controller
         $perPage = $request->get('per_page', 25);
 
         $contracts = QueryBuilder::for(Contract::query())
-            ->allowedFilters([
+            ->allowedFilters(
                 AllowedFilter::exact('status'),
                 AllowedFilter::exact('type'),
                 AllowedFilter::exact('account_id'),
-                AllowedFilter::exact('account_manager_id'),
-            ])
+                AllowedFilter::exact('account_manager_id')
+            )
             ->orderBy('end_date', 'asc')
             ->paginate($perPage);
 

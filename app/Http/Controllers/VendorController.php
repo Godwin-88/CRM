@@ -16,10 +16,10 @@ class VendorController extends Controller
         $this->authorize('viewAny', Vendor::class);
 
         $vendors = QueryBuilder::for(Vendor::query())
-            ->allowedFilters([
+            ->allowedFilters(
                 AllowedFilter::exact('status'),
-                AllowedFilter::exact('category'),
-            ])
+                AllowedFilter::exact('category')
+            )
             ->when($request->filled('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })

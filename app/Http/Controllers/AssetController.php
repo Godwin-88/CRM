@@ -19,10 +19,10 @@ class AssetController extends Controller
         $this->authorize('viewAny', Asset::class);
 
         $assets = QueryBuilder::for(Asset::query())
-            ->allowedFilters([
+            ->allowedFilters(
                 AllowedFilter::exact('status'),
-                AllowedFilter::exact('type'),
-            ])
+                AllowedFilter::exact('type')
+            )
             ->with(['assignee', 'assignedAccount'])
             ->when($request->filled('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")

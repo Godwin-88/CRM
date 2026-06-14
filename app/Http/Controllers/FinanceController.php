@@ -51,7 +51,7 @@ class FinanceController extends Controller
             ->sum('total');
 
         $revenueTrend = Invoice::query()
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, sum(total) as invoiced, sum(total) as collected')
+            ->selectRaw('TO_CHAR(created_at, \'YYYY-MM\') as month, sum(total) as invoiced, sum(total) as collected')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('month')
             ->orderBy('month')

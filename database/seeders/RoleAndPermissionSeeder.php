@@ -18,66 +18,70 @@ class RoleAndPermissionSeeder extends Seeder
         // ─── Permissions ──────────────────────────────────────────
         $permissions = [
             // Contacts
-            'view contacts',
-            'create contacts',
-            'edit contacts',
-            'delete contacts',
+            'contacts.view',
+            'contacts.create',
+            'contacts.edit',
+            'contacts.delete',
             'contacts.export',
 
             // Accounts
-            'view accounts',
-            'create accounts',
-            'edit accounts',
-            'delete accounts',
+            'accounts.view',
+            'accounts.create',
+            'accounts.edit',
+            'accounts.delete',
 
             // Deals
-            'view deals',
-            'create deals',
-            'edit deals',
-            'delete deals',
+            'deals.view',
+            'deals.create',
+            'deals.edit',
+            'deals.delete',
 
             // Quotes
-            'view quotes',
-            'create quotes',
+            'quotes.view',
+            'quotes.create',
 
             // Pipelines
-            'manage pipelines',
+            'pipelines.manage',
 
             // Win/Loss Reasons
-            'manage win_loss_reasons',
+            'win_loss_reasons.manage',
 
             // Quote Templates
-            'manage quote_templates',
+            'quote_templates.manage',
 
             // Scoring
-            'manage scoring rules',
+            'scoring_rules.manage',
 
             // Segments
-            'view segments',
-            'manage segments',
+            'segments.view',
+            'segments.manage',
 
             // Custom Fields
-            'manage custom fields',
+            'custom_fields.manage',
 
             // Import/Export
             'contacts.import',
 
             // Contracts
-            'view contracts',
-            'create contracts',
-            'edit contracts',
-            'delete contracts',
-            'manage contract_templates',
-            'view legal_matters',
-            'create legal_matters',
-            'edit legal_matters',
-            'delete legal_matters',
+            'contracts.view',
+            'contracts.create',
+            'contracts.edit',
+            'contracts.delete',
+            'contracts.sign',
+            'contract_templates.manage',
+
+            // Legal
+            'legal_matters.view',
+            'legal_matters.create',
+            'legal_matters.edit',
+            'legal_matters.delete',
+            'legal.manage',
 
             // Opportunities
-            'view opportunities',
-            'create opportunities',
-            'edit opportunities',
-            'delete opportunities',
+            'opportunities.view',
+            'opportunities.create',
+            'opportunities.edit',
+            'opportunities.delete',
 
             // Invoices
             'invoices.view',
@@ -110,6 +114,26 @@ class RoleAndPermissionSeeder extends Seeder
 
             // Finance Analytics
             'analytics.finance',
+
+            // Loyalty
+            'loyalty.adjust',
+
+            // Data Classification
+            'data.view_pii',
+            'data.view_financial',
+            'data.view_confidential',
+
+            // DSR
+            'dsr.manage',
+
+            // Compliance
+            'compliance.field_audit',
+
+            // Security
+            'security.events',
+
+            // API Client
+            'api_client',
         ];
 
         foreach ($permissions as $permission) {
@@ -124,24 +148,25 @@ class RoleAndPermissionSeeder extends Seeder
         // Manager — most permissions except scoring/custom fields management
         $manager = Role::create(['name' => 'manager']);
         $manager->givePermissionTo([
-            'view contacts', 'create contacts', 'edit contacts', 'delete contacts',
-            'view accounts', 'create accounts', 'edit accounts', 'delete accounts',
-            'view deals', 'create deals', 'edit deals', 'delete deals',
-            'view quotes', 'create quotes',
-            'view segments', 'manage segments',
+            'contacts.view', 'contacts.create', 'contacts.edit', 'contacts.delete',
+            'accounts.view', 'accounts.create', 'accounts.edit', 'accounts.delete',
+            'deals.view', 'deals.create', 'deals.edit', 'deals.delete',
+            'quotes.view', 'quotes.create',
+            'segments.view', 'segments.manage',
             'contacts.import', 'contacts.export',
-            'manage pipelines',
-            'manage win_loss_reasons',
-            'manage quote_templates',
-            'manage scoring rules',
-            'view contracts', 'create contracts', 'edit contracts',
-            'manage contract_templates',
-            'view legal_matters', 'create legal_matters', 'edit legal_matters',
+            'pipelines.manage',
+            'win_loss_reasons.manage',
+            'quote_templates.manage',
+            'scoring_rules.manage',
+            'contracts.view', 'contracts.create', 'contracts.edit',
+            'contract_templates.manage',
+            'legal_matters.view', 'legal_matters.create', 'legal_matters.edit',
             // Finance
             'invoices.view', 'invoices.manage', 'invoices.payments',
             'procurement.create', 'procurement.approve',
             'vendors.view', 'vendors.manage',
             'analytics.finance',
+            'loyalty.adjust',
         ]);
 
         // Finance Manager — all finance and procurement permissions
@@ -152,6 +177,7 @@ class RoleAndPermissionSeeder extends Seeder
             'vendors.view', 'vendors.manage', 'vendors.financials',
             'banking.view', 'banking.financials', 'banking.documents',
             'analytics.finance',
+            'banking.manage',
         ]);
 
         // Operations Manager — assets and HR view
@@ -165,21 +191,21 @@ class RoleAndPermissionSeeder extends Seeder
         // Agent — create and edit, but not delete
         $agent = Role::create(['name' => 'agent']);
         $agent->givePermissionTo([
-            'view contacts', 'create contacts', 'edit contacts',
-            'view accounts', 'create accounts', 'edit accounts',
-            'view deals', 'create deals', 'edit deals',
-            'view quotes', 'create quotes',
-            'view segments',
+            'contacts.view', 'contacts.create', 'contacts.edit',
+            'accounts.view', 'accounts.create', 'accounts.edit',
+            'deals.view', 'deals.create', 'deals.edit',
+            'quotes.view', 'quotes.create',
+            'segments.view',
             'contacts.export',
-            'manage pipelines',
+            'pipelines.manage',
         ]);
 
         // Read-only — can only view
         $readOnly = Role::create(['name' => 'read-only']);
         $readOnly->givePermissionTo([
-            'view contacts',
-            'view accounts',
-            'view segments',
+            'contacts.view',
+            'accounts.view',
+            'segments.view',
         ]);
 
         // Assign admin role to the first user (if exists)
