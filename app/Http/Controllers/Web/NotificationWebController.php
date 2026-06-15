@@ -7,7 +7,7 @@ use Inertia\Inertia;
 
 class NotificationWebController extends Controller
 {
-    public function index($request)
+    public function index(Request $request)
     {
         $notifications = $request->user()
             ->notifications()
@@ -30,7 +30,7 @@ class NotificationWebController extends Controller
         ]);
     }
 
-    public function markRead($request, string $id): void
+    public function markRead(Request $request, string $id): void
     {
         $notification = $request->user()
             ->notifications()
@@ -39,7 +39,7 @@ class NotificationWebController extends Controller
         $notification->markAsRead();
     }
 
-    public function markAllRead($request): void
+    public function markAllRead(Request $request): void
     {
         $request->user()
             ->notifications()

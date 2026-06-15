@@ -48,7 +48,7 @@ class ContractPolicy
 
     public function manageTemplates(User $user): bool
     {
-        return $user->hasRole(['admin']);
+        return $user->hasRole(['admin', 'manager']);
     }
 
     public function viewLegal(User $user): bool

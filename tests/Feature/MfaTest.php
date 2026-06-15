@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,7 +13,6 @@ class MfaTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(RoleAndPermissionSeeder::class);
     }
 
     public function test_unauthenticated_user_redirected_from_mfa_verify(): void
@@ -45,6 +43,6 @@ class MfaTest extends TestCase
         $response = $this->get(route('mfa.setup'));
 
         $response->assertOk();
-        $response->assertInertiaComponent('Auth/MfaSetup');
+        $response->assertInertia(fn($page) => $page->component('Auth/MfaSetup'));
     }
 }

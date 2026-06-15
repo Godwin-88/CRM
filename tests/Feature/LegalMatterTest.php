@@ -24,12 +24,15 @@ class LegalMatterTest extends TestCase
 
         $this->admin = User::factory()->create();
         $this->admin->assignRole('admin');
+        $this->admin->update(['mfa_enabled' => false]);
 
         $this->manager = User::factory()->create();
         $this->manager->assignRole('manager');
+        $this->manager->update(['mfa_enabled' => false]);
 
         $this->agent = User::factory()->create();
         $this->agent->assignRole('agent');
+        $this->agent->update(['mfa_enabled' => false]);
     }
 
     public function test_admin_can_view_legal_matters_index(): void
@@ -41,7 +44,7 @@ class LegalMatterTest extends TestCase
         $response = $this->get('/legal');
 
         $response->assertStatus(200);
-        $response->assertInertia('Legal/Index');
+        $response->assertInertia(fn ($page) => $page->component('Legal/Index'));
     }
 
     public function test_manager_can_view_legal_matters_index(): void
@@ -71,7 +74,7 @@ class LegalMatterTest extends TestCase
         $response = $this->get("/legal/{$matter->id}");
 
         $response->assertStatus(200);
-        $response->assertInertia('Legal/Show');
+        $response->assertInertia(fn ($page) => $page->component('Legal/Show'));
     }
 
     public function test_admin_can_create_legal_matter(): void

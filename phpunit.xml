@@ -33,5 +33,6 @@
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="FILESYSTEM_DISK" value="local"/>
         <env name="MEDIA_DISK" value="local"/>
+        <env name="SCOUT_DRIVER" value="null"/>
     </php>
 </phpunit>

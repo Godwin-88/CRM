@@ -143,8 +143,10 @@ class ContractTemplateController extends Controller
         return back()->with('success', 'Template deleted.');
     }
 
-    public function restore(ContractTemplate $contractTemplate): RedirectResponse
+    public function restore($id): RedirectResponse
     {
+        $contractTemplate = ContractTemplate::withTrashed()->findOrFail($id);
+
         $this->authorize('manageTemplates', Contract::class);
 
         $contractTemplate->restore();

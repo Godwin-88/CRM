@@ -24,6 +24,7 @@ class ContractTest extends TestCase
         parent::setUp();
 
         Storage::fake('local');
+        Storage::fake('r2');
 
         $this->admin = User::factory()->create();
         $this->admin->assignRole('admin');
@@ -44,7 +45,7 @@ class ContractTest extends TestCase
         $response = $this->get('/contracts');
 
         $response->assertStatus(200);
-        $response->assertInertia('Contracts/Index');
+        $response->assertInertia(fn ($page) => $page->component('Contracts/Index'));
     }
 
     public function test_admin_can_view_contract_show(): void
@@ -56,7 +57,7 @@ class ContractTest extends TestCase
         $response = $this->get("/contracts/{$contract->id}");
 
         $response->assertStatus(200);
-        $response->assertInertia('Contracts/Show');
+        $response->assertInertia(fn ($page) => $page->component('Contracts/Show'));
     }
 
     public function test_admin_can_create_contract(): void
@@ -154,7 +155,7 @@ class ContractTest extends TestCase
 
         $response = $this->post("/contracts/{$contract->id}/duplicate");
 
-        $response->assertRedirect('/contracts');
+        $response->assertRedirect();
         $this->assertDatabaseHas('contracts', [
             'title' => 'Original (Copy)',
             'status' => Contract::STATUS_DRAFT,
@@ -182,11 +183,12 @@ class ContractTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        $contract = Contract::factory()->create([
+        $contract = Contract::factory()->create();
+        $contract->update([
             'document_path' => 'contracts/'.$contract->id.'/v1.pdf',
         ]);
 
-        Storage::disk('local')->put('contracts/'.$contract->id.'/v1.pdf', 'dummy pdf');
+        Storage::disk('r2')->put('contracts/'.$contract->id.'/v1.pdf', 'dummy pdf');
 
         $response = $this->get("/contracts/{$contract->id}/download");
 

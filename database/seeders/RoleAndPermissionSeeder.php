@@ -137,20 +137,27 @@ class RoleAndPermissionSeeder extends Seeder
 
             // Integrations
             'integrations.manage',
-        ];
+
+            // Teams
+            'teams.manage',
+
+// Comments
+             'comments.view',
+             'attachments.sign',
+             ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // ─── Roles ────────────────────────────────────────────────
         // Admin — all permissions
-        $admin = Role::create(['name' => 'admin']);
-        $admin->givePermissionTo(Permission::all());
+        $admin = Role::firstOrCreate(['name' => 'admin']);
+        $admin->syncPermissions(Permission::all());
 
         // Manager — most permissions except scoring/custom fields management
-        $manager = Role::create(['name' => 'manager']);
-        $manager->givePermissionTo([
+        $manager = Role::firstOrCreate(['name' => 'manager']);
+        $manager->syncPermissions([
             'contacts.view', 'contacts.create', 'contacts.edit', 'contacts.delete',
             'accounts.view', 'accounts.create', 'accounts.edit', 'accounts.delete',
             'deals.view', 'deals.create', 'deals.edit', 'deals.delete',
@@ -173,8 +180,8 @@ class RoleAndPermissionSeeder extends Seeder
         ]);
 
         // Finance Manager — all finance and procurement permissions
-        $financeManager = Role::create(['name' => 'finance-manager']);
-        $financeManager->givePermissionTo([
+        $financeManager = Role::firstOrCreate(['name' => 'finance-manager']);
+        $financeManager->syncPermissions([
             'invoices.view', 'invoices.manage', 'invoices.payments',
             'procurement.create', 'procurement.approve',
             'vendors.view', 'vendors.manage', 'vendors.financials',
@@ -184,16 +191,16 @@ class RoleAndPermissionSeeder extends Seeder
         ]);
 
         // Operations Manager — assets and HR view
-        $operationsManager = Role::create(['name' => 'operations-manager']);
-        $operationsManager->givePermissionTo([
+        $operationsManager = Role::firstOrCreate(['name' => 'operations-manager']);
+        $operationsManager->syncPermissions([
             'assets.view', 'assets.manage',
             'hr.view', 'hr.manage',
             'hr.documents',
         ]);
 
         // Agent — create and edit, but not delete
-        $agent = Role::create(['name' => 'agent']);
-        $agent->givePermissionTo([
+        $agent = Role::firstOrCreate(['name' => 'agent']);
+        $agent->syncPermissions([
             'contacts.view', 'contacts.create', 'contacts.edit',
             'accounts.view', 'accounts.create', 'accounts.edit',
             'deals.view', 'deals.create', 'deals.edit',
@@ -204,8 +211,8 @@ class RoleAndPermissionSeeder extends Seeder
         ]);
 
         // Read-only — can only view
-        $readOnly = Role::create(['name' => 'read-only']);
-        $readOnly->givePermissionTo([
+        $readOnly = Role::firstOrCreate(['name' => 'read-only']);
+        $readOnly->syncPermissions([
             'contacts.view',
             'accounts.view',
             'segments.view',

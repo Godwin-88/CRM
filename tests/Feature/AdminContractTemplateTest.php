@@ -38,7 +38,7 @@ class AdminContractTemplateTest extends TestCase
         $response = $this->get('/admin/contract-templates');
 
         $response->assertStatus(200);
-        $response->assertInertia('Admin/ContractTemplates/Index');
+        $response->assertInertia(fn ($page) => $page->component('Admin/ContractTemplates/Index'));
     }
 
     public function test_manager_can_view_contract_template_index(): void
@@ -66,18 +66,22 @@ class AdminContractTemplateTest extends TestCase
         $response = $this->get('/admin/contract-templates/create');
 
         $response->assertStatus(200);
-        $response->assertInertia('Admin/ContractTemplates/Create');
+        $response->assertInertia(fn ($page) => $page->component('Admin/ContractTemplates/Create'));
     }
 
     public function test_admin_can_store_contract_template(): void
     {
         $this->actingAs($this->admin);
 
+        $clause = \App\Models\ContractClause::factory()->create();
+
         $response = $this->post('/admin/contract-templates', [
             'name' => 'Test Template',
             'description' => 'Test description',
             'type' => 'msa',
-            'clauses' => [],
+            'clauses' => [
+                ['id' => $clause->id, 'sort_order' => 1, 'is_mandatory' => true, 'is_optional' => false],
+            ],
         ]);
 
         $response->assertRedirect('/admin/contract-templates');
@@ -95,7 +99,7 @@ class AdminContractTemplateTest extends TestCase
         $response = $this->get("/admin/contract-templates/{$template->id}/edit");
 
         $response->assertStatus(200);
-        $response->assertInertia('Admin/ContractTemplates/Edit');
+        $response->assertInertia(fn ($page) => $page->component('Admin/ContractTemplates/Edit'));
     }
 
     public function test_admin_can_update_contract_template(): void
@@ -105,12 +109,15 @@ class AdminContractTemplateTest extends TestCase
         $template = ContractTemplate::factory()->create([
             'name' => 'Original Name',
         ]);
+        $clause = \App\Models\ContractClause::factory()->create();
 
         $response = $this->put("/admin/contract-templates/{$template->id}", [
             'name' => 'Updated Name',
             'description' => 'Updated description',
             'type' => $template->type,
-            'clauses' => [],
+            'clauses' => [
+                ['id' => $clause->id, 'sort_order' => 1, 'is_mandatory' => true, 'is_optional' => false],
+            ],
         ]);
 
         $response->assertRedirect('/admin/contract-templates');

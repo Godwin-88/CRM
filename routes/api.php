@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\SegmentController;
 use App\Http\Controllers\Api\V1\ServiceRegistryController;
 use App\Http\Controllers\Api\V1\SlaController;
 use App\Http\Controllers\Api\V1\SocialPostController;
+use App\Http\Controllers\Api\V1\TeamController;
 use App\Http\Controllers\Api\V1\TicketCategoryController;
 use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\TranslationController;
@@ -303,12 +304,59 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('{type}/{id}/comments', [CommentController::class, 'store'])->where('id', '[0-9A-Za-z]{26}');
     Route::get('{type}/{id}/comments/{comment}', [CommentController::class, 'show'])->where(['id' => '[0-9A-Za-z]{26}', 'comment' => '[0-9A-Za-z]{26}']);
     Route::put('{type}/{id}/comments/{comment}', [CommentController::class, 'update'])->where(['id' => '[0-9A-Za-z]{26}', 'comment' => '[0-9A-Za-z]{26}']);
-    // Calendar
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('calendar', [CalendarController::class, 'index']);
-});
+    Route::delete('{type}/{id}/comments/{comment}', [CommentController::class, 'destroy'])->where(['id' => '[0-9A-Za-z]{26}', 'comment' => '[0-9A-Za-z]{26}']);
 
-Route::delete('{type}/{id}/comments/{comment}', [CommentController::class, 'destroy'])->where(['id' => '[0-9A-Za-z]{26}', 'comment' => '[0-9A-Za-z]{26}']);
+    // Calendar
+    Route::get('calendar', [CalendarController::class, 'index']);
+
+    // Teams
+    Route::middleware('role:manager|admin')->group(function () {
+        Route::get('teams', [TeamController::class, 'index']);
+        Route::post('teams', [TeamController::class, 'store']);
+        Route::get('teams/{team}', [TeamController::class, 'show']);
+        Route::put('teams/{team}', [TeamController::class, 'update']);
+        Route::delete('teams/{team}', [TeamController::class, 'destroy']);
+        Route::get('teams/{team}/members', [TeamController::class, 'members']);
+        Route::post('teams/{team}/members', [TeamController::class, 'addMember']);
+        Route::delete('teams/{team}/members/{user}', [TeamController::class, 'removeMember']);
+    });
+
+    // Notifications
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
+
+    // Discussion Boards
+    Route::prefix('{type}/{id}/discussion')->where(['id' => '[0-9A-Za-z]{26}'])->group(function () {
+        Route::get('/', function ($type, $id) {
+            $modelClass = match ($type) {
+                'accounts' => \App\Models\Account::class,
+                'deals' => \App\Models\Deal::class,
+                default => abort(404),
+            };
+            $model = $modelClass::findOrFail($id);
+            $board = $model->discussionBoard()->firstOrCreate(['title' => 'Discussion']);
+
+            return response()->json(['data' => $board->load('threads.author')]);
+        });
+
+        Route::get('threads', function ($type, $id) {
+            $modelClass = match ($type) {
+                'accounts' => \App\Models\Account::class,
+                'deals' => \App\Models\Deal::class,
+                default => abort(404),
+            };
+            $model = $modelClass::findOrFail($id);
+            $board = $model->discussionBoard()->first();
+
+            return response()->json(['data' => $board?->threads()->with('author')->latest()->paginate(20)]);
+        });
+
+        Route::post('threads', 'App\Http\Controllers\Api\V1\DiscussionThreadController@store');
+        Route::get('threads/{thread}', 'App\Http\Controllers\Api\V1\DiscussionThreadController@show');
+        Route::put('threads/{thread}', 'App\Http\Controllers\Api\V1\DiscussionThreadController@update');
+        Route::delete('threads/{thread}', 'App\Http\Controllers\Api\V1\DiscussionThreadController@destroy');
+    });
 });
 
 // Service Registry

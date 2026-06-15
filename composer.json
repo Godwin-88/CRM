@@ -8,7 +8,9 @@
     "require": {
         "php": "^8.3",
         "barryvdh/laravel-dompdf": "^3.0",
+        "ezyang/htmlpurifier": "^4.19",
         "inertiajs/inertia-laravel": "^3.1",
+        "knuckleswtf/scribe": "^5.0",
         "laravel/framework": "^13.8",
         "laravel/horizon": "^5.47",
         "laravel/passport": "^13.0",
@@ -16,7 +18,6 @@
         "laravel/sanctum": "^4.3",
         "laravel/scout": "^11.2",
         "laravel/tinker": "^3.0",
-        "knuckleswtf/scribe": "^5.0",
         "pragmarx/google2fa-laravel": "^2.0",
         "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-medialibrary": "^11.23",

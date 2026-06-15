@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\MediaLibrary\HasMedia;
@@ -113,5 +114,10 @@ class Account extends Model implements HasMedia
     public function activitiesLog(): MorphMany
     {
         return $this->morphMany(Activity::class, 'subject');
+    }
+
+    public function discussionBoard(): MorphOne
+    {
+        return $this->morphOne(DiscussionBoard::class, 'boardable');
     }
 }

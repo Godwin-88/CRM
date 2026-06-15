@@ -6,15 +6,14 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-use App\Models\Invoice;
-use App\Models\DealComment;
-
-class Deal extends Model
+class Deal extends Model implements HasMedia
 {
-    use HasComments, HasFactory, HasUlids, SoftDeletes;
+    use HasComments, HasFactory, HasUlids, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -120,5 +119,10 @@ class Deal extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function discussionBoard(): MorphOne
+    {
+        return $this->morphOne(DiscussionBoard::class, 'boardable');
     }
 }

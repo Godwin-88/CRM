@@ -39,4 +39,14 @@ class DiscussionPolicy
     {
         return $user->can('view', $thread->board->boardable);
     }
+
+    public function update(User $user, DiscussionThread $thread): bool
+    {
+        return $user->hasAnyRole(['admin', 'manager']) || $thread->user_id === $user->id;
+    }
+
+    public function delete(User $user, DiscussionThread $thread): bool
+    {
+        return $user->hasAnyRole(['admin', 'manager']) || $thread->user_id === $user->id;
+    }
 }

@@ -13,7 +13,7 @@ class InputSanitizer
     {
         $config = HTMLPurifier_Config::createDefault();
         $config->set('HTML.Allowed', 'p,b,i,u,em,strong,ul,ol,li,a[href],h1,h2,h3,h4,h5,h6,table,tr,td,th');
-        $config->set('HTML.Attr.ForbiddenClasses', ['*']);
+        $config->set('CSS.AllowedProperties', []);
         $config->set('URI.DisableExternalResources', true);
         $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'mailto' => true]);
 

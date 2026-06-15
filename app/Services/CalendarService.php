@@ -38,7 +38,7 @@ class CalendarService
                 'id' => $activity->id,
                 'type' => 'activity',
                 'title' => $activity->subject,
-                'date' => $activity->due_at,
+                'date' => $activity->due_at->toIso8601String(),
                 'color' => 'blue',
                 'url' => '/activities/'.$activity->id,
                 'editable' => true,
@@ -48,7 +48,7 @@ class CalendarService
 
     protected function getDemoTrialEvents($userId, $teamId, $start, $end): Collection
     {
-        $query = DemoTrial::whereBetween('scheduled_at', [$start, $end]);
+        $query = DemoTrial::whereBetween('scheduled_date', [$start, $end]);
 
         if ($teamId) {
             $query->whereHas('deal.owner.teamMembers', fn ($q) => $q->where('team_id', $teamId));
@@ -61,7 +61,7 @@ class CalendarService
                 'id' => $demo->id,
                 'type' => 'demo',
                 'title' => $demo->deal->title ?? 'Demo',
-                'date' => $demo->scheduled_at,
+                'date' => $demo->scheduled_date->toIso8601String(),
                 'color' => 'indigo',
                 'url' => '/deals/'.$demo->deal_id,
                 'editable' => true,
@@ -71,14 +71,14 @@ class CalendarService
 
     protected function getContractMilestoneEvents($userId, $teamId, $start, $end): Collection
     {
-        $query = ContractMilestone::whereBetween('date', [$start, $end]);
+        $query = ContractMilestone::whereBetween('due_date', [$start, $end]);
 
         return $query->get()->map(function ($milestone) {
             return [
                 'id' => $milestone->id,
                 'type' => 'contract_milestone',
-                'title' => $milestone->title ?? 'Contract Milestone',
-                'date' => $milestone->date,
+                'title' => $milestone->name ?? 'Contract Milestone',
+                'date' => $milestone->due_date->toIso8601String(),
                 'color' => $this->getContractMilestoneColor($milestone),
                 'url' => '/contracts/'.$milestone->contract_id,
                 'editable' => false,
@@ -95,7 +95,7 @@ class CalendarService
                 'id' => $activity->id,
                 'type' => 'onboarding',
                 'title' => $activity->name ?? 'Onboarding Step',
-                'date' => $activity->due_date,
+                'date' => $activity->due_date->toIso8601String(),
                 'color' => 'amber',
                 'url' => '/contacts/'.$activity->record->contact_id,
                 'editable' => true,
