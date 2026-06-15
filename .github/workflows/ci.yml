@@ -56,7 +56,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Directory Permissions
-        run: mkdir -p storage/framework/cache/data storage/framework/sessions bootstrap/cache && chmod -R 777 storage bootstrap/cache
+        run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache && chmod -R 777 storage bootstrap/cache
 
       - name: Run Migrations
         run: php artisan migrate --force
