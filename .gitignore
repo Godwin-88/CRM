@@ -40,3 +40,8 @@ Homestead.yaml
 Thumbs.db
 docker-compose.override.yml
 /bootstrap/cache/*.php
+.github_actions_deploy_key
+.github_actions_deploy_key.pubgithub_actions_deploy_key
+github_actions_deploy_key.pub
+github_actions_deploy_key.pub
+github_actions_deploy_key
