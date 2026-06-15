@@ -7,11 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Integration extends Model
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory, HasUlids;
 
     protected $fillable = [
         'name',
@@ -20,12 +19,39 @@ class Integration extends Model
         'config',
         'is_active',
         'created_by',
+        'category',
+        'logo',
+        'description',
+        'connection_status',
+        'last_active_at',
+        'webhook_events',
+        'rate_limit_key',
+        'api_key',
     ];
 
     protected $casts = [
         'config' => 'array',
         'is_active' => 'boolean',
+        'last_active_at' => 'datetime',
+        'webhook_events' => 'array',
     ];
+
+    protected $hidden = [
+        'api_key',
+    ];
+
+    protected $appends = [
+        'masked_api_key',
+    ];
+
+    public function getMaskedApiKeyAttribute(): ?string
+    {
+        if (! $this->api_key) {
+            return null;
+        }
+
+        return '••••'.substr(decrypt($this->api_key), -4);
+    }
 
     public function creator(): BelongsTo
     {

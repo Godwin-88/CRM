@@ -91,7 +91,55 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::post('/admin/privileged/exit', [PrivilegedSessionController::class, 'exit'])
         ->name('admin.privileged.exit');
 
-    // ─── DSR Module ──────────────────────────────────────────────────────────────
+    // ─── Integrations (Admin) ───────────────────────────────────────────────────
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/integrations', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'index'])
+            ->name('admin.integrations.index');
+        Route::get('/admin/integrations/marketplace', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'marketplace'])
+            ->name('admin.integrations.marketplace');
+        Route::post('/admin/integrations/{integration}/connect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'connect'])
+            ->name('admin.integrations.connect');
+        Route::post('/admin/integrations/{integration}/disconnect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'disconnect'])
+            ->name('admin.integrations.disconnect');
+        Route::get('/admin/integrations/webhooks', [\App\Http\Controllers\Admin\WebhookWebController::class, 'index'])
+            ->name('admin.integrations.webhooks');
+        Route::post('/admin/integrations/webhooks', [\App\Http\Controllers\Admin\WebhookWebController::class, 'store'])
+            ->name('admin.integrations.webhooks.store');
+        Route::get('/admin/integrations/webhooks/{webhook}', [\App\Http\Controllers\Admin\WebhookWebController::class, 'show'])
+            ->name('admin.integrations.webhooks.show');
+        Route::put('/admin/integrations/webhooks/{webhook}', [\App\Http\Controllers\Admin\WebhookWebController::class, 'update'])
+            ->name('admin.integrations.webhooks.update');
+        Route::delete('/admin/integrations/webhooks/{webhook}', [\App\Http\Controllers\Admin\WebhookWebController::class, 'destroy'])
+            ->name('admin.integrations.webhooks.destroy');
+        Route::post('/admin/integrations/webhooks/{webhook}/retry', [\App\Http\Controllers\Admin\WebhookWebController::class, 'retry'])
+            ->name('admin.integrations.webhooks.retry');
+    });
+
+    Route::middleware(['role:manager|admin'])->group(function () {
+        Route::get('/admin/api-tokens', [\App\Http\Controllers\Api\PersonalTokenController::class, 'index'])
+            ->name('admin.api-tokens.index');
+        Route::post('/admin/api-tokens', [\App\Http\Controllers\Api\PersonalTokenController::class, 'store'])
+            ->name('admin.api-tokens.store');
+        Route::delete('/admin/api-tokens/{token}', [\App\Http\Controllers\Api\PersonalTokenController::class, 'destroy'])
+            ->name('admin.api-tokens.destroy');
+    });
+
+    Route::middleware(['permission:integrations.manage'])->group(function () {
+        Route::get('/admin/oauth-clients', [\App\Http\Controllers\Api\OAuthClientController::class, 'index'])
+            ->name('admin.oauth-clients.index');
+        Route::post('/admin/oauth-clients', [\App\Http\Controllers\Api\OAuthClientController::class, 'store'])
+            ->name('admin.oauth-clients.store');
+        Route::get('/admin/oauth-clients/{client}', [\App\Http\Controllers\Api\OAuthClientController::class, 'show'])
+            ->name('admin.oauth-clients.show');
+        Route::put('/admin/oauth-clients/{client}', [\App\Http\Controllers\Api\OAuthClientController::class, 'update'])
+            ->name('admin.oauth-clients.update');
+        Route::delete('/admin/oauth-clients/{client}', [\App\Http\Controllers\Api\OAuthClientController::class, 'destroy'])
+            ->name('admin.oauth-clients.destroy');
+        Route::post('/admin/oauth-clients/{client}/suspend', [\App\Http\Controllers\Api\OAuthClientController::class, 'suspend'])
+            ->name('admin.oauth-clients.suspend');
+    });
+
+    // DSR Module
     Route::middleware(['permission:dsr.manage'])->group(function () {
         Route::get('/admin/dsr', [DsrController::class, 'index'])->name('admin.dsr.index');
         Route::get('/admin/dsr/create', [DsrController::class, 'create'])->name('admin.dsr.create');

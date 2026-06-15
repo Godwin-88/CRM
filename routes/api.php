@@ -25,11 +25,13 @@ use App\Http\Controllers\Api\V1\KnowledgeBaseController;
 use App\Http\Controllers\Api\V1\PipelineController;
 use App\Http\Controllers\Api\V1\ReportBuilderController;
 use App\Http\Controllers\Api\V1\SegmentController;
+use App\Http\Controllers\Api\V1\ServiceRegistryController;
 use App\Http\Controllers\Api\V1\SlaController;
 use App\Http\Controllers\Api\V1\SocialPostController;
 use App\Http\Controllers\Api\V1\TicketCategoryController;
 use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\TranslationController;
+use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\LegalMatterController;
 use Illuminate\Support\Facades\Route;
@@ -281,4 +283,31 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('translations', [TranslationController::class, 'index']);
         Route::post('user/language', [TranslationController::class, 'setLanguage']);
     });
+
+    // Webhooks (authenticated)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('webhooks', [WebhookController::class, 'index']);
+        Route::post('webhooks', [WebhookController::class, 'store']);
+        Route::get('webhooks/{webhook}', [WebhookController::class, 'show']);
+        Route::put('webhooks/{webhook}', [WebhookController::class, 'update']);
+        Route::delete('webhooks/{webhook}', [WebhookController::class, 'destroy']);
+        Route::post('webhooks/{webhook}/pause', [WebhookController::class, 'pause']);
+        Route::post('webhooks/{webhook}/resume', [WebhookController::class, 'resume']);
+        Route::post('webhooks/{webhook}/retry/{delivery}', [WebhookController::class, 'retryDelivery']);
+    });
+});
+
+// Service Registry
+Route::middleware(['auth:sanctum', 'permission:integrations.manage'])->group(function () {
+    Route::get('service-registry', [ServiceRegistryController::class, 'index']);
+    Route::get('service-registry/activity', [ServiceRegistryController::class, 'activity']);
+    Route::get('service-registry/export', [ServiceRegistryController::class, 'export']);
+});
+
+// Inbound webhooks (API key auth, no versioning per spec)
+Route::middleware('api_key_auth')->group(function () {
+    Route::post('webhooks/stripe', [WebhookController::class, 'stripe'])->name('webhooks.inbound.stripe');
+    Route::post('webhooks/twilio', [WebhookController::class, 'twilio'])->name('webhooks.inbound.twilio');
+    Route::post('webhooks/docusign', [WebhookController::class, 'docusign'])->name('webhooks.inbound.docusign');
+    Route::post('webhooks/mailgun', [WebhookController::class, 'mailgun'])->name('webhooks.inbound.mailgun');
 });

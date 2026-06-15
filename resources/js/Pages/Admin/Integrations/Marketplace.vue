@@ -1,0 +1,93 @@
+<template>
+    <div class="max-w-7xl mx-auto py-6">
+        <h1 class="text-2xl font-bold mb-4">Integration Marketplace</h1>
+
+        <div class="mb-4">
+            <input
+                v-model="search"
+                type="text"
+                placeholder="Search connectors..."
+                class="border rounded px-3 py-2 w-64"
+            />
+            <select v-model="category" class="border rounded px-3 py-2 ml-2">
+                <option value="">All categories</option>
+                <option value="communications">Communications</option>
+                <option value="finance">Finance</option>
+                <option value="productivity">Productivity</option>
+                <option value="identity">Identity</option>
+                <option value="e-signature">E-signature</option>
+                <option value="payments">Payments</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+                v-for="connector in filteredCatalog"
+                :key="connector.provider"
+                class="border rounded-lg p-4"
+            >
+                <div class="flex items-center mb-2">
+                    <div class="w-10 h-10 bg-gray-200 rounded mr-3"></div>
+                    <div>
+                        <h3 class="font-semibold">{{ connector.name }}</h3>
+                        <span class="text-xs text-gray-500">{{
+                            connector.category
+                        }}</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">
+                    {{ connector.description }}
+                </p>
+                <button
+                    @click="connect(connector)"
+                    :disabled="isConnected(connector.provider)"
+                    class="w-full bg-blue-600 text-white px-3 py-1 rounded disabled:bg-gray-300"
+                >
+                    {{
+                        isConnected(connector.provider)
+                            ? "Connected"
+                            : "Connect"
+                    }}
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { ref, computed } from "vue";
+import { router } from "@inertiajs/vue3";
+
+defineProps({
+    catalog: Array,
+    connected: Array,
+});
+
+const search = ref("");
+const category = ref("");
+
+const filteredCatalog = computed(() => {
+    return catalog.filter((c) => {
+        const matchesSearch =
+            c.name.toLowerCase().includes(search.value.toLowerCase()) ||
+            c.description.toLowerCase().includes(search.value.toLowerCase());
+        const matchesCategory =
+            !category.value || c.category === category.value;
+        return matchesSearch && matchesCategory;
+    });
+});
+
+function isConnected(provider) {
+    return connected.includes(provider);
+}
+
+function connect(connector) {
+    router.post(
+        route("admin.integrations.connect", connector.provider),
+        {},
+        {
+            preserveScroll: true,
+        },
+    );
+}
+</script>

@@ -10,7 +10,7 @@ return [
     | Admins can customize this list via environment variables.
     |
     */
-    'mfa_required_roles' => env('MFA_REQUIRED_ROLES', 'admin,manager'),
+    'mfa_required_roles' => explode(',', env('MFA_REQUIRED_ROLES', 'admin,manager')),
 
     /*
     |--------------------------------------------------------------------------
@@ -20,7 +20,7 @@ return [
     | Minimum password length (cannot be set below 10)
     |
     */
-    'password_min_length' => env('PASSWORD_MIN_LENGTH', 12),
+    'password_min_length' => (int) env('PASSWORD_MIN_LENGTH', 12),
 
     /*
     |--------------------------------------------------------------------------
@@ -32,10 +32,10 @@ return [
     |
     */
     'password_expiry' => [
-        'admin' => env('PASSWORD_EXPIRY_ADMIN', 90),
-        'manager' => env('PASSWORD_EXPIRY_MANAGER', 90),
-        'agent' => env('PASSWORD_EXPIRY_AGENT', 0),
-        'read-only' => env('PASSWORD_EXPIRY_READONLY', 0),
+        'admin' => (int) env('PASSWORD_EXPIRY_ADMIN', 90),
+        'manager' => (int) env('PASSWORD_EXPIRY_MANAGER', 90),
+        'agent' => (int) env('PASSWORD_EXPIRY_AGENT', 0),
+        'read-only' => (int) env('PASSWORD_EXPIRY_READONLY', 0),
     ],
 
     /*
@@ -46,5 +46,18 @@ return [
     | Days to keep soft-deleted contacts before anonymization (default 30)
     |
     */
-    'data_retention_days' => env('DATA_RETENTION_DAYS', 30),
+    'data_retention_days' => (int) env('DATA_RETENTION_DAYS', 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Rate Limits
+    |--------------------------------------------------------------------------
+    |
+    | Per-minute rate limits for API endpoints
+    |
+    */
+    'api_rate_limits' => [
+        'default' => (int) env('API_RATE_LIMIT', 60),
+        'per_page_max' => 100,
+    ],
 ];

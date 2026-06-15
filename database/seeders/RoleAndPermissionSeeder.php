@@ -134,6 +134,9 @@ class RoleAndPermissionSeeder extends Seeder
 
             // API Client
             'api_client',
+
+            // Integrations
+            'integrations.manage',
         ];
 
         foreach ($permissions as $permission) {

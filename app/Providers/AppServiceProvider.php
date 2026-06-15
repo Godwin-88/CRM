@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\WebhookEventOccurred;
+use App\Listeners\QueueWebhookDeliveries;
 use App\Models\Asset;
 use App\Models\BankingRelationship;
 use App\Models\Contract;
@@ -17,11 +19,13 @@ use App\Policies\BankingRelationshipPolicy;
 use App\Policies\ContractPolicy;
 use App\Policies\DealPolicy;
 use App\Policies\EmployeePolicy;
+use App\Policies\IntegrationOAuthClientPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\LegalMatterPolicy;
 use App\Policies\PurchaseOrderPolicy;
 use App\Policies\SegmentPolicy;
 use App\Policies\VendorPolicy;
+use App\Policies\WebhookPolicy;
 use Aws\S3\S3Client;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Gate;
@@ -69,5 +73,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Asset::class, AssetPolicy::class);
         Gate::policy(Employee::class, EmployeePolicy::class);
         Gate::policy(BankingRelationship::class, BankingRelationshipPolicy::class);
+
+        Gate::policy(Webhook::class, WebhookPolicy::class);
+        Gate::policy(IntegrationOAuthClient::class, IntegrationOAuthClientPolicy::class);
+
+        \Event::listen(WebhookEventOccurred::class, QueueWebhookDeliveries::class);
     }
 }

@@ -47,6 +47,10 @@ class HandleInertiaRequests extends Middleware
             'is_privileged' => $request->session()->get('is_privileged', false),
             'privileged_until' => $request->session()->get('privileged_until'),
             'csrf_token' => csrf_token(),
+            'flash' => [
+                'newToken' => $request->session()->get('newToken'),
+                'message' => $request->session()->get('message'),
+            ],
         ];
     }
 }
