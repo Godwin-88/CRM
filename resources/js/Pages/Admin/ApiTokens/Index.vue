@@ -113,6 +113,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { Head, useForm, usePage, router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 
 const page = usePage();
 

@@ -10,6 +10,11 @@ class RequireMfaVerified
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Allow disabling MFA via environment for development/testing
+        if (env('MFA_ENABLED', true) === false) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         if ($user && $this->mfaRequired($user) && ! $request->session()->get('mfa_verified')) {

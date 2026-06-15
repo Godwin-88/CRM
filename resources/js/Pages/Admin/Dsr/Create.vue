@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 import { ref } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

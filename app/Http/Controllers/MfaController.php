@@ -28,11 +28,7 @@ class MfaController extends Controller
 
         if ($user->mfa_secret_encrypted) {
             $secret = decrypt($user->mfa_secret_encrypted);
-            $qrCode = (new Google2FA)->getQRCodeUrl(
-                config('app.name'),
-                $user->email,
-                $secret
-            );
+            $qrCode = $this->generateQrCode($secret, $user->email);
         }
 
         return Inertia::render('Auth/MfaSetup', [
@@ -46,22 +42,11 @@ class MfaController extends Controller
     {
         $user = Auth::user();
 
-        $secret = $user->mfa_secret_encrypted
-            ? decrypt($user->mfa_secret_encrypted)
-            : app('pragmarx.google2fa.encryption')->encrypt(
-                str_replace('-', '', (string) \Str::uuid()),
-                null
-            );
-
-        // Actually generate a proper secret
+        // Generate a proper TOTP secret
         $secret = (new \PragmaRX\Google2FA\Google2FA)->generateSecretKey();
         $request->session()->put('mfa_secret', $secret);
 
-        $qrCode = (new Google2FA)->getQRCodeUrl(
-            config('app.name'),
-            $user->email,
-            $secret
-        );
+        $qrCode = $this->generateQrCode($secret, $user->email);
 
         return Inertia::render('Auth/MfaSetup', [
             'qrCode' => $qrCode,
@@ -223,6 +208,29 @@ class MfaController extends Controller
         $this->logSecurityEvent('mfa_admin_reset', $user);
 
         return back()->with('status', 'MFA reset for user.');
+    }
+
+    private function generateQrCode(string $secret, string $email): string
+    {
+        try {
+            $google2fa = new Google2FA();
+            $qrCodeData = $google2fa->getQRCodeInline(
+                config('app.name'),
+                $email,
+                $secret
+            );
+
+            // If SVG, wrap in data URL; if base64 PNG, it's already a data URL
+            if (str_starts_with($qrCodeData, '<svg')) {
+                return 'data:image/svg+xml;base64,' . base64_encode($qrCodeData);
+            }
+
+            return $qrCodeData;
+        } catch (\Exception $e) {
+            // Fallback: use Google Charts API for QR code generation
+            $otpauthUrl = urlencode('otpauth://totp/' . config('app.name') . ':' . $email . '?secret=' . $secret . '&issuer=' . config('app.name'));
+            return 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=' . $otpauthUrl;
+        }
     }
 
     private function mfaRequiredForUserRole(): bool

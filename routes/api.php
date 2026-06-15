@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\InteractionController;
 use App\Http\Controllers\Api\V1\KioskController;
 use App\Http\Controllers\Api\V1\KnowledgeBaseCategoryController;
 use App\Http\Controllers\Api\V1\KnowledgeBaseController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PipelineController;
 use App\Http\Controllers\Api\V1\ReportBuilderController;
 use App\Http\Controllers\Api\V1\SegmentController;

@@ -74,6 +74,7 @@
 <script setup>
 import { ref } from "vue";
 import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 
 defineProps({
     webhooks: Object,
