@@ -1,40 +1,40 @@
-name: CI
+name: Deploy to Staging
 
 on:
   push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
-  laravel-tests:
+  deploy-staging:
     runs-on: ubuntu-latest
+    needs: ci
+    steps:
+      - uses: actions/checkout@v4
 
-    services:
-      redis:
-        image: redis:alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
+      - name: Deploy to staging server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /var/www/crm/staging
+            git fetch origin
+            git reset --hard origin/main
+            git pull origin main
+            composer install --no-dev --no-interaction --no-progress --prefer-dist
+            npm ci --production
+            npm run build
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            sudo systemctl reload nginx
 
-      pgsql:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: laravel
-          POSTGRES_USER: laravel
-          POSTGRES_PASSWORD: password
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
+  ci:
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.phpunit.outcome }}
     steps:
       - uses: actions/checkout@v4
 
@@ -46,7 +46,7 @@ jobs:
           coverage: none
 
       - name: Install Dependencies
-        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+        run: composer install -q --no-dev --no-interaction --no-scripts --no-progress --prefer-dist
 
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
@@ -56,6 +56,9 @@ jobs:
 
       - name: Directory Permissions
         run: chmod -R 777 storage bootstrap/cache
+
+      - name: Build JS
+        run: npm ci && npm run build
 
       - name: Run Migrations
         run: php artisan migrate --force
@@ -68,6 +71,7 @@ jobs:
           DB_PASSWORD: password
 
       - name: Execute tests
+        id: phpunit
         run: vendor/bin/phpunit
         env:
           DB_CONNECTION: pgsql
@@ -80,13 +84,3 @@ jobs:
           CACHE_DRIVER: redis
           SESSION_DRIVER: redis
           QUEUE_CONNECTION: sync
-
-  build-js:
-    runs-on: ubuntu-latest
-    needs: [laravel-tests]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install NPM dependencies
-        run: npm ci
-      - name: Build JS
-        run: npm run build
