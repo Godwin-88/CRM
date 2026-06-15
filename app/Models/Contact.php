@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\HasComments;
+use Spatie\MediaLibrary\HasMedia;
 
-class Contact extends Model
+class Contact extends Model implements HasMedia
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasComments, HasFactory, HasUlids, SoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
         'first_name',

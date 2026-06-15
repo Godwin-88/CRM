@@ -14,6 +14,8 @@ use App\Models\LegalMatter;
 use App\Models\PurchaseOrder;
 use App\Models\Segment;
 use App\Models\Vendor;
+use App\Models\Comment;
+use App\Models\Team;
 use App\Policies\AssetPolicy;
 use App\Policies\BankingRelationshipPolicy;
 use App\Policies\ContractPolicy;
@@ -24,15 +26,15 @@ use App\Policies\InvoicePolicy;
 use App\Policies\LegalMatterPolicy;
 use App\Policies\PurchaseOrderPolicy;
 use App\Policies\SegmentPolicy;
+use App\Policies\TeamPolicy;
 use App\Policies\VendorPolicy;
-use App\Policies\WebhookPolicy;
 use Aws\S3\S3Client;
 use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\ServiceProvider;
 use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
 use League\Flysystem\Filesystem;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -73,8 +75,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Asset::class, AssetPolicy::class);
         Gate::policy(Employee::class, EmployeePolicy::class);
         Gate::policy(BankingRelationship::class, BankingRelationshipPolicy::class);
-
-        Gate::policy(Webhook::class, WebhookPolicy::class);
+        Gate::policy(Team::class, TeamPolicy::class);
+        Gate::policy(Comment::class, CommentPolicy::class);
         Gate::policy(IntegrationOAuthClient::class, IntegrationOAuthClientPolicy::class);
 
         \Event::listen(WebhookEventOccurred::class, QueueWebhookDeliveries::class);

@@ -7,24 +7,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TeamMember extends Model
+class CommentMention extends Model
 {
     use HasFactory, HasUlids;
 
     protected $fillable = [
-        'team_id',
+        'comment_id',
         'user_id',
-        'role',
-        'is_primary',
     ];
 
     protected $casts = [
-        'is_primary' => 'boolean',
+        'read_at' => 'datetime',
     ];
 
-    public function team(): BelongsTo
+    public function comment(): BelongsTo
     {
-        return $this->belongsTo(Team::class);
+        return $this->belongsTo(Comment::class);
     }
 
     public function user(): BelongsTo
@@ -32,8 +30,8 @@ class TeamMember extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function scopePrimary($query)
+    public function markRead(): void
     {
-        return $query->where('is_primary', true);
+        $this->update(['read_at' => now()]);
     }
 }

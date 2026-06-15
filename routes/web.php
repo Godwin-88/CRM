@@ -46,6 +46,8 @@ use App\Http\Controllers\Support\PerformanceController;
 use App\Http\Controllers\Support\TicketController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\VendorController;
+use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\CalendarWebController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -462,5 +464,13 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
             Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
         });
+
+        // Calendar
+        Route::get('/calendar', [CalendarWebController::class, 'index'])->name('calendar.index');
+
+        // Notifications
+        Route::get('/notifications', [\App\Http\Controllers\Web\NotificationWebController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{notification}/read', [\App\Http\Controllers\Web\NotificationWebController::class, 'markRead'])->name('notifications.read');
+        Route::post('/notifications/read-all', [\App\Http\Controllers\Web\NotificationWebController::class, 'markAllRead'])->name('notifications.readAll');
     });
 });

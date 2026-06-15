@@ -8,10 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use App\Models\HasComments;
 
-class Campaign extends Model
+class Campaign extends Model implements HasMedia
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasComments, HasFactory, HasUlids, SoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
         'name',

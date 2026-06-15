@@ -8,9 +8,11 @@ use App\Http\Controllers\Api\V1\AnalyticsApiController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\CampaignAnalyticsController;
 use App\Http\Controllers\Api\V1\CampaignController;
+use App\Http\Controllers\Api\V1\CalendarController;
 use App\Http\Controllers\Api\V1\CampaignTemplateController;
 use App\Http\Controllers\Api\V1\CannedResponseController;
 use App\Http\Controllers\Api\V1\ChatController;
+use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ComplianceAnalyticsController;
 use App\Http\Controllers\Api\V1\ContactCentreController;
 use App\Http\Controllers\Api\V1\ContactController;
@@ -295,6 +297,18 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::post('webhooks/{webhook}/resume', [WebhookController::class, 'resume']);
         Route::post('webhooks/{webhook}/retry/{delivery}', [WebhookController::class, 'retryDelivery']);
     });
+
+    // Comments (polymorphic, per entity type)
+    Route::get('{type}/{id}/comments', [CommentController::class, 'index'])->where('id', '[0-9A-Za-z]{26}');
+    Route::post('{type}/{id}/comments', [CommentController::class, 'store'])->where('id', '[0-9A-Za-z]{26}');
+    Route::get('{type}/{id}/comments/{comment}', [CommentController::class, 'show'])->where(['id' => '[0-9A-Za-z]{26}', 'comment' => '[0-9A-Za-z]{26}']);
+    Route::put('{type}/{id}/comments/{comment}', [CommentController::class, 'update'])->where(['id' => '[0-9A-Za-z]{26}', 'comment' => '[0-9A-Za-z]{26}']);
+    // Calendar
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('calendar', [CalendarController::class, 'index']);
+});
+
+Route::delete('{type}/{id}/comments/{comment}', [CommentController::class, 'destroy'])->where(['id' => '[0-9A-Za-z]{26}', 'comment' => '[0-9A-Za-z]{26}']);
 });
 
 // Service Registry

@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Activity;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Account extends Model
+class Account extends Model implements HasMedia
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasComments, HasFactory, HasUlids, SoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
         'name',

@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Models\Invoice;
+use App\Models\DealComment;
 
 class Deal extends Model
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasComments, HasFactory, HasUlids, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -76,7 +77,7 @@ class Deal extends Model
         return $this->hasMany(Quote::class);
     }
 
-    public function comments(): HasMany
+    public function dealComments(): HasMany
     {
         return $this->hasMany(DealComment::class);
     }
