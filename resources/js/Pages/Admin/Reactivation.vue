@@ -6,175 +6,136 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Plus, UserPlus, Mail, Clock, TrendingUp, Settings, Filter, Zap } from 'lucide-vue-next'
+import { Plus, Clock, Mail, UserPlus, TrendingUp, Play } from 'lucide-vue-next'
 
-interface Config {
-  id: string
-  name: string
-  description: string
-  criteria: any
-  actions: any
-  is_active: boolean
-  contacts_count: number
-}
-interface Contact {
-  id: string
-  contact: { first_name: string; last_name: string; email: string }
-  status: string
-  config: { name: string }
-}
-const props = defineProps<{ 
-  configs: Config[]; 
-  contacts?: Contact[]; 
-  stats?: Record<string, number>;
-  segments: {id: string, name: string}[];
-  tiers: {id: string, name: string}[];
-  sequences: {id: string, name: string}[];
+const props = defineProps<{
+  configs: any[]
+  stats: { queued: number; sent: number; responded: number; reactivated: number }
 }>()
-const configs = ref(props.configs)
-const contacts = ref(props.contacts ?? [])
-const stats = ref(props.stats ?? {})
-const showCreateDialog = ref(false)
 
-const newConfig = ref({ 
-  name: '', 
-  description: '', 
-  criteria: {
-    min_inactivity_days: 90,
-    segment_id: '',
-    loyalty_tier_id: ''
-  }, 
-  actions: {
-    drip_sequence_id: '',
-    dormant_tag: 'inactive-dormant'
-  }, 
-  is_active: true 
+const showCreateOpen = ref(false)
+const selectedConfig = ref<any | null>(null)
+const isRunning = ref(false)
+
+const newCampaign = ref({
+  name: '',
+  description: '',
+  segment_id: '',
+  template_id: '',
+  channels: [] as string[],
+  max_retries: 3,
+  delay_hours: 24,
 })
 
-const submitConfig = async () => {
-  router.post('/admin/reactivation', newConfig.value, {
-    onSuccess: () => { 
-      showCreateDialog.value = false 
-      // Reset form
-      newConfig.value = { 
-        name: '', description: '', 
-        criteria: { min_inactivity_days: 90, segment_id: '', loyalty_tier_id: '' },
-        actions: { drip_sequence_id: '', dormant_tag: 'inactive-dormant' },
-        is_active: true 
+const createCampaign = async () => {
+  router.post('/api/v1/reactivation', newCampaign.value, {
+    onSuccess: () => {
+      showCreateOpen.value = false
+      newCampaign.value = {
+        name: '',
+        description: '',
+        segment_id: '',
+        template_id: '',
+        channels: [],
+        max_retries: 3,
+        delay_hours: 24,
       }
     },
   })
 }
 
-const runCampaign = async (id: string) => {
-  if (!confirm('This will evaluate all contacts and queue those matching the criteria. Continue?')) return
-  router.post(`/admin/reactivation/${id}/run`, {}, {
-    onSuccess: () => router.reload(),
-  })
+const runCampaign = async (id: number) => {
+  isRunning.value = true
+  await router.post(`/api/v1/reactivation/${id}/run`)
+  isRunning.value = false
+}
+
+const channelColor = (channel: string) => {
+  const colors: Record<string, string> = {
+    email: 'default',
+    sms: 'secondary',
+    push: 'outline',
+    in_app: 'destructive',
+  }
+  return colors[channel] || 'outline'
 }
 </script>
 
 <template>
   <AppLayout>
-    <Head title="Reactivation Center" />
+    <Head title="Reactivation" />
     <div class="max-w-7xl mx-auto space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Reactivation Center</h1>
-          <p class="text-gray-500">Intelligently re-engage dormant customers based on behavior and value.</p>
+          <h1 class="text-3xl font-bold tracking-tight">Reactivation</h1>
+          <p class="text-muted-foreground">Win back inactive contacts.</p>
         </div>
-        <Dialog v-model:open="showCreateDialog">
-          <DialogTrigger as-child><Button size="lg" class="shadow-lg"><Plus class="h-5 w-5 mr-2" />New Strategy</Button></DialogTrigger>
-          <DialogContent class="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle class="text-xl">Create Reactivation Strategy</DialogTitle>
-              <p class="text-sm text-gray-500">Define who to target and what actions to take when they become inactive.</p>
-            </DialogHeader>
-            <form @submit.prevent="submitConfig" class="space-y-6 py-4">
-              <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="space-y-2 col-span-2">
-                    <Label for="name">Campaign Name</Label>
-                    <Input id="name" v-model="newConfig.name" placeholder="e.g. 90-Day High Value Win-back" required />
-                  </div>
-                  <div class="space-y-2 col-span-2">
-                    <Label for="desc">Internal Description</Label>
-                    <Textarea id="desc" v-model="newConfig.description" placeholder="Goal of this campaign..." />
-                  </div>
-                </div>
-
-                <div class="border-t pt-4">
-                  <h3 class="text-sm font-semibold mb-3 flex items-center gap-2 text-blue-700">
-                    <Filter class="h-4 w-4" /> Targeting Criteria
-                  </h3>
-                  <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                      <Label>Inactivity Threshold</Label>
-                      <div class="flex items-center gap-2">
-                        <Input type="number" v-model="newConfig.criteria.min_inactivity_days" class="w-24" />
-                        <span class="text-sm text-gray-500">days inactive</span>
-                      </div>
-                    </div>
-                    <div class="space-y-2">
-                      <Label>Loyalty Tier</Label>
-                      <Select v-model="newConfig.criteria.loyalty_tier_id">
-                        <SelectTrigger><SelectValue placeholder="All Tiers" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Tiers</SelectItem>
-                          <SelectItem v-for="tier in tiers" :key="tier.id" :value="tier.id">{{ tier.name }}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div class="space-y-2 col-span-2">
-                      <Label>Target Segment (Optional)</Label>
-                      <Select v-model="newConfig.criteria.segment_id">
-                        <SelectTrigger><SelectValue placeholder="Select a specific segment..." /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Contacts</SelectItem>
-                          <SelectItem v-for="seg in segments" :key="seg.id" :value="seg.id">{{ seg.name }}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="border-t pt-4">
-                  <h3 class="text-sm font-semibold mb-3 flex items-center gap-2 text-emerald-700">
-                    <Zap class="h-4 w-4" /> Automation Actions
-                  </h3>
-                  <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2 col-span-2">
-                      <Label>Enroll in Drip Sequence</Label>
-                      <Select v-model="newConfig.actions.drip_sequence_id">
-                        <SelectTrigger><SelectValue placeholder="Choose a re-engagement flow..." /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem v-for="seq in sequences" :key="seq.id" :value="seq.id">{{ seq.name }}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div class="space-y-2">
-                      <Label>Apply "Dormant" Tag</Label>
-                      <Input v-model="newConfig.actions.dormant_tag" placeholder="tag-name" />
-                    </div>
-                    <div class="flex items-end pb-2">
-                      <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                        <Checkbox :checked="newConfig.is_active" @update:checked="v => newConfig.is_active = v" />
-                        Enable Strategy Immediately
-                      </label>
-                    </div>
-                  </div>
-                </div>
+        <Dialog v-model:open="showCreateOpen">
+          <DialogTrigger as-child><Button><Plus class="h-4 w-4 mr-2" />New Campaign</Button></DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Create Reactivation Campaign</DialogTitle></DialogHeader>
+            <form @submit.prevent="createCampaign" class="space-y-4 py-4">
+              <div class="space-y-2"><Label>Name</Label><Input v-model="newCampaign.name" placeholder="e.g. Win-Back Q4" /></div>
+              <div class="space-y-2"><Label>Segment</Label>
+                <Select v-model="newCampaign.segment_id">
+                  <SelectTrigger><SelectValue placeholder="Select segment" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="inactive_30">Inactive 30 days</SelectItem>
+                    <SelectItem value="inactive_90">Inactive 90 days</SelectItem>
+                    <SelectItem value="churned_365">Churned 365 days</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              
-              <div class="flex justify-end gap-3 pt-2">
-                <Button type="button" variant="ghost" @click="showCreateDialog = false">Cancel</Button>
-                <Button type="submit" class="px-8">Launch Strategy</Button>
+              <div class="space-y-2"><Label>Template</Label>
+                <Select v-model="newCampaign.template_id">
+                  <SelectTrigger><SelectValue placeholder="Select template" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="win-back-email">Win-Back Email</SelectItem>
+                    <SelectItem value="discount-sms">Discount SMS</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              <div class="space-y-2"><Label>Channels</Label>
+                <Select v-model="newCampaign.channels" multiple>
+                  <SelectTrigger><SelectValue placeholder="Select channels" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                    <SelectItem value="push">Push</SelectItem>
+                    <SelectItem value="in_app">In App</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2"><Label>Max Retries</Label><Input type="number" v-model.number="newCampaign.max_retries" min="1" max="10" /></div>
+                <div class="space-y-2"><Label>Delay (hours)</Label><Input type="number" v-model.number="newCampaign.delay_hours" min="1" /></div>
+              </div>
+              <Button type="submit" class="w-full">Create Campaign</Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -190,17 +151,24 @@ const runCampaign = async (id: string) => {
       <Card>
         <CardHeader><CardTitle>Campaigns</CardTitle></CardHeader>
         <CardContent class="p-0">
-          <table class="w-full text-sm">
-            <thead class="border-b"><tr class="text-left text-gray-500"><th class="p-4">Name</th><th class="p-4">Status</th><th class="p-4">Queue</th><th class="p-4"></th></tr></thead>
-            <tbody>
-              <tr v-for="config in configs" :key="config.id" class="border-b hover:bg-gray-50">
-                <td class="p-4 font-medium">{{ config.name }}</td>
-                <td class="p-4"><Badge :variant="config.is_active ? 'default' : 'outline'">{{ config.is_active ? 'Active' : 'Inactive' }}</Badge></td>
-                <td class="p-4">{{ config.contacts_count }}</td>
-                <td class="p-4"><Button size="sm" @click="runCampaign(config.id)">Run</Button></td>
-              </tr>
-            </tbody>
-          </table>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="p-4">Name</TableHead>
+                <TableHead class="p-4">Status</TableHead>
+                <TableHead class="p-4">Queue</TableHead>
+                <TableHead class="p-4"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="config in configs" :key="config.id" class="border-b hover:bg-gray-50">
+                <TableCell class="p-4 font-medium">{{ config.name }}</TableCell>
+                <TableCell class="p-4"><Badge :variant="config.is_active ? 'default' : 'outline'">{{ config.is_active ? 'Active' : 'Inactive' }}</Badge></TableCell>
+                <TableCell class="p-4">{{ config.contacts_count }}</TableCell>
+                <TableCell class="p-4"><Button size="sm" @click="runCampaign(config.id)" :disabled="isRunning"><Play class="h-4 w-4 mr-2" />Run</Button></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

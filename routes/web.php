@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\CampaignWebController;
 use App\Http\Controllers\Admin\CannedResponseController;
 use App\Http\Controllers\Admin\ClvAnalyticsWebController;
 use App\Http\Controllers\Admin\ContractTemplateController;
+use App\Http\Controllers\Admin\CustomFieldWebController;
+use App\Http\Controllers\Admin\DuplicateContactsWebController;
 use App\Http\Controllers\Admin\GuidedJourneyWebController;
 use App\Http\Controllers\Admin\InteractionWebController;
 use App\Http\Controllers\Admin\LoyaltyProgramWebController;
@@ -22,7 +24,9 @@ use App\Http\Controllers\Admin\SlaWebController;
 use App\Http\Controllers\Admin\SocialPostWebController;
 use App\Http\Controllers\Admin\SupportCategoryController;
 use App\Http\Controllers\Admin\SurveyWebController;
+use App\Http\Controllers\Admin\TagWebController;
 use App\Http\Controllers\Admin\TicketFormController;
+use App\Http\Controllers\Admin\WelcomeEmailTemplateController;
 use App\Http\Controllers\Admin\WinLossReasonWebController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AuthController;
@@ -48,7 +52,7 @@ use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\CalendarWebController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DocsWebController;
 use Inertia\Inertia;
 
 // ─── Authentication ───────────────────────────────────────────────────────────
@@ -153,6 +157,8 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
     // Contacts
     Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+    Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
+    Route::post('/contacts/bulk-delete', [ContactController::class, 'bulkDelete'])->name('contacts.bulk-delete');
     Route::get('/contacts/template', [ContactController::class, 'downloadTemplate'])->name('contacts.template');
     Route::get('/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
     Route::get('/contacts/{contact}/edit', [ContactController::class, 'edit'])->name('contacts.edit');
@@ -165,7 +171,10 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
     // Accounts
     Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
+    Route::post('/accounts', [AccountController::class, 'store'])->name('accounts.store');
     Route::get('/accounts/{account}', [AccountController::class, 'show'])->name('accounts.show');
+    Route::put('/accounts/{account}', [AccountController::class, 'update'])->name('accounts.update');
+    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
 
     // Segments
     Route::get('/segments', [SegmentController::class, 'index'])->name('segments.index');
@@ -276,21 +285,31 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::get('/admin/win-loss-reasons', [WinLossReasonWebController::class, 'index'])->name('admin.win-loss-reasons.index');
         Route::get('/admin/quote-templates', [QuoteTemplateWebController::class, 'index'])->name('admin.quote-templates.index');
         Route::get('/admin/scoring-rules', [ScoringRuleWebController::class, 'index'])->name('admin.scoring-rules.index');
+        Route::get('/admin/custom-fields', [CustomFieldWebController::class, 'index'])->name('admin.custom-fields.index');
+        Route::get('/admin/duplicates', [DuplicateContactsWebController::class, 'index'])->name('admin.duplicates.index');
+        Route::get('/admin/deal-automations', [DealAutomationWebController::class, 'index'])->name('admin.deal-automations.index');
 
         // Campaigns
         Route::get('/admin/campaigns', [CampaignWebController::class, 'index'])->name('admin.campaigns.index');
         Route::get('/admin/campaigns/create', [CampaignWebController::class, 'create'])->name('admin.campaigns.create');
         Route::get('/admin/analytics/campaigns', [CampaignWebController::class, 'analytics'])->name('admin.campaign-analytics.index');
         Route::get('/admin/campaigns/{campaign}', [CampaignWebController::class, 'show'])->name('admin.campaigns.show');
+        Route::get('/admin/campaigns/{campaign}/ab-test', [CampaignWebController::class, 'abTest'])->name('admin.campaigns.ab-test');
 
         // Campaign Templates
         Route::get('/admin/campaign-templates', [CampaignTemplateWebController::class, 'index'])->name('admin.campaign-templates.index');
+        Route::get('/admin/campaign-templates/create', [CampaignTemplateWebController::class, 'create'])->name('admin.campaign-templates.create');
 
         // Drip Sequences
         Route::get('/admin/drip-sequences', [DripSequenceWebController::class, 'index'])->name('admin.drip-sequences.index');
+        Route::get('/admin/drip-sequences/{sequence}', [DripSequenceWebController::class, 'show'])->name('admin.drip-sequences.show');
 
         // Social Posts
         Route::get('/admin/social-posts', [SocialPostWebController::class, 'index'])->name('admin.social-posts.index');
+
+        Route::get('/admin/tags', [TagWebController::class, 'index'])->name('admin.tags.index');
+
+        Route::get('/admin/analytics/campaigns-dashboard', [CampaignWebController::class, 'analyticsDashboard'])->name('admin.campaign-analytics.dashboard');
 
         // Loyalty
         Route::get('/admin/loyalty', [LoyaltyProgramWebController::class, 'index'])->name('admin.loyalty.index');
@@ -342,7 +361,14 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::post('/admin/reactivation', [ReactivationWebController::class, 'store'])->name('admin.reactivation.store');
         Route::put('/admin/reactivation/{reactivationConfig}', [ReactivationWebController::class, 'update'])->name('admin.reactivation.update');
         Route::get('/admin/reactivation/contacts', [ReactivationWebController::class, 'contacts'])->name('admin.reactivation.contacts');
+        Route::get('/admin/reactivation/analytics', [ReactivationWebController::class, 'analytics'])->name('admin.reactivation.analytics');
         Route::post('/admin/reactivation/{reactivationConfig}/run', [GuidedJourneyWebController::class, 'run'])->name('admin.reactivation.run');
+
+        // Welcome Email Templates
+        Route::get('/admin/welcome-email-templates', [WelcomeEmailTemplateController::class, 'index'])->name('admin.welcome-email-templates.index');
+        Route::post('/admin/welcome-email-templates', [WelcomeEmailTemplateController::class, 'store'])->name('admin.welcome-email-templates.store');
+        Route::put('/admin/welcome-email-templates/{template}', [WelcomeEmailTemplateController::class, 'update'])->name('admin.welcome-email-templates.update');
+        Route::delete('/admin/welcome-email-templates/{template}', [WelcomeEmailTemplateController::class, 'destroy'])->name('admin.welcome-email-templates.destroy');
 
         // CLV Analytics
         Route::get('/admin/clv-analytics', [ClvAnalyticsWebController::class, 'index'])->name('admin.clv-analytics.index');
@@ -472,5 +498,20 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::get('/notifications', [\App\Http\Controllers\Web\NotificationWebController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{notification}/read', [\App\Http\Controllers\Web\NotificationWebController::class, 'markRead'])->name('notifications.read');
         Route::post('/notifications/read-all', [\App\Http\Controllers\Web\NotificationWebController::class, 'markAllRead'])->name('notifications.readAll');
+
+        // Documentation Center
+        Route::get('/docs', [DocsWebController::class, 'index'])->name('docs.index');
+        Route::get('/docs/category/{category:slug}', [DocsWebController::class, 'category'])->name('docs.category');
+        Route::get('/docs/{article:slug}', [DocsWebController::class, 'show'])->name('docs.show');
+        Route::post('/docs/{article}/verify', [DocsWebController::class, 'verify'])->name('docs.verify');
+
+        // Onboarding Checklist
+        Route::get('/onboarding/checklist', [DocsWebController::class, 'onboardingChecklist'])->name('onboarding.checklist');
+        Route::post('/onboarding/checklist/complete', [DocsWebController::class, 'completeItem'])->name('onboarding.checklist.complete');
+        Route::post('/onboarding/checklist/dismiss', [DocsWebController::class, 'dismissChecklist'])->name('onboarding.checklist.dismiss');
+
+        // Admin - Docs Dashboard
+        Route::get('/admin/docs', [\App\Http\Controllers\Admin\DocsDashboardController::class, 'index'])->name('admin.docs.index');
+        Route::post('/admin/docs/{docRequest}/resolve', [\App\Http\Controllers\Admin\DocsDashboardController::class, 'resolveRequest'])->name('admin.docs.resolve-request');
     });
 });

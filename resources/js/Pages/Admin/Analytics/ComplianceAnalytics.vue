@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Shield, Users, Filter, AlertTriangle } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -79,20 +80,20 @@ const timeRange = ref<'30d' | '90d' | '1y'>('30d')
           <CardTitle>Top Users by Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <table class="w-full text-sm">
-            <thead class="border-b">
-              <tr class="text-left text-gray-500">
-                <th class="p-3">User</th>
-                <th class="p-3">Events</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="user in props.audit_stats?.top_users" :key="user.user_id" class="border-b hover:bg-gray-50">
-                <td class="p-3">{{ user.name }}</td>
-                <td class="p-3"><Badge>{{ user.count }}</Badge></td>
-              </tr>
-            </tbody>
-          </table>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="p-3">User</TableHead>
+                <TableHead class="p-3">Events</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="user in props.audit_stats?.top_users" :key="user.user_id" class="border-b hover:bg-gray-50">
+                <TableCell class="p-3">{{ user.name }}</TableCell>
+                <TableCell class="p-3"><Badge>{{ user.count }}</Badge></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

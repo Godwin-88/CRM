@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Plus, Workflow, Zap, Target } from 'lucide-vue-next';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Plus, Workflow, Zap, Target, Link as LinkIcon } from 'lucide-vue-next';
 
 interface DripSequence {
   id: string;
@@ -116,39 +117,39 @@ const triggerLabel = (trigger: string) => {
         </Dialog>
       </div>
 
-      <Card>
-        <CardContent class="p-0">
-          <table class="w-full">
-            <thead class="bg-gray-50 border-b">
-              <tr class="text-left text-xs uppercase tracking-wider text-gray-500">
-                <th class="p-4">Name</th>
-                <th class="p-4">Trigger</th>
-                <th class="p-4">Status</th>
-                <th class="p-4">Steps</th>
-                <th class="p-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="sequence in sequences" :key="sequence.id" class="border-b hover:bg-gray-50/50">
-                <td class="p-4">
-                  <div class="font-bold">{{ sequence.name }}</div>
-                  <div class="text-xs text-gray-500">{{ sequence.description }}</div>
-                </td>
-                <td class="p-4 flex items-center gap-2 text-sm"><Target class="h-4 w-4 text-blue-500" /> {{ triggerLabel(sequence.trigger) }}</td>
-                <td class="p-4">
-                  <Badge :variant="statusColor(sequence.status)">{{ sequence.status }}</Badge>
-                </td>
-                <td class="p-4 text-sm">{{ sequence.steps?.length ?? 0 }} steps</td>
-                <td class="p-4">
-                  <Button variant="outline" size="sm" class="flex gap-2">
-                    <Workflow class="h-4 w-4" /> Manage Steps
-                  </Button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+          <Card>
+            <CardContent class="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead class="p-4">Name</TableHead>
+                    <TableHead class="p-4">Trigger</TableHead>
+                    <TableHead class="p-4">Status</TableHead>
+                    <TableHead class="p-4">Steps</TableHead>
+                    <TableHead class="p-4">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow v-for="sequence in sequences" :key="sequence.id" class="border-b hover:bg-gray-50/50">
+                    <TableCell class="p-4">
+                      <div class="font-bold">{{ sequence.name }}</div>
+                      <div class="text-xs text-gray-500">{{ sequence.description }}</div>
+                    </TableCell>
+                    <TableCell class="p-4 flex items-center gap-2 text-sm"><Target class="h-4 w-4 text-blue-500" /> {{ triggerLabel(sequence.trigger) }}</TableCell>
+                    <TableCell class="p-4">
+                      <Badge :variant="statusColor(sequence.status)">{{ sequence.status }}</Badge>
+                    </TableCell>
+                    <TableCell class="p-4 text-sm">{{ sequence.steps?.length ?? 0 }} steps</TableCell>
+                    <TableCell class="p-4">
+                      <Button variant="outline" size="sm" class="flex gap-2" @click="router.visit(`/admin/drip-sequences/${sequence.id}`)">
+                        <Workflow class="h-4 w-4" /> Manage Steps
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
     </div>
   </AppLayout>
 </template>

@@ -17,6 +17,9 @@ import {
   PointElement,
   LineElement,
 } from 'chart.js';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement);
 
@@ -108,9 +111,17 @@ const lineChartOptions = { responsive: true };
           <h1 class="text-3xl font-bold">Campaign Analytics</h1>
           <p class="text-gray-500">Track performance and engagement across campaigns.</p>
         </div>
-        <select v-model="selectedCampaignId" @change="fetchMetrics(selectedCampaignId); fetchTimeSeries(selectedCampaignId); fetchPerContact(selectedCampaignId)" class="p-2 border rounded">
-          <option v-for="c in campaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
-        </select>
+        <div class="flex flex-col gap-2">
+          <Label>Campaign</Label>
+          <Select v-model="selectedCampaignId" @update:model-value="(v) => { selectedCampaignId = v; fetchMetrics(v); fetchTimeSeries(v); fetchPerContact(v); }">
+            <SelectTrigger class="w-64">
+              <SelectValue placeholder="Select campaign" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="c in campaigns" :key="c.id" :value="c.id">{{ c.name }}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <!-- Metrics Cards -->
@@ -142,20 +153,20 @@ const lineChartOptions = { responsive: true };
       <Card>
         <CardHeader><CardTitle>Per-Contact Status</CardTitle></CardHeader>
         <CardContent class="p-0">
-          <table class="w-full">
-            <thead class="border-b">
-              <tr class="text-left">
-                <th class="p-4">Contact</th>
-                <th class="p-4">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in perContact" :key="item.contact_id" class="border-b">
-                <td class="p-4">{{ item.contact?.first_name }} {{ item.contact?.last_name }}</td>
-                <td class="p-4"><Badge>{{ item.status }}</Badge></td>
-              </tr>
-            </tbody>
-          </table>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="p-4">Contact</TableHead>
+                <TableHead class="p-4">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="item in perContact" :key="item.contact_id" class="border-b">
+                <TableCell class="p-4">{{ item.contact?.first_name }} {{ item.contact?.last_name }}</TableCell>
+                <TableCell class="p-4"><Badge>{{ item.status }}</Badge></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

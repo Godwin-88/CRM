@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Segment;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,6 +27,6 @@ class SegmentController extends Controller
 
         Segment::create($data);
 
-        return redirect()->route('segments.index');
+        return redirect()->route('segments.index')->with('success', 'Segment created successfully.');
     }
 }

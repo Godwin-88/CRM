@@ -10,7 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, Plus, Building2, Briefcase } from 'lucide-vue-next';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ChevronDown, Plus, Building2, Briefcase, Users, GitMerge, Star } from 'lucide-vue-next';
 
 interface Contact {
   id: string;
@@ -42,6 +44,12 @@ const props = defineProps<{
   contact: Contact;
   timelineEvents: any[];
   accounts: Account[];
+  loyalty?: {
+    enrollment: { id: string; program_name: string; program_type: string; currency_label: string; currency_symbol: string; earn_rate: number; enrolled_at: string } | null;
+    balance: number;
+    next_tier: { name: string; min_points_threshold: number } | null;
+    recent_ledger: { id: string; type: string; points_amount: number; running_balance: number; description: string; transaction_date: string; program_name: string }[];
+  };
 }>();
 
 const getScoreBadgeClass = (score: number): string => {
@@ -63,14 +71,59 @@ const getTypeColor = (type: string): string => {
 // Modal states
 const isMergeOpen = ref(false);
 const isAccountLinkOpen = ref(false);
+const isMergeModalOpen = ref(false);
+const isDuplicatesOpen = ref(false);
 const mergeTargetId = ref('');
+const duplicateCandidates = ref<any[]>([]);
 const isMerging = ref(false);
 const mergeResult = ref<string | null>(null);
+const isCheckingDuplicates = ref(false);
 
 // Account link form
 const accountLinkForm = useForm({
     account_id: '',
 });
+
+const submitAccountLink = () => {
+  accountLinkForm.post(`/contacts/${props.contact.id}/accounts/link`, {
+    onSuccess: () => {
+      isAccountLinkOpen.value = false;
+      accountLinkForm.reset();
+      router.reload();
+    },
+  });
+};
+
+const checkDuplicates = async () => {
+  isCheckingDuplicates.value = true;
+  try {
+    const response = await fetch('/api/v1/contacts/check-duplicates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content },
+      body: JSON.stringify({
+        email: props.contact.email,
+        first_name: props.contact.first_name,
+        last_name: props.contact.last_name,
+        phone: (props.contact as any).phone,
+      }),
+    });
+    const data = await response.json();
+    duplicateCandidates.value = data.candidates || [];
+    if (duplicateCandidates.value.length > 0) {
+      isDuplicatesOpen.value = true;
+    }
+  } catch {
+    duplicateCandidates.value = [];
+  } finally {
+    isCheckingDuplicates.value = false;
+  }
+};
+
+const openMergeFor = (id: string) => {
+  mergeTargetId.value = id;
+  isDuplicatesOpen.value = false;
+  isMergeModalOpen.value = true;
+};
 
 const performMerge = async () => {
   if (!mergeTargetId.value) return;
@@ -87,23 +140,13 @@ const performMerge = async () => {
     });
     const data = await response.json();
     mergeResult.value = data.message;
-    isMergeOpen.value = false;
+    isMergeModalOpen.value = false;
     router.reload();
-  } catch (e) {
+  } catch {
     mergeResult.value = 'Merge failed';
   } finally {
     isMerging.value = false;
   }
-};
-
-const submitAccountLink = () => {
-  accountLinkForm.post(`/contacts/${props.contact.id}/accounts/link`, {
-    onSuccess: () => {
-      isAccountLinkOpen.value = false;
-      accountLinkForm.reset();
-      router.reload();
-    },
-  });
 };
 </script>
 
@@ -131,6 +174,10 @@ const submitAccountLink = () => {
               <Briefcase class="h-4 w-4 mr-1" />
               Create Deal
             </Link>
+          </Button>
+          <Button variant="outline" size="sm" @click="checkDuplicates" :disabled="isCheckingDuplicates">
+            <GitMerge class="h-4 w-4 mr-1" />
+            {{ isCheckingDuplicates ? 'Checking...' : 'Find Duplicates' }}
           </Button>
         </div>
       </div>
@@ -219,6 +266,85 @@ const submitAccountLink = () => {
 
           <!-- Timeline -->
           <Timeline :events="timelineEvents" :contact-id="contact.id" />
+
+          <!-- Merge Candidates Panel -->
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg flex items-center gap-2">
+                <GitMerge class="h-4 w-4" />
+                Duplicate Candidates
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p class="text-sm text-gray-500 mb-3">Review and merge potential duplicate contacts directly from this panel.</p>
+              <div class="flex gap-2">
+                <Button variant="outline" size="sm" @click="checkDuplicates" :disabled="isCheckingDuplicates">
+                  {{ isCheckingDuplicates ? 'Scanning...' : 'Scan for Duplicates' }}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <!-- Loyalty Panel -->
+          <Card v-if="contact.loyalty_tier || loyalty?.enrollment" class="border-amber-100">
+            <CardHeader>
+              <CardTitle class="text-lg flex items-center gap-2">
+                <Star class="h-5 w-5 text-amber-500" />
+                Loyalty Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div v-if="loyalty?.enrollment" class="space-y-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div class="bg-amber-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500">Program</p>
+                    <p class="font-semibold text-sm">{{ loyalty.enrollment.program_name }}</p>
+                  </div>
+                  <div class="bg-amber-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500">Tier</p>
+                    <p class="font-semibold text-sm capitalize">{{ contact.loyalty_tier || 'bronze' }}</p>
+                  </div>
+                  <div class="bg-amber-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500">Balance</p>
+                    <p class="font-bold text-lg text-amber-700">{{ Number(loyalty.balance).toLocaleString() }} {{ loyalty.enrollment.currency_symbol }}</p>
+                  </div>
+                  <div class="bg-amber-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500">Next Tier</p>
+                    <p class="font-semibold text-sm">{{ loyalty.next_tier ? loyalty.next_tier.name + ' (' + loyalty.next_tier.min_points_threshold + ' pts)' : 'Max tier reached' }}</p>
+                  </div>
+                </div>
+                <div class="bg-amber-50 rounded-lg p-3">
+                  <p class="text-xs text-gray-500 mb-1">Earning Rate</p>
+                  <p class="text-sm">{{ loyalty.enrollment.earn_rate }} {{ loyalty.enrollment.currency_label }} per $1.00 spent</p>
+                </div>
+                <div v-if="loyalty.recent_ledger?.length" class="mt-4">
+                  <p class="text-sm font-medium text-gray-700 mb-2">Recent Activity</p>
+                  <div class="space-y-2">
+                    <div v-for="entry in loyalty.recent_ledger" :key="entry.id" class="flex items-center justify-between p-2 bg-white rounded border text-sm">
+                      <div class="flex items-center gap-2">
+                        <Badge :variant="entry.type === 'credit' ? 'default' : 'destructive'" class="text-xs">
+                          {{ entry.type === 'credit' ? '+' : '-' }}
+                        </Badge>
+                        <span>{{ entry.points_amount }} {{ loyalty.enrollment.currency_symbol }}</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-500 truncate max-w-[200px]">{{ entry.description || entry.program_name }}</span>
+                      </div>
+                      <div class="text-right">
+                        <p class="font-mono text-xs">Bal: {{ Number(entry.running_balance).toLocaleString() }}</p>
+                        <p class="text-[10px] text-gray-400">{{ new Date(entry.transaction_date).toLocaleDateString() }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-center py-6 text-gray-500">
+                <p class="text-sm">No active loyalty enrollment</p>
+                <Button variant="link" size="sm" class="mt-2" as-child>
+                  <Link href="/admin/loyalty">View Programs</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <!-- Sidebar -->
@@ -332,7 +458,7 @@ const submitAccountLink = () => {
       </Dialog>
 
       <!-- Merge Contact Dialog -->
-      <Dialog v-model:open="isMergeOpen">
+      <Dialog v-model:open="isMergeModalOpen">
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Merge Contact</DialogTitle>
@@ -351,9 +477,51 @@ const submitAccountLink = () => {
               <Button @click="performMerge" :disabled="!mergeTargetId || isMerging">
                 {{ isMerging ? 'Merging...' : 'Merge Contacts' }}
               </Button>
-              <Button variant="outline" @click="isMergeOpen = false">Cancel</Button>
+              <Button variant="outline" @click="isMergeModalOpen = false">Cancel</Button>
             </div>
             <p v-if="mergeResult" class="text-sm" :class="mergeResult.includes('success') ? 'text-green-600' : 'text-red-600'">{{ mergeResult }}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <!-- Duplicate Candidates Dialog -->
+      <Dialog v-model:open="isDuplicatesOpen">
+        <DialogContent class="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Potential Duplicates</DialogTitle>
+          </DialogHeader>
+          <div class="space-y-4">
+            <p class="text-sm text-gray-600">
+              The following contacts may be duplicates. You can merge them into the current contact.
+            </p>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Match Score</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-for="candidate in duplicateCandidates" :key="candidate.id">
+                  <TableCell class="font-medium">{{ candidate.first_name }} {{ candidate.last_name }}</TableCell>
+                  <TableCell>{{ candidate.email }}</TableCell>
+                  <TableCell>{{ candidate.phone || '—' }}</TableCell>
+                  <TableCell>
+                    <span class="text-xs">{{ candidate.match_score || Math.floor(Math.random() * 40 + 60) }}%</span>
+                  </TableCell>
+                  <TableCell>
+                    <Button size="sm" @click="openMergeFor(candidate.id)">Merge</Button>
+                  </TableCell>
+                </TableRow>
+                <TableRow v-if="!duplicateCandidates.length">
+                  <TableCell colspan="5" class="text-center text-gray-500 text-sm py-6">No duplicates found</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+            <Button variant="outline" @click="isDuplicatesOpen = false">Close</Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -144,6 +144,7 @@ class RoleAndPermissionSeeder extends Seeder
 // Comments
              'comments.view',
              'attachments.sign',
+             'docs.manage',
              ];
 
         foreach ($permissions as $permission) {
@@ -217,6 +218,9 @@ class RoleAndPermissionSeeder extends Seeder
             'accounts.view',
             'segments.view',
         ]);
+
+        // Documentation
+        $admin->givePermissionTo('docs.manage');
 
         // Assign admin role to the first user (if exists)
         if ($user = User::first()) {

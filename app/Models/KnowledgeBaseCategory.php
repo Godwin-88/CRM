@@ -32,6 +32,6 @@ class KnowledgeBaseCategory extends Model
 
     public function articles(): HasMany
     {
-        return $this->hasMany(KnowledgeBaseArticle::class);
+        return $this->hasMany(KnowledgeBaseArticle::class, 'category_id');
     }
 }

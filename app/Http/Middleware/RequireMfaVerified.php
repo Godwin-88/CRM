@@ -10,8 +10,8 @@ class RequireMfaVerified
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Allow disabling MFA via environment for development/testing
-        if (env('MFA_ENABLED', true) === false) {
+        // Allow disabling MFA via configuration for development/testing
+        if (! config('security.mfa_enabled', true)) {
             return $next($request);
         }
 

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'mfa_enabled' => (bool) env('MFA_ENABLED', true),
+
     /*
     |--------------------------------------------------------------------------
     | MFA Required Roles

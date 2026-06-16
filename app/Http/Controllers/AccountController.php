@@ -82,4 +82,57 @@ class AccountController extends Controller
             'financialSummary' => $financialSummary,
         ]);
     }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'nullable|string|max:50',
+            'industry' => 'nullable|string|max:100',
+            'status' => 'required|string|max:20',
+            'website' => 'nullable|url|max:255',
+            'phone' => 'nullable|string|max:20',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'annual_revenue' => 'nullable|numeric|min:0',
+            'employee_count' => 'nullable|integer|min:0',
+            'parent_account_id' => 'nullable|exists:accounts,id',
+            'account_manager_id' => 'nullable|exists:users,id',
+        ]);
+
+        $account = Account::create($validated);
+
+        return redirect()->route('accounts.show', $account)->with('success', 'Account created successfully.');
+    }
+
+    public function update(Request $request, Account $account)
+    {
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'type' => 'nullable|string|max:50',
+            'industry' => 'nullable|string|max:100',
+            'status' => 'sometimes|string|max:20',
+            'website' => 'nullable|url|max:255',
+            'phone' => 'nullable|string|max:20',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'annual_revenue' => 'nullable|numeric|min:0',
+            'employee_count' => 'nullable|integer|min:0',
+            'parent_account_id' => 'nullable|exists:accounts,id',
+            'account_manager_id' => 'nullable|exists:users,id',
+        ]);
+
+        $account->update($validated);
+
+        return redirect()->route('accounts.show', $account)->with('success', 'Account updated successfully.');
+    }
+
+    public function destroy(Account $account)
+    {
+        $account->delete();
+
+        return redirect()->route('accounts.index')->with('success', 'Account deleted successfully.');
+    }
 }

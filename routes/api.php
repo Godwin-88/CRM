@@ -16,8 +16,7 @@ use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ComplianceAnalyticsController;
 use App\Http\Controllers\Api\V1\ContactCentreController;
 use App\Http\Controllers\Api\V1\ContactController;
-use App\Http\Controllers\Api\V1\CsatController;
-use App\Http\Controllers\Api\V1\DealController;
+use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\DripSequenceController;
 use App\Http\Controllers\Api\V1\IntegrationController;
 use App\Http\Controllers\Api\V1\InteractionController;
@@ -31,6 +30,8 @@ use App\Http\Controllers\Api\V1\SegmentController;
 use App\Http\Controllers\Api\V1\ServiceRegistryController;
 use App\Http\Controllers\Api\V1\SlaController;
 use App\Http\Controllers\Api\V1\SocialPostController;
+use App\Http\Controllers\Api\V1\SurveyController;
+use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\Api\V1\TeamController;
 use App\Http\Controllers\Api\V1\TicketCategoryController;
 use App\Http\Controllers\Api\V1\TicketController;
@@ -38,6 +39,7 @@ use App\Http\Controllers\Api\V1\TranslationController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\LegalMatterController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
@@ -112,6 +114,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('analytics/campaign-time-series/{campaign}', [CampaignAnalyticsController::class, 'timeSeries']);
     Route::get('analytics/campaign-per-contact/{campaign}', [CampaignAnalyticsController::class, 'perContact']);
     Route::get('analytics/campaign-per-link/{campaign}', [CampaignAnalyticsController::class, 'perLink']);
+    Route::get('analytics/campaign-revenue/{campaign}', [CampaignAnalyticsController::class, 'revenue']);
+    Route::get('analytics/cross-campaign', [CampaignAnalyticsController::class, 'crossCampaign']);
 
     // Reports
     Route::get('reports', [ReportBuilderController::class, 'index']);
@@ -160,6 +164,25 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('knowledge-base/{knowledge_base}/rate', [KnowledgeBaseController::class, 'rate']);
     Route::post('knowledge-base/{knowledge_base}/restore-version', [KnowledgeBaseController::class, 'restoreVersion']);
     Route::get('knowledge-base/categories', [KnowledgeBaseCategoryController::class, 'index']);
+    Route::get('knowledge-base/contextual', [KnowledgeBaseController::class, 'contextual']);
+    Route::post('knowledge-base/record-view', [KnowledgeBaseController::class, 'recordView']);
+    Route::post('doc-requests', function (Request $request) {
+        $validated = $request->validate([
+            'screen_identifier' => 'required|string',
+            'comment' => 'sometimes|string',
+        ]);
+
+        $request = \App\Models\DocRequest::firstOrCreate(
+            ['screen_identifier' => $validated['screen_identifier'], 'user_id' => $request->user()->id],
+            ['comment' => $validated['comment'] ?? null]
+        );
+
+        if (!$request->wasRecentlyCreated) {
+            $request->incrementRequestCount();
+        }
+
+        return response()->json(['created' => true]);
+    });
     Route::apiResource('knowledge-base', KnowledgeBaseController::class);
 
     Route::get('canned-responses', [CannedResponseController::class, 'index']);
@@ -182,6 +205,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::delete('pipelines/{pipeline}', [App\Http\Controllers\Admin\PipelineController::class, 'destroy']);
         Route::patch('pipelines/{pipeline}/archive', [App\Http\Controllers\Admin\PipelineController::class, 'archive']);
 
+        // Deal Automations
+        Route::get('deal-automations', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'index']);
+        Route::post('deal-automations', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'store']);
+        Route::get('deal-automations/{dealAutomation}', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'show']);
+        Route::put('deal-automations/{dealAutomation}', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'update']);
+        Route::delete('deal-automations/{dealAutomation}', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'destroy']);
+
         // Win/Loss Reasons
         Route::get('win-loss-reasons', [WinLossReasonController::class, 'index']);
         Route::post('win-loss-reasons', [WinLossReasonController::class, 'store']);
@@ -201,8 +231,35 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::put('campaigns/{campaign}', [CampaignController::class, 'update']);
         Route::delete('campaigns/{campaign}', [CampaignController::class, 'destroy']);
         Route::post('campaigns/{campaign}/steps', [CampaignController::class, 'addStep']);
+        Route::put('campaigns/{campaign}/steps/{step}', [CampaignController::class, 'updateStep']);
+        Route::delete('campaigns/{campaign}/steps/{step}', [CampaignController::class, 'deleteStep']);
+        Route::put('campaigns/{campaign}/steps/reorder', [CampaignController::class, 'reorderSteps']);
         Route::post('campaigns/{campaign}/pause', [CampaignController::class, 'pause']);
         Route::post('campaigns/{campaign}/resume', [CampaignController::class, 'resume']);
+        Route::post('campaigns/{campaign}/dispatch', [CampaignController::class, 'dispatch']);
+        Route::post('campaigns/{campaign}/cancel', [CampaignController::class, 'cancel']);
+        Route::post('campaigns/{campaign}/validate', [CampaignController::class, 'validateCampaign']);
+        Route::post('campaigns/{campaign}/ab-test', [App\Http\Controllers\Api\V1\CampaignABTestController::class, 'store']);
+        Route::get('campaigns/{campaign}/ab-test', [App\Http\Controllers\Api\V1\CampaignABTestController::class, 'show']);
+        Route::put('campaigns/{campaign}/ab-test', [App\Http\Controllers\Api\V1\CampaignABTestController::class, 'update']);
+        Route::post('campaigns/{campaign}/ab-test/start', [App\Http\Controllers\Api\V1\CampaignABTestController::class, 'start']);
+        Route::post('campaigns/{campaign}/ab-test/conclude', [App\Http\Controllers\Api\V1\CampaignABTestController::class, 'conclude']);
+        Route::get('campaigns/{campaign}/ab-test/results', [App\Http\Controllers\Api\V1\CampaignABTestController::class, 'results']);
+        Route::get('segments/{segment}/count', [CampaignController::class, 'getSegmentCount']);
+
+        // Tags
+        Route::get('tags', [App\Http\Controllers\Api\V1\TagController::class, 'index']);
+        Route::post('tags', [App\Http\Controllers\Api\V1\TagController::class, 'store']);
+        Route::put('tags/{tag}', [App\Http\Controllers\Api\V1\TagController::class, 'update']);
+        Route::delete('tags/{tag}', [App\Http\Controllers\Api\V1\TagController::class, 'destroy']);
+        Route::post('campaigns/bulk-tags', [App\Http\Controllers\Api\V1\TagController::class, 'bulkApply']);
+
+        // Custom Fields
+        Route::get('custom-fields', [CustomFieldController::class, 'index']);
+        Route::post('custom-fields', [CustomFieldController::class, 'store']);
+        Route::get('custom-fields/{customField}', [CustomFieldController::class, 'show']);
+        Route::put('custom-fields/{customField}', [CustomFieldController::class, 'update']);
+        Route::delete('custom-fields/{customField}', [CustomFieldController::class, 'destroy']);
 
         // Campaign Templates
         Route::get('campaign-templates', [CampaignTemplateController::class, 'index']);
@@ -212,6 +269,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::delete('campaign-templates/{template}', [CampaignTemplateController::class, 'destroy']);
         Route::patch('campaign-templates/{template}/submit', [CampaignTemplateController::class, 'submitForReview']);
         Route::patch('campaign-templates/{template}/approve', [CampaignTemplateController::class, 'approve']);
+        Route::get('campaign-templates/variables', [CampaignTemplateController::class, 'variables']);
+        Route::post('campaign-templates/{template}/duplicate', [CampaignTemplateController::class, 'duplicate']);
+        Route::post('campaign-templates/{template}/publish', [CampaignTemplateController::class, 'publish']);
+        Route::post('campaign-templates/{template}/archive', [CampaignTemplateController::class, 'archive']);
+        Route::post('campaign-templates/{template}/restore-version', [CampaignTemplateController::class, 'restoreVersion']);
 
         // Drip Sequences
         Route::get('drip-sequences', [DripSequenceController::class, 'index']);
@@ -220,12 +282,33 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::put('drip-sequences/{sequence}', [DripSequenceController::class, 'update']);
         Route::delete('drip-sequences/{sequence}', [DripSequenceController::class, 'destroy']);
         Route::post('drip-sequences/{sequence}/steps', [DripSequenceController::class, 'addStep']);
+        Route::put('drip-sequences/{sequence}/steps/{step}', [DripSequenceController::class, 'updateStep']);
+        Route::delete('drip-sequences/{sequence}/steps/{step}', [DripSequenceController::class, 'deleteStep']);
+        Route::post('drip-sequences/{sequence}/status', [DripSequenceController::class, 'updateStatus']);
+        Route::post('drip-sequences/{sequence}/enrol', [DripSequenceController::class, 'enrolContact']);
+        Route::delete('drip-sequences/{sequence}/enrolments/{contact}', [DripSequenceController::class, 'cancelEnrolment']);
+        Route::get('drip-sequences/{sequence}/enrolments', [DripSequenceController::class, 'listEnrolments']);
 
         // Social Posts
         Route::get('social-posts', [SocialPostController::class, 'index']);
         Route::post('social-posts', [SocialPostController::class, 'store']);
         Route::put('social-posts/{socialPost}', [SocialPostController::class, 'update']);
         Route::delete('social-posts/{socialPost}', [SocialPostController::class, 'destroy']);
+        Route::get('social-posts/channels', [SocialPostController::class, 'channels']);
+        Route::post('social-posts/{socialPost}/publish', [SocialPostController::class, 'publish']);
+        Route::post('social-posts/{socialPost}/refresh', [SocialPostController::class, 'refreshEngagement']);
+
+        // Surveys
+        Route::get('surveys', [SurveyController::class, 'index']);
+        Route::post('surveys', [SurveyController::class, 'store']);
+        Route::get('surveys/{survey}', [SurveyController::class, 'show']);
+        Route::put('surveys/{survey}', [SurveyController::class, 'update']);
+        Route::delete('surveys/{survey}', [SurveyController::class, 'destroy']);
+        Route::post('surveys/{survey}/send', [SurveyController::class, 'send']);
+        Route::post('surveys/{survey}/respond', [SurveyController::class, 'respond']);
+        Route::get('surveys/{survey}/responses', [SurveyController::class, 'responses']);
+        Route::get('surveys/{survey}/analytics', [SurveyController::class, 'analytics']);
+        Route::post('surveys/{surveyId}/public-respond/{token}', [SurveyController::class, 'publicRespond']);
 
         // Interactions - Unified Inbox
         Route::get('interactions/inbox', [InteractionController::class, 'inbox']);

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -35,10 +35,15 @@ class KnowledgeBaseArticle extends Model implements HasMedia
         'helpful_votes',
         'not_helpful_votes',
         'published_at',
+        'audience',
+        'feature_refs',
+        'last_verified_at',
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
+        'last_verified_at' => 'datetime',
+        'feature_refs' => 'array',
     ];
 
     public function category(): BelongsTo
@@ -53,7 +58,7 @@ class KnowledgeBaseArticle extends Model implements HasMedia
 
     public function versions(): HasMany
     {
-        return $this->hasMany(KnowledgeBaseArticleVersion::class);
+        return $this->hasMany(KnowledgeBaseArticleVersion::class, 'article_id');
     }
 
     public function tickets(): BelongsToMany
@@ -85,6 +90,28 @@ class KnowledgeBaseArticle extends Model implements HasMedia
     public function scopePublished($query)
     {
         return $query->where('status', 'published');
+    }
+
+    public function scopeForAudience($query, string $audience)
+    {
+        return $query->where(function ($q) use ($audience) {
+            $q->where('audience', 'all')
+              ->orWhere('audience', $audience)
+              ->orWhereHas('author', function ($q) use ($audience) {
+                  $q->whereHas('roles', function ($q) use ($audience) {
+                      $q->where('name', $audience);
+                  });
+              });
+        });
+    }
+
+    public function isStale(): bool
+    {
+        if (!$this->last_verified_at) {
+            return true;
+        }
+
+        return $this->last_verified_at->addMonths(6)->isPast();
     }
 
     public function incrementViewCount(): void

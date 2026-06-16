@@ -93,8 +93,25 @@ class SurveyWebController extends Controller
     {
         $responses = SurveyResponse::with(['survey', 'contact'])->orderBy('created_at', 'desc')->limit(500)->get();
 
+        $surveys = Survey::orderBy('name')->get(['id', 'name', 'type']);
+
+        $responseData = $responses->map(fn ($r) => [
+            'id' => $r->id,
+            'survey_id' => $r->survey_id,
+            'survey_name' => $r->survey?->name ?? 'Unknown',
+            'survey_type' => $r->survey?->type ?? 'unknown',
+            'contact_name' => $r->contact?->first_name . ' ' . $r->contact?->last_name ?? 'Unknown',
+            'contact_email' => $r->contact?->email ?? '—',
+            'score' => $r->score,
+            'nps_category' => $r->nps_category,
+            'open_text_answer' => $r->open_text_answer,
+            'channel' => $r->channel,
+            'responded_at' => $r->responded_at,
+        ]);
+
         return Inertia::render('Admin/SurveyResponses', [
-            'responses' => $responses,
+            'responses' => $responseData,
+            'surveys' => $surveys,
         ]);
     }
 }

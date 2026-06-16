@@ -26,7 +26,11 @@ class StoreContactRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:contacts,email'],
+            'email' => [
+                'required', 
+                'email', 
+                \Illuminate\Validation\Rule::unique('contacts', 'email')->whereNull('deleted_at')
+            ],
             'phone' => ['nullable', 'string', 'max:20'],
             'type' => ['required', 'in:lead,prospect,customer,partner'],
             'account_id' => ['nullable', 'exists:accounts,id'],

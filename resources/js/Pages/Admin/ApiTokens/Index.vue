@@ -3,91 +3,71 @@
     <div class="max-w-4xl mx-auto py-6">
         <h1 class="text-2xl font-bold mb-4">API Tokens</h1>
 
-        <div
-            class="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4"
-            v-if="!tokens.length"
-        >
+        <div v-if="!tokens.length" class="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
             <p>No API tokens found. Create one below.</p>
         </div>
 
-        <table v-else class="min-w-full bg-white border mb-6">
-            <thead>
-                <tr class="border-b">
-                    <th class="px-4 py-2 text-left">Name</th>
-                    <th class="px-4 py-2 text-left">Token</th>
-                    <th class="px-4 py-2 text-left">Expires</th>
-                    <th class="px-4 py-2 text-left">Last Used</th>
-                    <th class="px-4 py-2 text-left">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="token in tokens" :key="token.id" class="border-b">
-                    <td class="px-4 py-2">{{ token.name }}</td>
-                    <td class="px-4 py-2 font-mono">
-                        {{ token.masked_token }}
-                    </td>
-                    <td class="px-4 py-2">
-                        {{ token.expires_at || "No expiry" }}
-                    </td>
-                    <td class="px-4 py-2">{{ token.last_used_at }}</td>
-                    <td class="px-4 py-2">
-                        <button
-                            @click="revokeToken(token.id)"
-                            class="text-sm text-red-600"
-                        >
-                            Revoke
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <template v-else>
+            <Table class="mb-6">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Token</TableHead>
+                        <TableHead>Expires</TableHead>
+                        <TableHead>Last Used</TableHead>
+                        <TableHead>Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow v-for="token in tokens" :key="token.id">
+                        <TableCell>{{ token.name }}</TableCell>
+                        <TableCell class="font-mono">{{ token.masked_token }}</TableCell>
+                        <TableCell>{{ token.expires_at || "No expiry" }}</TableCell>
+                        <TableCell>{{ token.last_used_at }}</TableCell>
+                        <TableCell>
+                            <Button variant="ghost" size="sm" class="text-red-600" @click="revokeToken(token.id)">
+                                Revoke
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </template>
 
         <div class="border rounded-lg p-4">
             <h2 class="text-lg font-semibold mb-2">Create Token</h2>
 
-            <form @submit.prevent="createToken">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Name</label>
-                    <input
-                        v-model="form.name"
-                        type="text"
-                        required
-                        class="border rounded px-3 py-2 w-full"
-                    />
+            <form @submit.prevent="createToken" class="space-y-4">
+                <div class="space-y-2">
+                    <Label>Name</Label>
+                    <Input v-model="form.name" type="text" required />
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Abilities (optional)</label>
-                    <select
-                        v-model="form.abilities"
-                        multiple
-                        class="border rounded px-3 py-2 w-full h-32"
-                    >
-                        <option value="contacts:read">contacts:read</option>
-                        <option value="contacts:write">contacts:write</option>
-                        <option value="deals:read">deals:read</option>
-                        <option value="deals:write">deals:write</option>
-                        <option value="tickets:read">tickets:read</option>
-                        <option value="tickets:write">tickets:write</option>
-                    </select>
+                <div class="space-y-2">
+                    <Label>Abilities (optional)</Label>
+                    <Select v-model="form.abilities" multiple>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select abilities" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="contacts:read">contacts:read</SelectItem>
+                            <SelectItem value="contacts:write">contacts:write</SelectItem>
+                            <SelectItem value="deals:read">deals:read</SelectItem>
+                            <SelectItem value="deals:write">deals:write</SelectItem>
+                            <SelectItem value="tickets:read">tickets:read</SelectItem>
+                            <SelectItem value="tickets:write">tickets:write</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Expires At (optional)</label>
-                    <input
-                        v-model="form.expires_at"
-                        type="date"
-                        class="border rounded px-3 py-2 w-full"
-                    />
+                <div class="space-y-2">
+                    <Label>Expires At (optional)</Label>
+                    <Input v-model="form.expires_at" type="date" />
                 </div>
 
-                <button
-                    type="submit"
-                    class="bg-blue-600 text-white px-4 py-2 rounded"
-                    :disabled="form.processing"
-                >
+                <Button type="submit" :disabled="form.processing">
                     {{ form.processing ? 'Creating...' : 'Create Token' }}
-                </button>
+                </Button>
             </form>
         </div>
 
@@ -99,12 +79,7 @@
                 <h3 class="text-lg font-semibold mb-2">Token Created</h3>
                 <p class="mb-2">Save this token now - it will not be shown again!</p>
                 <code class="block bg-gray-100 p-3 rounded mb-4 break-all">{{ newToken }}</code>
-                <button
-                    @click="clearToken"
-                    class="bg-blue-600 text-white px-4 py-2 rounded"
-                >
-                    Done
-                </button>
+                <Button @click="clearToken">Done</Button>
             </div>
         </div>
     </div>
@@ -114,6 +89,24 @@
 import { computed } from "vue";
 import { Head, useForm, usePage, router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const page = usePage();
 

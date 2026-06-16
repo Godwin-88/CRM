@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface SocialPost {
   id: string;
@@ -124,36 +126,36 @@ const statusColor = (status: string) => {
 
       <Card>
         <CardContent class="p-0">
-          <table class="w-full">
-            <thead class="border-b">
-              <tr class="text-left">
-                <th class="p-4">Content</th>
-                <th class="p-4">Channel</th>
-                <th class="p-4">Status</th>
-                <th class="p-4">Scheduled</th>
-                <th class="p-4">Published</th>
-                <th class="p-4">Engagement</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="post in posts" :key="post.id" class="border-b">
-                <td class="p-4 max-w-xs truncate">{{ post.content }}</td>
-                <td class="p-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="p-4">Content</TableHead>
+                <TableHead class="p-4">Channel</TableHead>
+                <TableHead class="p-4">Status</TableHead>
+                <TableHead class="p-4">Scheduled</TableHead>
+                <TableHead class="p-4">Published</TableHead>
+                <TableHead class="p-4">Engagement</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="post in posts" :key="post.id" class="border-b">
+                <TableCell class="p-4 max-w-xs truncate">{{ post.content }}</TableCell>
+                <TableCell class="p-4">
                   <Badge variant="outline">{{ post.channel }}</Badge>
-                </td>
-                <td class="p-4">
+                </TableCell>
+                <TableCell class="p-4">
                   <Badge :variant="statusColor(post.status)">{{ post.status }}</Badge>
-                </td>
-                <td class="p-4">{{ post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : '-' }}</td>
-                <td class="p-4">{{ post.published_at ? new Date(post.published_at).toLocaleString() : '-' }}</td>
-                <td class="p-4 text-sm">
+                </TableCell>
+                <TableCell class="p-4">{{ post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : '-' }}</TableCell>
+                <TableCell class="p-4">{{ post.published_at ? new Date(post.published_at).toLocaleString() : '-' }}</TableCell>
+                <TableCell class="p-4 text-sm">
                   <span class="mr-3">❤️ {{ post.likes }}</span>
                   <span class="mr-3">💬 {{ post.comments }}</span>
                   <span>🔁 {{ post.shares }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

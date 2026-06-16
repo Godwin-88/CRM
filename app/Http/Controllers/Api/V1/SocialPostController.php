@@ -29,7 +29,6 @@ class SocialPostController extends Controller
             'channel_specific_data' => 'nullable|array',
         ]);
 
-        // Validate character limits
         $maxChars = match ($validated['channel']) {
             'linkedin' => 3000,
             'x' => 280,
@@ -67,5 +66,45 @@ class SocialPostController extends Controller
         $socialPost->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function channels(): JsonResponse
+    {
+        return response()->json([
+            ['name' => 'linkedin', 'label' => 'LinkedIn', 'connected' => true, 'max_chars' => 3000],
+            ['name' => 'x', 'label' => 'X (Twitter)', 'connected' => true, 'max_chars' => 280],
+            ['name' => 'facebook', 'label' => 'Facebook', 'connected' => true, 'max_chars' => 63206],
+        ]);
+    }
+
+    public function publish(SocialPost $socialPost): JsonResponse
+    {
+        if (!in_array($socialPost->status, ['draft', 'scheduled'])) {
+            return response()->json(['message' => 'Cannot publish a post with status: ' . $socialPost->status], 422);
+        }
+
+        $socialPost->update([
+            'status' => 'published',
+            'published_at' => now(),
+        ]);
+
+        return response()->json($socialPost->load(['campaign']));
+    }
+
+    public function refreshEngagement(SocialPost $socialPost): JsonResponse
+    {
+        $postId = $socialPost->external_id;
+
+        $mockEngagement = [
+            'likes' => rand(10, 500),
+            'comments' => rand(2, 50),
+            'shares' => rand(0, 30),
+            'impressions' => rand(500, 10000),
+            'refreshed_at' => now()->toIso8601String(),
+        ];
+
+        $socialPost->update($mockEngagement);
+
+        return response()->json($socialPost->load(['campaign']));
     }
 }
