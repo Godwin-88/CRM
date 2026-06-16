@@ -1,0 +1,286 @@
+name: ${COMPOSE_PROJECT_NAME:-enterprise-crm}
+
+services:
+    app:
+        image: ${APP_IMAGE:-ghcr.io/${GITHUB_REPOSITORY:-enterprise-crm}:main}
+        restart: unless-stopped
+        expose:
+            - "9000"
+        ports:
+            - "127.0.0.1:${APP_FPM_PORT:-9000}:9000"
+        environment:
+            APP_NAME: ${APP_NAME:-Enterprise CRM}
+            APP_ENV: production
+            APP_DEBUG: "false"
+            APP_KEY: ${APP_KEY:?APP_KEY is required}
+            APP_URL: https://${APP_DOMAIN:?APP_DOMAIN is required}
+            LOG_CHANNEL: stderr
+            LOG_STACK: single
+            LOG_LEVEL: error
+            DB_CONNECTION: pgsql
+            DB_HOST: pgsql
+            DB_PORT: 5432
+            DB_DATABASE: ${DB_DATABASE:-laravel}
+            DB_USERNAME: ${DB_USERNAME:-laravel}
+            DB_PASSWORD: ${DB_PASSWORD:-secret}
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            REDIS_CLIENT: phpredis
+            CACHE_STORE: redis
+            CACHE_PREFIX: enterprise-crm-cache
+            SESSION_DRIVER: redis
+            QUEUE_CONNECTION: redis
+            BROADCAST_CONNECTION: reverb
+            REVERB_HOST: reverb
+            REVERB_PORT: 8080
+            REVERB_APP_ID: ${REVERB_APP_ID:-laravel}
+            REVERB_APP_KEY: ${REVERB_APP_KEY:-laravel}
+            REVERB_APP_SECRET: ${REVERB_APP_SECRET:-laravel}
+            REVERB_SCHEME: http
+            PUSHER_HOST: reverb
+            PUSHER_PORT: 8080
+            PUSHER_SCHEME: http
+            PUSHER_APP_ID: ${REVERB_APP_ID:-laravel}
+            PUSHER_APP_KEY: ${REVERB_APP_KEY:-laravel}
+            PUSHER_APP_SECRET: ${REVERB_APP_SECRET:-laravel}
+            FILESYSTEM_DISK: s3
+            MEDIA_DISK: s3
+            AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-minioadmin}
+            AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minioadmin}
+            AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+            AWS_BUCKET: ${AWS_BUCKET:-crm-local}
+            AWS_ENDPOINT: http://minio:9000
+            AWS_USE_PATH_STYLE_ENDPOINT: "true"
+            AWS_URL: https://${APP_DOMAIN:?APP_DOMAIN is required}/storage
+            MAIL_MAILER: log
+            SCOUT_DRIVER: "null"
+            ML_SERVICE_URL: http://ml-agents:8000
+            ML_AGENTS_PORT: 8000
+            AGENT_API_KEY: ${AGENT_API_KEY:-change_me}
+            OPENAI_API_KEY: ${OPENAI_API_KEY}
+            ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+            GROQ_API_KEY: ${GROQ_API_KEY}
+            MFA_ENABLED: ${MFA_ENABLED:-false}
+            MFA_REQUIRED_ROLES: ${MFA_REQUIRED_ROLES:-admin,manager}
+        volumes:
+            - ${REMOTE_DEPLOY_PATH:-/CRM}/storage:/var/www/html/storage
+            - ${REMOTE_DEPLOY_PATH:-/CRM}/bootstrap-cache:/var/www/html/bootstrap/cache
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "php artisan about --ansi >/dev/null 2>&1"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 60s
+
+    pgsql:
+        image: ${PGSQL_IMAGE:-ghcr.io/${GITHUB_REPOSITORY:-enterprise-crm}:main-pgsql}
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: ${DB_DATABASE:-laravel}
+            POSTGRES_USER: ${DB_USERNAME:-laravel}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+        volumes:
+            - pgsql-data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-laravel} -d ${DB_DATABASE:-laravel}"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+
+    redis:
+        image: redis:7-alpine
+        restart: unless-stopped
+        volumes:
+            - redis-data:/data
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+
+    meilisearch:
+        image: getmeili/meilisearch:latest
+        restart: unless-stopped
+        environment:
+            MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-change_me}
+            MEILI_NO_AUTH: "true"
+        volumes:
+            - meilisearch-data:/meili_data
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 30s
+
+    minio:
+        image: minio/minio:latest
+        restart: unless-stopped
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+        command: server /data --console-address ":9001"
+        volumes:
+            - minio-data:/data
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 30s
+
+    mailpit:
+        image: axllent/mailpit:latest
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8025/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 10s
+
+    reverb:
+        image: ${APP_IMAGE:-ghcr.io/${GITHUB_REPOSITORY:-enterprise-crm}:main}
+        restart: unless-stopped
+        command: php artisan reverb:start --host=0.0.0.0 --port=8080
+        expose:
+            - "8080"
+        ports:
+            - "127.0.0.1:${REVERB_PORT:-8080}:8080"
+        environment:
+            APP_NAME: ${APP_NAME:-Enterprise CRM}
+            APP_ENV: production
+            APP_DEBUG: "false"
+            APP_KEY: ${APP_KEY:?APP_KEY is required}
+            APP_URL: https://${APP_DOMAIN:?APP_DOMAIN is required}
+            DB_CONNECTION: pgsql
+            DB_HOST: pgsql
+            DB_PORT: 5432
+            DB_DATABASE: ${DB_DATABASE:-laravel}
+            DB_USERNAME: ${DB_USERNAME:-laravel}
+            DB_PASSWORD: ${DB_PASSWORD:-secret}
+            REDIS_HOST: redis
+            QUEUE_CONNECTION: redis
+            BROADCAST_CONNECTION: reverb
+            REVERB_HOST: 0.0.0.0
+            REVERB_PORT: 8080
+            REVERB_APP_ID: ${REVERB_APP_ID:-laravel}
+            REVERB_APP_KEY: ${REVERB_APP_KEY:-laravel}
+            REVERB_APP_SECRET: ${REVERB_APP_SECRET:-laravel}
+            REVERB_SCHEME: http
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+    queue-worker:
+        image: ${APP_IMAGE:-ghcr.io/${GITHUB_REPOSITORY:-enterprise-crm}:main}
+        restart: unless-stopped
+        command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+        environment:
+            APP_NAME: ${APP_NAME:-Enterprise CRM}
+            APP_ENV: production
+            APP_DEBUG: "false"
+            APP_KEY: ${APP_KEY:?APP_KEY is required}
+            APP_URL: https://${APP_DOMAIN:?APP_DOMAIN is required}
+            DB_CONNECTION: pgsql
+            DB_HOST: pgsql
+            DB_PORT: 5432
+            DB_DATABASE: ${DB_DATABASE:-laravel}
+            DB_USERNAME: ${DB_USERNAME:-laravel}
+            DB_PASSWORD: ${DB_PASSWORD:-secret}
+            REDIS_HOST: redis
+            CACHE_STORE: redis
+            SESSION_DRIVER: redis
+            QUEUE_CONNECTION: redis
+        volumes:
+            - ${REMOTE_DEPLOY_PATH:-/CRM}/storage:/var/www/html/storage
+            - ${REMOTE_DEPLOY_PATH:-/CRM}/bootstrap-cache:/var/www/html/bootstrap/cache
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+    scheduler:
+        image: ${APP_IMAGE:-ghcr.io/${GITHUB_REPOSITORY:-enterprise-crm}:main}
+        restart: unless-stopped
+        command: php artisan schedule:work
+        environment:
+            APP_NAME: ${APP_NAME:-Enterprise CRM}
+            APP_ENV: production
+            APP_DEBUG: "false"
+            APP_KEY: ${APP_KEY:?APP_KEY is required}
+            APP_URL: https://${APP_DOMAIN:?APP_DOMAIN is required}
+            DB_CONNECTION: pgsql
+            DB_HOST: pgsql
+            DB_PORT: 5432
+            DB_DATABASE: ${DB_DATABASE:-laravel}
+            DB_USERNAME: ${DB_USERNAME:-laravel}
+            DB_PASSWORD: ${DB_PASSWORD:-secret}
+            REDIS_HOST: redis
+            CACHE_STORE: redis
+            SESSION_DRIVER: redis
+            QUEUE_CONNECTION: redis
+        volumes:
+            - ${REMOTE_DEPLOY_PATH:-/CRM}/storage:/var/www/html/storage
+            - ${REMOTE_DEPLOY_PATH:-/CRM}/bootstrap-cache:/var/www/html/bootstrap/cache
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+    n8n:
+        image: n8nio/n8n:latest
+        restart: unless-stopped
+        environment:
+            DB_TYPE: postgres
+            DB_POSTGRES_HOST: pgsql
+            DB_POSTGRES_PORT: 5432
+            DB_POSTGRES_DATABASE: ${DB_DATABASE:-laravel}
+            DB_POSTGRES_USER: ${DB_USERNAME:-laravel}
+            DB_POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+            N8N_HOST: n8n
+            N8N_PORT: 5678
+            N8N_PROTOCOL: http
+            WEBHOOK_URL: https://${APP_DOMAIN:?APP_DOMAIN is required}
+            NODE_ENV: production
+        volumes:
+            - n8n-data:/home/node/.n8n
+        depends_on:
+            pgsql:
+                condition: service_healthy
+
+    ml-agents:
+        image: ${ML_IMAGE:-ghcr.io/${GITHUB_REPOSITORY:-enterprise-crm}:main-ml}
+        restart: unless-stopped
+        environment:
+            DATABASE_URL: postgresql+asyncpg://${DB_USERNAME:-laravel}:${DB_PASSWORD:-secret}@pgsql:5432/${DB_DATABASE:-laravel}
+            REDIS_URL: redis://redis:6379
+            AGENT_API_KEY: ${AGENT_API_KEY:-change_me}
+            LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+            OPENAI_API_KEY: ${OPENAI_API_KEY}
+            ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+            GROQ_API_KEY: ${GROQ_API_KEY}
+            ENVIRONMENT: production
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+volumes:
+    pgsql-data:
+    redis-data:
+    meilisearch-data:
+    minio-data:
+    n8n-data:
