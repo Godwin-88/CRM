@@ -24,7 +24,9 @@ use App\Http\Controllers\Admin\SlaWebController;
 use App\Http\Controllers\Admin\SocialPostWebController;
 use App\Http\Controllers\Admin\SupportCategoryController;
 use App\Http\Controllers\Admin\SurveyWebController;
+use App\Http\Controllers\Admin\TagWebController;
 use App\Http\Controllers\Admin\TicketFormController;
+use App\Http\Controllers\Admin\WelcomeEmailTemplateController;
 use App\Http\Controllers\Admin\WinLossReasonWebController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AuthController;
@@ -155,6 +157,8 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
     // Contacts
     Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+    Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
+    Route::post('/contacts/bulk-delete', [ContactController::class, 'bulkDelete'])->name('contacts.bulk-delete');
     Route::get('/contacts/template', [ContactController::class, 'downloadTemplate'])->name('contacts.template');
     Route::get('/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
     Route::get('/contacts/{contact}/edit', [ContactController::class, 'edit'])->name('contacts.edit');
@@ -167,7 +171,10 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
     // Accounts
     Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
+    Route::post('/accounts', [AccountController::class, 'store'])->name('accounts.store');
     Route::get('/accounts/{account}', [AccountController::class, 'show'])->name('accounts.show');
+    Route::put('/accounts/{account}', [AccountController::class, 'update'])->name('accounts.update');
+    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
 
     // Segments
     Route::get('/segments', [SegmentController::class, 'index'])->name('segments.index');
@@ -287,15 +294,22 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::get('/admin/campaigns/create', [CampaignWebController::class, 'create'])->name('admin.campaigns.create');
         Route::get('/admin/analytics/campaigns', [CampaignWebController::class, 'analytics'])->name('admin.campaign-analytics.index');
         Route::get('/admin/campaigns/{campaign}', [CampaignWebController::class, 'show'])->name('admin.campaigns.show');
+        Route::get('/admin/campaigns/{campaign}/ab-test', [CampaignWebController::class, 'abTest'])->name('admin.campaigns.ab-test');
 
         // Campaign Templates
         Route::get('/admin/campaign-templates', [CampaignTemplateWebController::class, 'index'])->name('admin.campaign-templates.index');
+        Route::get('/admin/campaign-templates/create', [CampaignTemplateWebController::class, 'create'])->name('admin.campaign-templates.create');
 
         // Drip Sequences
         Route::get('/admin/drip-sequences', [DripSequenceWebController::class, 'index'])->name('admin.drip-sequences.index');
+        Route::get('/admin/drip-sequences/{sequence}', [DripSequenceWebController::class, 'show'])->name('admin.drip-sequences.show');
 
         // Social Posts
         Route::get('/admin/social-posts', [SocialPostWebController::class, 'index'])->name('admin.social-posts.index');
+
+        Route::get('/admin/tags', [TagWebController::class, 'index'])->name('admin.tags.index');
+
+        Route::get('/admin/analytics/campaigns-dashboard', [CampaignWebController::class, 'analyticsDashboard'])->name('admin.campaign-analytics.dashboard');
 
         // Loyalty
         Route::get('/admin/loyalty', [LoyaltyProgramWebController::class, 'index'])->name('admin.loyalty.index');
@@ -347,7 +361,14 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::post('/admin/reactivation', [ReactivationWebController::class, 'store'])->name('admin.reactivation.store');
         Route::put('/admin/reactivation/{reactivationConfig}', [ReactivationWebController::class, 'update'])->name('admin.reactivation.update');
         Route::get('/admin/reactivation/contacts', [ReactivationWebController::class, 'contacts'])->name('admin.reactivation.contacts');
+        Route::get('/admin/reactivation/analytics', [ReactivationWebController::class, 'analytics'])->name('admin.reactivation.analytics');
         Route::post('/admin/reactivation/{reactivationConfig}/run', [GuidedJourneyWebController::class, 'run'])->name('admin.reactivation.run');
+
+        // Welcome Email Templates
+        Route::get('/admin/welcome-email-templates', [WelcomeEmailTemplateController::class, 'index'])->name('admin.welcome-email-templates.index');
+        Route::post('/admin/welcome-email-templates', [WelcomeEmailTemplateController::class, 'store'])->name('admin.welcome-email-templates.store');
+        Route::put('/admin/welcome-email-templates/{template}', [WelcomeEmailTemplateController::class, 'update'])->name('admin.welcome-email-templates.update');
+        Route::delete('/admin/welcome-email-templates/{template}', [WelcomeEmailTemplateController::class, 'destroy'])->name('admin.welcome-email-templates.destroy');
 
         // CLV Analytics
         Route::get('/admin/clv-analytics', [ClvAnalyticsWebController::class, 'index'])->name('admin.clv-analytics.index');

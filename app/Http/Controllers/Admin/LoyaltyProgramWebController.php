@@ -186,8 +186,37 @@ class LoyaltyProgramWebController extends Controller
     {
         $ledger = PointsLedger::with(['contact', 'program'])->orderBy('created_at', 'desc')->limit(200)->get();
 
+        $programs = LoyaltyProgram::all(['id', 'name', 'currency_symbol']);
+
+        $credits = PointsLedger::where('type', 'credit')->sum('points_amount');
+        $debits = PointsLedger::where('type', 'debit')->sum('points_amount');
+
+        $stats = [
+            'total_credits' => $credits,
+            'total_debits' => $debits,
+            'net_change' => $credits - $debits,
+            'transaction_count' => PointsLedger::count(),
+        ];
+
+        $ledgerData = $ledger->map(fn ($entry) => [
+            'id' => $entry->id,
+            'contact_id' => $entry->contact_id,
+            'contact_name' => $entry->contact?->first_name . ' ' . $entry->contact?->last_name ?? 'Unknown',
+            'program_name' => $entry->program?->name ?? 'Unknown',
+            'type' => $entry->type,
+            'points_amount' => $entry->points_amount,
+            'running_balance' => $entry->running_balance,
+            'description' => $entry->description,
+            'triggered_by_event' => $entry->triggered_by_event,
+            'transaction_date' => $entry->transaction_date,
+            'creator_name' => $entry->creator?->name,
+            'reason_note' => $entry->reason_note,
+        ]);
+
         return Inertia::render('Admin/LoyaltyLedger', [
-            'ledger' => $ledger,
+            'ledger' => $ledgerData,
+            'programs' => $programs,
+            'stats' => $stats,
         ]);
     }
 

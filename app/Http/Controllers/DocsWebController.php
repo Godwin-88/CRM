@@ -75,6 +75,10 @@ class DocsWebController extends Controller
             ];
         })->values();
 
+        if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json(['checklist' => $checklist]);
+        }
+
         return Inertia::render('Onboarding/Checklist', [
             'checklist' => $checklist,
         ]);

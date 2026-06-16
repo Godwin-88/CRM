@@ -50,11 +50,11 @@ const submit = async () => {
   }
 
   if (props.contact) {
-    form.put(`/api/v1/contacts/${props.contact.id}`, { 
+    form.put(`/contacts/${props.contact.id}`, { 
       onSuccess: () => emit('close') 
     });
   } else {
-    form.post('/api/v1/contacts', { 
+    form.post('/contacts', { 
       onSuccess: () => emit('close') 
     });
   }
@@ -64,11 +64,11 @@ const proceedAnyway = () => {
   showDuplicateWarning.value = false;
   duplicates.value = [];
   if (props.contact) {
-    form.put(`/api/v1/contacts/${props.contact.id}`, { 
+    form.put(`/contacts/${props.contact.id}`, { 
       onSuccess: () => emit('close') 
     });
   } else {
-    form.post('/api/v1/contacts', { 
+    form.post('/contacts', { 
       onSuccess: () => emit('close') 
     });
   }

@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Campaign {
   id: string;
@@ -141,38 +143,38 @@ const statusColor = (status: string) => {
 
       <Card>
         <CardContent class="p-0">
-          <table class="w-full">
-            <thead class="border-b">
-              <tr class="text-left">
-                <th class="p-4">Name</th>
-                <th class="p-4">Type</th>
-                <th class="p-4">Status</th>
-                <th class="p-4">Segment</th>
-                <th class="p-4">Scheduled For</th>
-                <th class="p-4">Created By</th>
-                <th class="p-4"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="campaign in campaigns" :key="campaign.id" class="border-b">
-                <td class="p-4 font-medium">{{ campaign.name }}</td>
-                <td class="p-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="p-4">Name</TableHead>
+                <TableHead class="p-4">Type</TableHead>
+                <TableHead class="p-4">Status</TableHead>
+                <TableHead class="p-4">Segment</TableHead>
+                <TableHead class="p-4">Scheduled For</TableHead>
+                <TableHead class="p-4">Created By</TableHead>
+                <TableHead class="p-4"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="campaign in campaigns" :key="campaign.id" class="border-b">
+                <TableCell class="p-4 font-medium">{{ campaign.name }}</TableCell>
+                <TableCell class="p-4">
                   <Badge variant="outline">{{ campaign.type.replace('_', ' ') }}</Badge>
-                </td>
-                <td class="p-4">
+                </TableCell>
+                <TableCell class="p-4">
                   <Badge :variant="statusColor(campaign.status)">{{ campaign.status }}</Badge>
-                </td>
-                <td class="p-4">{{ campaign.segment?.name || 'Not set' }}</td>
-                <td class="p-4">{{ campaign.scheduled_at ? new Date(campaign.scheduled_at).toLocaleString() : '-' }}</td>
-                <td class="p-4">{{ campaign.created_by?.name || '-' }}</td>
-                <td class="p-4">
+                </TableCell>
+                <TableCell class="p-4">{{ campaign.segment?.name || 'Not set' }}</TableCell>
+                <TableCell class="p-4">{{ campaign.scheduled_at ? new Date(campaign.scheduled_at).toLocaleString() : '-' }}</TableCell>
+                <TableCell class="p-4">{{ campaign.created_by?.name || '-' }}</TableCell>
+                <TableCell class="p-4">
                   <Button variant="ghost" size="sm" @click="router.visit(`/admin/campaigns/${campaign.id}`)">
                     {{ campaign.status === 'draft' ? 'Build' : 'View' }}
                   </Button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

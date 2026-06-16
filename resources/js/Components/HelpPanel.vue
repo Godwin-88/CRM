@@ -67,19 +67,20 @@ const filteredArticles = computed(() => {
 })
 
 const requestDocumentation = () => {
-  fetch('/api/v1/doc-requests', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-    },
-    body: JSON.stringify({
-      screen_identifier: props.currentRoute,
-      comment: null,
-    }),
-  })
-  emit('update:open', false)
-}
+   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+   fetch('/api/v1/doc-requests', {
+     method: 'POST',
+     headers: {
+       'Content-Type': 'application/json',
+       'X-CSRF-TOKEN': csrfToken || '',
+     },
+     body: JSON.stringify({
+       screen_identifier: props.currentRoute,
+       comment: null,
+     }),
+   })
+   emit('update:open', false)
+ }
 </script>
 
 <template>
@@ -105,14 +106,11 @@ const requestDocumentation = () => {
         </div>
 
         <div v-else-if="filteredArticles.length > 0" class="space-y-2 max-h-80 overflow-y-auto">
-          <div v-for="article in filteredArticles" :key="article.id" class="p-3 border rounded-lg hover:bg-gray-50">
-            <Link :href="`/docs/${article.slug}`" class="font-medium text-blue-600 hover:underline" @click="emit('update:open', false)">
-              {{ article.title }}
-            </Link>
-            <div v-if="article.feature_refs?.length" class="text-xs text-gray-500 mt-1">
-              Refs: {{ article.feature_refs.join(', ') }}
-            </div>
-          </div>
+<div v-for="article in filteredArticles" :key="article.id" class="p-3 border rounded-lg hover:bg-gray-50">
+             <Link :href="`/docs/${article.slug}`" class="font-medium text-blue-600 hover:underline" @click="emit('update:open', false)">
+               {{ article.title }}
+             </Link>
+           </div>
         </div>
 
         <div v-else class="text-center py-4 text-gray-500">

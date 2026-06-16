@@ -5,10 +5,15 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\CampaignStep;
+use App\Models\CampaignABTest;
+use App\Models\CampaignTemplate;
+use App\Models\CampaignRecipient;
+use App\Models\DripEnrolment;
 use App\Models\Segment;
 use App\Services\SegmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CampaignController extends Controller
 {
@@ -116,6 +121,58 @@ class CampaignController extends Controller
         return response()->json($step->load(['emailTemplate']));
     }
 
+    public function updateStep(Request $request, Campaign $campaign, CampaignStep $step): JsonResponse
+    {
+        if ($step->campaign_id !== $campaign->id) {
+            return response()->json(['message' => 'Step does not belong to this campaign.'], 422);
+        }
+
+        $validated = $request->validate([
+            'channel' => 'sometimes|in:email,sms,push,in_app',
+            'email_template_id' => 'nullable|exists:campaign_templates,id',
+            'sms_content' => 'nullable|string',
+            'push_title' => 'nullable|string',
+            'push_content' => 'nullable|string',
+            'in_app_title' => 'nullable|string',
+            'in_app_content' => 'nullable|string',
+            'delay_type' => 'sometimes|in:immediately,n_hours,n_days',
+            'delay_value' => 'sometimes|integer|min:0',
+        ]);
+
+        $step->update($validated);
+
+        return response()->json($step->load(['emailTemplate']));
+    }
+
+    public function deleteStep(Campaign $campaign, CampaignStep $step): JsonResponse
+    {
+        if ($step->campaign_id !== $campaign->id) {
+            return response()->json(['message' => 'Step does not belong to this campaign.'], 422);
+        }
+
+        $step->delete();
+
+        return response()->json(null, 204);
+    }
+
+    public function reorderSteps(Request $request, Campaign $campaign): JsonResponse
+    {
+        $validated = $request->validate([
+            'step_ids' => 'required|array',
+            'step_ids.*' => 'exists:campaign_steps,id',
+        ]);
+
+        $stepIds = $validated['step_ids'];
+
+        foreach ($stepIds as $position => $stepId) {
+            CampaignStep::where('id', $stepId)
+                ->where('campaign_id', $campaign->id)
+                ->update(['position' => $position]);
+        }
+
+        return response()->json($campaign->steps()->orderBy('position')->get());
+    }
+
     public function pause(Campaign $campaign): JsonResponse
     {
         if ($campaign->status !== 'sending') {
@@ -138,11 +195,79 @@ class CampaignController extends Controller
         return response()->json($campaign->load(['segment', 'creator']));
     }
 
+    public function dispatch(Campaign $campaign): JsonResponse
+    {
+        if (!$campaign->canBeScheduled()) {
+            return response()->json(['message' => 'Campaign must have a segment and at least one step with a template to dispatch.'], 422);
+        }
+
+        $campaign->update([
+            'status' => 'scheduled',
+            'scheduled_at' => $campaign->scheduled_at ?? now(),
+        ]);
+
+        return response()->json($campaign->load(['segment', 'creator']));
+    }
+
+    public function cancel(Campaign $campaign): JsonResponse
+    {
+        if (!in_array($campaign->status, ['scheduled', 'sending'])) {
+            return response()->json(['message' => 'Campaign cannot be cancelled in its current status.'], 422);
+        }
+
+        $campaign->update(['status' => 'cancelled']);
+
+        return response()->json($campaign->load(['segment', 'creator']));
+    }
+
+    public function validateCampaign(Campaign $campaign): JsonResponse
+    {
+        $errors = [];
+
+        if (!$campaign->segment_id) {
+            $errors[] = 'No target segment selected.';
+        } else {
+            $segment = $campaign->segment;
+            $preview = $this->segmentService->getPreview($segment->criteria ?? ['rules' => []]);
+            if (($preview['total_count'] ?? 0) === 0) {
+                $errors[] = 'Target segment has zero matching contacts.';
+            }
+        }
+
+        if (!$campaign->steps()->exists()) {
+            $errors[] = 'Campaign has no steps defined.';
+        }
+
+        foreach ($campaign->steps as $step) {
+            if ($step->channel === 'email' && !$step->emailTemplate) {
+                $errors[] = "Step {$step->position} (email) has no template assigned.";
+            }
+        }
+
+        return response()->json([
+            'valid' => count($errors) === 0,
+            'errors' => $errors,
+        ]);
+    }
+
     public function previewSegment(Segment $segment): JsonResponse
     {
         $criteria = $segment->criteria ?: ['rules' => []];
         $preview = $this->segmentService->getPreview($criteria);
 
         return response()->json($preview);
+    }
+
+    public function getSegmentCount(Segment $segment): JsonResponse
+    {
+        $preview = $this->segmentService->getPreview($segment->criteria ?? ['rules' => []]);
+
+        return response()->json([
+            'total_count' => $preview['total_count'] ?? 0,
+            'email_eligible' => $preview['email_eligible'] ?? 0,
+            'sms_eligible' => $preview['sms_eligible'] ?? 0,
+            'push_eligible' => $preview['push_eligible'] ?? 0,
+            'sample_contacts' => $preview['sample_contacts'] ?? [],
+        ]);
     }
 }

@@ -82,4 +82,62 @@ class CampaignTemplateController extends Controller
 
         return response()->json($template->load('reviewer'));
     }
+
+    public function variables(): JsonResponse
+    {
+        return response()->json([
+            ['key' => '{{contact.first_name}}', 'label' => 'Contact First Name'],
+            ['key' => '{{contact.last_name}}', 'label' => 'Contact Last Name'],
+            ['key' => '{{contact.email}}', 'label' => 'Contact Email'],
+            ['key' => '{{account.name}}', 'label' => 'Account Name'],
+            ['key' => '{{agent.name}}', 'label' => 'Agent Name'],
+            ['key' => '{{unsubscribe_link}}', 'label' => 'Unsubscribe Link'],
+        ]);
+    }
+
+    public function duplicate(CampaignTemplate $template): JsonResponse
+    {
+        $newTemplate = $template->replicate();
+        $newTemplate->name = $template->name . ' (Copy)';
+        $newTemplate->status = 'draft';
+        $newTemplate->version = 1;
+        $newTemplate->is_active = true;
+        $newTemplate->created_by = request()->user()->id;
+        $newTemplate->reviewed_by = null;
+        $newTemplate->reviewed_at = null;
+        $newTemplate->save();
+
+        return response()->json($newTemplate->load(['creator']), 201);
+    }
+
+    public function publish(CampaignTemplate $template): JsonResponse
+    {
+        $template->update(['status' => 'published', 'is_active' => true]);
+
+        CampaignTemplate::where('id', '!=', $template->id)
+            ->where('name', $template->name)
+            ->update(['is_active' => false, 'status' => 'archived']);
+
+        return response()->json($template);
+    }
+
+    public function archive(CampaignTemplate $template): JsonResponse
+    {
+        $template->update(['status' => 'archived', 'is_active' => false]);
+
+        return response()->json($template);
+    }
+
+    public function restoreVersion(Request $request, CampaignTemplate $template): JsonResponse
+    {
+        $versionId = $request->validate(['version_id' => 'required|string'])['version_id'];
+
+        $newTemplate = $template->replicate();
+        $newTemplate->version = ($template->version ?? 1) + 1;
+        $newTemplate->status = 'draft';
+        $newTemplate->created_by = request()->user()->id;
+        $newTemplate->save();
+
+        return response()->json($newTemplate->load(['creator']), 201);
+    }
 }

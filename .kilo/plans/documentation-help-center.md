@@ -1,248 +1,129 @@
-# Implementation Plan: Platform Documentation & Help Center (Section 4.13)
+# Section 4.13 Implementation Plan
 
-## Codebase Coverage Analysis (4.1 - 4.12)
-
-Based on analysis of existing Vue pages and routes, here is the current UI implementation status:
-
-### Section 4.1 - Contact & Account Management: 60% UI Coverage
-**Implemented:** Contacts Index/Show/Edit, Accounts Index/Show  
-**Missing UI:** Merge workflow, duplicate detection, timeline view, custom fields management, bulk import/export, scoring rules UI
-
-### Section 4.2 - Sales Pipeline & Deal Management: 40% UI Coverage
-**Implemented:** Deals Index, Deals Board (Kanban), Deals Form, Deals Show, Pipelines Index  
-**Missing UI:** Deal automations, win/loss reasons modal, quotes/proposals integration, stage probability weighting in forecast, collaboration comments UI
-
-### Section 4.3 - Customer Interactions & Omni-Channel: 35% UI Coverage
-**Implemented:** Admin/InteractionInbox, Admin/InteractionChannels, Admin/UnmatchedItems, Admin/OmniChannelDashboard, Admin/ContactCenter, Admin/Kiosk  
-**Missing UI:** Email compose/reply UI, call logging UI, chat widget, SMS composer, IVR ingestion, field channel mobile, queue stats real-time dashboard, language selector in header
-
-### Section 4.4 - Marketing & Campaign Orchestration: 45% UI Coverage
-**Implemented:** Campaigns Index/Show, Admin/CampaignTemplates, DripSequences Index, Admin/SocialPosts, Admin/Surveys  
-**Missing UI:** Email drag-drop template editor, multi-channel step builder, A/B testing UI, schedule/throttle controls, tag management, analytics dashboard
-
-### Section 4.5 - Loyalty & CX: 40% UI Coverage
-**Implemented:** Admin/Loyalty, Admin/Onboarding (for workflows)  
-**Missing UI:** Points ledger view, tier display on contact, survey responses, kiosk interactions, welcome email templates, reactivation analytics
-
-### Section 4.6 - Support & Service: 55% UI Coverage
-**Implemented:** Support/Tickets (Index/Create/Show), Support/KnowledgeBase (Index/Show), Admin/Tickets, Support/Performance  
-**Missing UI:** Ticket merge/split UI, internal notes on tickets, canned responses picker, CSAT rating UI, SLA configuration UI, escalation workflow
-
-### Section 4.7 - Analytics & Intelligence: 75% UI Coverage
-**Implemented:** Admin/Analytics (Dashboard, CustomerAnalytics, GrowthAnalytics, FinanceAnalytics, ComplianceAnalytics, PredictiveScoring, ReportBuilder), Analytics/Forecast  
-**Missing UI:** Exploratory analysis tool UI, revenue forecast detailed view, churn risk list, time-bucketed forecast view
-
-### Section 4.8 - Contracts & Legal: 65% UI Coverage
-**Implemented:** Contracts (Index/Show/Create/Edit), Admin/ContractTemplates (Index/Create/Edit), Legal (Index/Show/Create)  
-**Missing UI:** Milestone/KPI tracking panel, renewal reminder UI, contract repository search/filter/export, e-signature initiation workflow, duplicate contract UI
-
-### Section 4.9 - Back-Office & Finance: 70% UI Coverage
-**Implemented:** Invoices (Index/Show/Create), PurchaseOrders (Index/Show/Create), Vendors (Index/Show/Create), Assets (Index/Show/Create), Banking (Index/Show/Create), Employees (Index/Show/Edit)  
-**Missing UI:** Ledger summary panel, payment recording UI, bank details fields, headcount planning, facility expiry warnings, procurement approval workflow
-
-### Section 4.10 - Security & Access Control: 25% UI Coverage
-**Implemented:** Auth/MfaSetup, Auth/MfaVerify, Admin/SecurityEvents, Admin/PrivilegedSessionChallenge  
-**Missing UI:** RBAC permission matrix UI, SSO provider configuration, privileged session indicator in header, data classification UI, DSR module (Create/Show/Index exist but limited)
-
-### Section 4.11 - API & Integrations: 50% UI Coverage
-**Implemented:** Admin/Integrations/Marketplace, Admin/ApiTokens, Admin/Integrations/Webhooks  
-**Missing UI:** OAuth2 authorization screen, service registry UI, rate limit configuration UI, OpenAPI documentation portal
-
-### Section 4.12 - Workspace & Collaboration: 30% UI Coverage
-**Implemented:** Calendar/Index, Notifications/Index  
-**Missing UI:** File attachment UI, discussion boards UI, shared team calendar UI, @mention dropdown, shared/team calendar
+Two separate deliverables in one focused implementation pass.
 
 ---
 
-## Updated Implementation Strategy
+## 1. Onboarding Checklist Slider/Modal (Feature 4)
 
-Given the incomplete UI coverage, the documentation system must:
-1. **Document existing features** - Cover what's already implemented
-2. **Provide placeholder articles** - For features that exist in backend but lack UI
-3. **Include "Coming Soon" markers** - For features not yet implemented
-4. **Link to API docs** - For features that exist only in API layer
+### Current state
+- Backend fully implemented: `DocsWebController::onboardingChecklist`, routes, `UserDocChecklist` model, `config/docs.php` checklist items.
+- Frontend page exists: `Onboarding/Checklist.vue` renders items, marks complete, dismisses.
+- **Gap**: There is no automatic entry point to this page. A new user never sees it because nothing triggers the visit.
 
----
+### Implementation
 
-## Feature 1: Documentation Content Model & Authoring
+#### 1a. Add middleware / gate logic (optional but preferred)
+Add a lightweight check either in a route middleware or in `AppLayout.vue` `onMounted` that:
+- Fetches `/onboarding/checklist` (Inertia endpoint)
+- If the returned checklist has any incomplete, non-dismissed items **and** the user has never been shown the checklist before → open the slider.
 
-### Changes Required:
-1. **Migration**: Add new columns to `knowledge_base_articles`:
-   - `audience` enum: `agent`, `manager`, `admin`, `all`
-   - `feature_refs` JSON array (stores spec section refs like `4.2.2`, `4.8.4`)
-   - `last_verified_at` timestamp (for staleness tracking)
+To avoid an extra API hit on every page load, persist state client-side only:
+- Check `localStorage.getItem('onboarding_checklist_seen')` once on first load.
+- If absent, open a `<Dialog>` or `<Slideover>` in `AppLayout.vue` containing the `Onboarding/Checklist.vue` (or inline the checklist markup).
+- Set the localStorage flag on open (idempotent, just a UX flag, not authoritative).
+- Once the user explicitly dismisses the checklist OR all items are complete, set the flag to `'true'`.
 
-2. **Model Update**: `KnowledgeBaseArticle.php`
-   - Add `audience` to fillable/casts
-   - Add `feature_refs` as JSON cast
-   - Add `last_verified_at` cast
-   - Add scope for audience filtering
-   - Add `isStale()` method (checks 6-month verification)
+**Decision**: Use a Dialog/Slideover wrapper inside `AppLayout.vue` rather than requiring navigation to a separate page. The spec says "on first login" — a modal that appears over the dashboard is the standard pattern. The existing `Onboarding/Checklist.vue` page can remain as the permanent "Reopen" destination from the docs centre.
 
-3. **Controller**: Create `DocsWebController.php` with:
-   - `index()` - documentation center landing
-   - `show(KnowledgeBaseArticle $article)` - article display
-   - `verify(Request $request, KnowledgeBaseArticle $article)` - set last verified date
-
-4. **Permission**: `docs.manage` assigned to admin role by default
+#### 1b. Add "Getting started" entry in docs centre (Docs/Index.vue)
+Update `Docs/Index.vue` to show a pinned "Getting started" card at the top, linking to `/onboarding/checklist`.
+This is already partially implied by `config/docs.php` having checklist items; no new backend needed.
 
 ---
 
-## Feature 2: Contextual In-App Help
+## 2. Populate Help Panel Content (Features 1–3, 5)
 
-### Changes Required:
-1. **Component**: Create `HelpPanel.vue` slide-over component
-   - Props: current route, user role-derived audience
-   - Fetches relevant articles via `/api/v1/docs/contextual` endpoint
-   - Displays max 5 ranked articles by feature_refs specificity
-   - Search box at top
-   - "Open in full view" link
-   - "Request documentation" action for fallback case
+### Root cause
+`config/docs.php` `route_feature_map` has **8 entries** only. The app has **200+ routes**. The backend `KnowledgeBaseController::contextual` returns zero matching articles because:
+1. The map does not match most routes.
+2. The DB has no `knowledge_base_articles`.
 
-2. **API Endpoint**: Add to `KnowledgeBaseController.php`:
-   - `contextual(Request $request)` - returns articles filtered by route + audience
-   - `recordView(Request $request)` - tracks view from route for analytics
+### Implementation
 
-3. **Layout Update**: `AppLayout.vue`
-   - Add persistent help icon to header
-   - Integrate HelpPanel component
+#### 2a. Expand `config/docs.php`
+Enumerate `routes/web.php` and add every major `path` to `route_feature_map` under the matching `section.subsection` format from the spec.
 
----
+Key additions per section (example list, full file will be exhaustive):
+- `4.1` contacts/accounts segments → `contacts`, `contacts/{id}`, `accounts`, `account/{id}`, `segments`
+- `4.2` deals/pipelines → `deals`, `deals/create`, `deals/board`, `pipelines`, `pipelines/{id}/board`
+- `4.3` omni-channel, tickets, kiosk, campaigns → all `support/tickets/*`, `admin/omni/*`, kiosk routes
+- `4.4` campaigns/templates → `admin/campaigns`, `admin/campaign-templates`, `admin/email-templates`
+- `4.5` loyalty/surveys → `admin/loyalty/*`, `admin/surveys`, `admin/kiosk`, `admin/welcome-email-templates`
+- `4.6` support kb → keep existing + all ticket CRUD routes
+- `4.7` analytics → all `admin/analytics/*`
+- `4.8` contracts/quotes → `admin/contracts/`, contracts routes, quote routes
+- `4.9` finance/vendors/employees → `admin/invoices`, `vendors`, `purchase-orders`, `assets`, `banking`, `employees`
+- `4.10` security → `admin/security/*`, `mfa/*`, `admin/privileged/*`, `admin/dsr`, `admin/rbac/*` (add RBAC routes if they exist)
+- `4.11` integrations → `admin/integrations/*`, `api-tokens`, `oauth-clients`, `webhooks`, `/docs` (developer portal)
+- `4.12` calendar/notifications → `admin/calendar/*`, `notifications`, `discussion-boards`
 
-## Feature 3: Full Documentation Centre
+Each key is the route path string (e.g. `contacts/{contact}`), ordered longest/most specific first. Generic parent routes come last so specificity scoring works.
 
-### Changes Required:
-1. **Category Structure**: Create seeded `DocCategory` model or extend `KnowledgeBaseCategory`:
-   - "Managing contacts and accounts" → contacts
-   - "Running your sales pipeline" → pipelines/deals
-   - "Customer conversations" → interactions
-   - "Contracts & legal" → contracts
-   - "Loyalty & CX" → loyalty/surveys
-   - "Working together" → teams/collaboration
-   - "Getting started" (pinned)
+#### 2b. Write `database/seeders/DocsSeeder.php`
+Populate `knowledge_base_articles` with ~35–45 published articles matching spec sections. Each article:
+- `status` = `published`
+- `audience` = `agent|manager|admin|all` (as appropriate; configuration pages get `admin`, view-only pages get `agent`, dual-get `manager`)
+- `feature_refs` = `['4.1.1']` etc.
+- `category_id` = mapped to an existing `KnowledgeBaseCategory` (create seed lookup or hard-code IDs after reading the table)
+- `body` = HTML Div with step-by-step how-to guidance
 
-2. **Pages**: Create Vue pages:
-   - `resources/js/Pages/Docs/Index.vue` - main center
-   - `resources/js/Pages/Docs/Show.vue` - article detail
-   - `resources/js/Pages/Docs/Category.vue` - category landing
+Article targets (at minimum one per spec subsection):
+- 4.1.1 Contact Management, 4.1.2 Account Management, 4.1.3 Merge Contacts, 4.1.5 Timeline View, 4.1.7 Bulk Import/Export, 4.1.8 Scoring Rules
+- 4.2.1 Deal Management, 4.2.2 Pipeline Kanban, 4.2.3 Deal Automations, 4.2.4 Win/Loss Reasons
+- 4.3.1 Omni-Channel Dashboard, 4.3.2 Interaction Inbox, 4.3.3 Channels Configuration, 4.3.5 Contact Center, 4.3.6 Kiosk, 4.3.7 Email Composer, 4.3.8 Call Logging
+- 4.4.1 Campaigns, 4.4.2 Campaign Templates, 4.4.3 Email Template Editor
+- 4.5.1 Loyalty Program, 4.5.2 Points Ledger, 4.5.4 Surveys, 4.5.5 Survey Responses, 4.5.6 Kiosk Interactions
+- 4.6.1 Ticket Management, 4.6.2 Knowledge Base, 4.6.5 Canned Responses, 4.6.6 CSAT Ratings
+- 4.7.1 Analytics Dashboard, 4.7.2 Customer Analytics, 4.7.3 Growth Analytics, 4.7.7 Report Builder, 4.7.10 Churn Risk
+- 4.8.1 Contract Management, 4.8.2 Contract Creation, 4.8.4 Milestone Tracking, 4.8.6 E-Signature
+- 4.9.1 Invoice Management, 4.9.2 Payment Recording, 4.9.5 Asset Management, 4.9.7 Ledger Summary
+- 4.10.1 MFA, 4.10.2 Security Events, 4.10.4 RBAC Matrix
+- 4.11.1 Integration Marketplace, 4.11.2 API Tokens, 4.11.3 Webhooks, 4.11.7 OpenAPI Docs
+- 4.12.1 Calendar, 4.12.2 Notifications, 4.12.3 File Attachments, 4.12.4 Discussion Boards
 
-3. **Routes**: Add to `web.php`:
-   - `/docs` - center index
-   - `/docs/{category}` - category view
-   - `/docs/{category}/{article}` - article view
+For audience assignment:
+- `admin` → configuration/setup screens (`admin/pipelines`, `admin/integrations/marketplace`, `admin/rbac`, `admin/contracts`)
+- `manager` → analytics, campaign, team overviews
+- `agent` → contact/deal/ticket views, omni-channel
+- `all` → generic dashboard, contact show page
 
-4. **Breadcrumbs**: Implement using Inertia breadcrumbs pattern
+#### 2c. Ensure `DocRequest` fallback creates records
+The `HelpPanel.vue` already calls `/api/v1/doc-requests` on empty result. This is wired to `firstOrCreate` + increment. No code change required; verify it works once the API route is live (it already is in `routes/api.php:169`).
 
----
-
-## Feature 4: Role-Based Onboarding Checklists
-
-### Changes Required:
-1. **Migration**: Add `user_doc_checklists` table:
-   - `id` (primary)
-   - `user_id` (foreign)
-   - `checklist_item_key` string
-   - `completed_at` timestamp (nullable)
-   - `dismissed_at` timestamp (nullable)
-
-2. **Models**: 
-   - `UserDocChecklist.php` - tracks per-user completion
-   - Seed checklist items in config or database
-
-3. **Pages**: `resources/js/Pages/Onboarding/Checklist.vue`
-   - Shows checklist for user's role(s)
-   - Links to screens with automatic help panel open
-   - Manual "mark complete" action
-
-4. **Controller**: Add to `DocsWebController.php`:
-   - `onboardingChecklist()` - returns user's checklist items
-   - `completeItem(Request $request)` - marks item complete
-   - `dismissChecklist()` - dismisses checklist
-
-5. **First Login Middleware**: Check if user should see checklist
+#### 2d. Docs centre full view (Docs/Index.vue)
+Already functional once articles exist. No new feature needed for the MVP, but add a "Getting started" pinned section by grouping category `slug=getting-started` (or simply rendering a manual card in the template).
 
 ---
 
-## Feature 5: Documentation Coverage & Feedback Loop
+## 3. Verification Checklist
 
-### Changes Required:
-1. **Migration**: Create `doc_requests` table:
-   - `id`
-   - `screen_identifier` string
-   - `user_id`
-   - `comment` text (nullable)
-   - `request_count` integer
-   - `resolved_at` timestamp (nullable)
-
-2. **Models**:
-   - `DocRequest.php` - documentation requests
-   - Add view tracking for articles in `UserDocChecklist` or separate table
-
-3. **Controller**: `Admin/DocsDashboardController.php`
-   - `index()` - maintainer dashboard
-   - Shows: low helpfulness articles, stale articles, coverage gaps, request queue
-
-4. **API**: Add endpoints to `KnowledgeBaseController.php`:
-   - `helpfulRatio()` - returns ratio for stale/low-helpfulness check
-   - `coverageGap()` - lists features without articles
-
-5. **Coverage Gap Logic**: Predefined list of spec sections for cross-reference:
-   - Sections 4.1-4.12, each numbered feature
+After code changes, verify in order:
+1. `php -l database/seeders/DocsSeeder.php`
+2. `php -l config/docs.php` (just validates array syntax)
+3. `php artisan db:seed --class=DocsSeeder`
+4. Login as agent → visit `/contacts` → click Help icon → 3–5 articles appear in panel
+5. Login as admin → visit `/admin/integrations/marketplace` → click Help → admin-audience articles appear
+6. Login as new user → visit `/` → onboarding slider appears once, dismisses
+7. Re-visit `/` → slider does NOT reappear unless all checklist items marked incomplete again
+8. Docs centre `/docs` renders categories + article counts
+9. Docs article page `/docs/{slug}` renders and rate buttons work
+10. Submit doc request from empty panel → record created in `doc_requests` table
 
 ---
 
-## Implementation Order
+## Files Modified
 
-1. **Database migrations** (Feature 1 & 5 data structures)
-2. **Model updates** (audience field, methods)
-3. **API endpoints** (search, contextual, feedback)
-4. **Web routes & controllers** (full docs center)
-5. **Vue components** (HelpPanel, Docs pages)
-6. **Layout integration** (help icon in header)
-7. **Onboarding system** (checklists, first-login flow)
-8. **Maintainer dashboard**
+| File | Action |
+|------|--------|
+| `config/docs.php` | Major `route_feature_map` expansion |
+| `database/seeders/DocsSeeder.php` | **New** – populate docs articles |
+| `resources/js/Layouts/AppLayout.vue` | Add onboarding checklist dialog + localStorage gate |
+| `resources/js/Pages/Onboarding/Checklist.vue` | No changes (reuse as-is), OR extract to a Dialog prop component |
+| `resources/js/Pages/Docs/Index.vue` | Add "Getting started" pinned section |
+| `resources/js/Components/HelpPanel.vue` | Minor: suppress `feature_refs` display (currently leaks metadata to end users) |
 
----
-
-## Key Decisions
-
-1. **Reuse KnowledgeBaseArticle table** - Documentation articles use same table as KB articles, filtered by `audience` field and `feature_refs` tagging. This follows the spec's requirement.
-
-2. **Signed URLs for media** - Use existing spatie-medialibrary + R2 driver for screenshots/videos at `docs/{article_id}/media/{filename}`
-
-3. **Route-to-feature mapping** - Store mapping in config:
-   ```php
-   'route_feature_map' => [
-     '/deals/board' => ['4.2.2', '4.2'], // Kanban board
-     '/admin/loyalty' => ['4.5.1', '4.5'], // Loyalty configuration
-   ]
-   ```
-
-4. **Audience derivation** - User's primary role determines default audience:
-   - `agent` role → `agent` audience
-   - `manager` role → `manager` audience
-   - `admin` role → `admin` audience
-
-5. **No duplicate API docs** - Link out to existing developer portal from docs center header
-
----
-
-## Files to Create/Modify
-
-### New Files:
-- `app/Models/DocRequest.php`
-- `app/Http/Controllers/DocsWebController.php`
-- `app/Http/Controllers/Admin/DocsDashboardController.php`
-- `resources/js/Pages/Docs/Index.vue`
-- `resources/js/Pages/Docs/Show.vue`
-- `resources/js/Pages/Docs/Category.vue`
-- `resources/js/Pages/Onboarding/Checklist.vue`
-- `resources/js/Components/HelpPanel.vue`
-
-### Modified Files:
-- `database/migrations/2026_06_12_100000_create_support_module_tables.php` (add columns)
-- `app/Models/KnowledgeBaseArticle.php` (add audience, feature_refs, last_verified_at)
-- `app/Http/Controllers/Api/V1/KnowledgeBaseController.php` (contextual endpoints)
-- `routes/web.php` (docs routes)
-- `routes/api.php` (contextual API routes)
-- `resources/js/Layouts/AppLayout.vue` (help icon)
+## Files Not Touched
+- `KnowledgeBaseController`, `DocsWebController` – already correct
+- `DocRequest` model/route – already correct
+- `Docs/Show.vue` – rendering is fine

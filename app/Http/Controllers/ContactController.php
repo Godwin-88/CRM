@@ -94,10 +94,71 @@ class ContactController extends Controller
         $allAccounts = Account::select(['id', 'name'])->get();
         $contactDeals = $contact->deals()->with('account')->get(['id', 'title', 'stage', 'value']);
 
+        $enrollment = $contact->loyaltyEnrollments()
+            ->where('is_active', true)
+            ->with(['program', 'tier'])
+            ->first();
+
+        $latestLedger = null;
+        $recentLedger = [];
+        if ($enrollment) {
+            $latestLedger = \App\Models\PointsLedger::where('enrollment_id', $enrollment->id)
+                ->orderByDesc('transaction_date')
+                ->first();
+            $recentLedger = \App\Models\PointsLedger::where('enrollment_id', $enrollment->id)
+                ->with('program')
+                ->orderByDesc('transaction_date')
+                ->limit(10)
+                ->get()
+                ->map(fn ($l) => [
+                    'id' => $l->id,
+                    'type' => $l->type,
+                    'points_amount' => $l->points_amount,
+                    'running_balance' => $l->running_balance,
+                    'description' => $l->description,
+                    'transaction_date' => $l->transaction_date,
+                    'program_name' => $l->program?->name ?? '—',
+                ]);
+        }
+
+        $loyaltyData = [
+            'enrollment' => $enrollment ? [
+                'id' => $enrollment->id,
+                'program_id' => $enrollment->program_id,
+                'program_name' => $enrollment->program?->name ?? '—',
+                'program_type' => $enrollment->program?->program_type ?? '—',
+                'currency_label' => $enrollment->program?->currency_label ?? '',
+                'currency_symbol' => $enrollment->program?->currency_symbol ?? '',
+                'earn_rate' => $enrollment->program?->earn_rate ?? 0,
+                'enrolled_at' => $enrollment->enrolled_at,
+                'tier_id' => $enrollment->tier_id,
+                'tier_name' => $enrollment->tier?->name ?? null,
+            ] : null,
+            'balance' => $latestLedger?->running_balance ?? 0,
+            'next_tier' => null,
+            'recent_ledger' => $recentLedger,
+        ];
+
+        if ($enrollment && $latestLedger) {
+            $nextTier = \App\Models\LoyaltyTier::where('program_id', $enrollment->program_id)
+                ->where('min_points_threshold', '>', $latestLedger->running_balance)
+                ->orderBy('min_points_threshold')
+                ->first();
+
+            if ($nextTier) {
+                $loyaltyData['next_tier'] = [
+                    'id' => $nextTier->id,
+                    'name' => $nextTier->name,
+                    'min_points_threshold' => $nextTier->min_points_threshold,
+                ];
+            }
+        }
+
         return Inertia::render('Contacts/Show', [
             'contact' => $contact,
             'accounts' => $allAccounts,
             'timelineEvents' => $timeline->items(),
+            'loyalty' => $loyaltyData,
         ]);
     }
 
@@ -106,6 +167,18 @@ class ContactController extends Controller
         $this->contactService->createContact($request->validated());
 
         return redirect()->route('contacts.index')->with('success', 'Contact created.');
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['exists:contacts,id'],
+        ]);
+
+        Contact::whereIn('id', $request->ids)->delete();
+
+        return back()->with('success', count($request->ids) . ' contacts deleted.');
     }
 
     public function edit(Contact $contact): Response

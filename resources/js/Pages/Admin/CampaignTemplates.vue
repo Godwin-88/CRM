@@ -7,8 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface CampaignTemplate {
   id: string;
@@ -162,11 +165,11 @@ const saveTemplate = async () => {
     html_content: generateHtml(),
     raw_html: rawHtml.value,
   };
-  
-  const url = editingTemplate.value 
+
+  const url = editingTemplate.value
     ? `/api/v1/campaign-templates/${editingTemplate.value.id}`
     : '/api/v1/campaign-templates';
-  
+
   const response = await fetch(url, {
     method: editingTemplate.value ? 'PUT' : 'POST',
     headers: {
@@ -175,7 +178,7 @@ const saveTemplate = async () => {
     },
     body: JSON.stringify(payload),
   });
-  
+
   if (response.ok) {
     isEditorOpen.value = false;
     router.reload();
@@ -208,8 +211,13 @@ const switchToVisualMode = () => {
 const dragOverIndex = ref<number | null>(null);
 const draggingBlock = ref<EmailBlock | null>(null);
 
-const handleDragStart = (block: EmailBlock, index: number) => {
-  draggingBlock.value = block;
+const selectedVariable = ref('');
+
+const insertVariable = (value: string) => {
+  if (value && selectedBlock.value) {
+    selectedBlock.value.content = (selectedBlock.value.content || '') + ' ' + value;
+    selectedVariable.value = '';
+  }
 };
 
 const handleDragOver = (index: number) => {
@@ -226,6 +234,7 @@ const handleDragEnd = () => {
   draggingBlock.value = null;
   dragOverIndex.value = null;
 };
+
 </script>
 
 <template>
@@ -247,11 +256,11 @@ const handleDragEnd = () => {
             </DialogHeader>
             <div class="space-y-4">
               <div>
-                <label class="text-sm font-medium">Name</label>
+                <Label class="text-sm font-medium">Name</Label>
                 <Input v-model="newTemplate.name" placeholder="e.g., Welcome Email" />
               </div>
               <div>
-                <label class="text-sm font-medium">Subject Line</label>
+                <Label class="text-sm font-medium">Subject Line</Label>
                 <Input v-model="newTemplate.subject" placeholder="Enter email subject" />
               </div>
               <Button @click="openEditor({ ...newTemplate, id: '', status: 'draft', blocks: [] }); isCreateOpen = false">Create & Edit</Button>
@@ -304,7 +313,7 @@ const handleDragEnd = () => {
             </div>
           </div>
         </DialogHeader>
-        
+
         <div class="flex flex-1 gap-4 overflow-hidden">
           <!-- Left Panel: Block Palette -->
           <div class="w-64 bg-gray-50 rounded-lg p-4 overflow-y-auto">
@@ -322,7 +331,7 @@ const handleDragEnd = () => {
 
           <!-- Center: Canvas/Preview -->
           <div class="flex-1 bg-gray-100 rounded-lg p-4 overflow-y-auto flex justify-center">
-            <div 
+            <div
               class="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300"
               :style="{ width: emailEditorWidth, minHeight: '600px' }"
             >
@@ -360,7 +369,7 @@ const handleDragEnd = () => {
                     <div v-else-if="block.type === 'social_links'" class="text-center text-sm">Social Links</div>
                   </div>
                 </div>
-                
+
                 <div v-if="blocks.length === 0" class="p-8 text-center text-gray-500">
                   Select blocks from the left panel to add content
                 </div>
@@ -380,67 +389,79 @@ const handleDragEnd = () => {
               <!-- Header Settings -->
               <div v-if="selectedBlock.type === 'header'" class="space-y-3">
                 <div>
-                  <label class="text-xs">Header Level</label>
-                  <select v-model="selectedBlock.settings.level" class="w-full p-2 border rounded">
-                    <option value="h1">H1</option>
-                    <option value="h2">H2</option>
-                    <option value="h3">H3</option>
-                  </select>
+                  <Label class="text-xs">Header Level</Label>
+                  <Select v-model="selectedBlock.settings.level">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="h1">H1</SelectItem>
+                      <SelectItem value="h2">H2</SelectItem>
+                      <SelectItem value="h3">H3</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <label class="text-xs">Alignment</label>
-                  <select v-model="selectedBlock.settings.align" class="w-full p-2 border rounded">
-                    <option value="left">Left</option>
-                    <option value="center">Center</option>
-                    <option value="right">Right</option>
-                  </select>
+                  <Label class="text-xs">Alignment</Label>
+                  <Select v-model="selectedBlock.settings.align">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <label class="text-xs">Content</label>
+                  <Label class="text-xs">Content</Label>
                   <Textarea v-model="selectedBlock.content" rows="3" />
                 </div>
               </div>
-              
+
               <!-- Text Settings -->
               <div v-if="selectedBlock.type === 'text'" class="space-y-3">
                 <div>
-                  <label class="text-xs">Font Size</label>
+                  <Label class="text-xs">Font Size</Label>
                   <Input v-model="selectedBlock.settings.fontSize" placeholder="14px" />
                 </div>
                 <div class="flex gap-2">
                   <label class="flex items-center gap-1 text-xs">
-                    <input type="checkbox" v-model="selectedBlock.settings.bold" /> Bold
+                    <Checkbox v-model:checked="selectedBlock.settings.bold" />
+                    <span>Bold</span>
                   </label>
                   <label class="flex items-center gap-1 text-xs">
-                    <input type="checkbox" v-model="selectedBlock.settings.italic" /> Italic
+                    <Checkbox v-model:checked="selectedBlock.settings.italic" />
+                    <span>Italic</span>
                   </label>
                 </div>
                 <div>
-                  <label class="text-xs">Content</label>
+                  <Label class="text-xs">Content</Label>
                   <Textarea v-model="selectedBlock.content" rows="4" />
                 </div>
               </div>
-              
+
               <!-- Image Settings -->
               <div v-if="selectedBlock.type === 'image'" class="space-y-3">
                 <div>
-                  <label class="text-xs">Image URL</label>
+                  <Label class="text-xs">Image URL</Label>
                   <Input v-model="selectedBlock.settings.url" placeholder="https://..." />
                 </div>
                 <div>
-                  <label class="text-xs">Alt Text</label>
+                  <Label class="text-xs">Alt Text</Label>
                   <Input v-model="selectedBlock.settings.alt" placeholder="Image description" />
                 </div>
               </div>
-              
+
               <!-- Button Settings -->
               <div v-if="selectedBlock.type === 'button'" class="space-y-3">
                 <div>
-                  <label class="text-xs">Button Text</label>
+                  <Label class="text-xs">Button Text</Label>
                   <Input v-model="selectedBlock.content" />
                 </div>
                 <div>
-                  <label class="text-xs">URL</label>
+                  <Label class="text-xs">URL</Label>
                   <Input v-model="selectedBlock.settings.url" placeholder="https://" />
                 </div>
               </div>
@@ -448,14 +469,19 @@ const handleDragEnd = () => {
             <div v-else class="text-gray-500 text-sm">
               Select a block to edit its settings
             </div>
-            
+
             <!-- Variable Placeholder Selector -->
             <div class="mt-6 pt-4 border-t" v-if="selectedBlock && (selectedBlock.type === 'text' || selectedBlock.type === 'header')">
               <h4 class="font-medium mb-2">Insert Variable</h4>
-              <select class="w-full p-2 border rounded text-sm" @change="($event) => { const v = ($event.target as HTMLSelectElement).value; if(v) selectedBlock!.content = (selectedBlock!.content || '') + ' ' + v }">
-                <option value="">Select a variable...</option>
-                <option v-for="v in availableVariables" :key="v.key" :value="v.key">{{ v.label }}</option>
-              </select>
+              <Select v-model="selectedVariable" @update:model-value="(v) => { if(v) insertVariable(v); }">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a variable..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Select a variable...</SelectItem>
+                  <SelectItem v-for="v in availableVariables" :key="v.key" :value="v.key">{{ v.label }}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

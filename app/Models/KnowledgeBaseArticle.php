@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -58,7 +58,7 @@ class KnowledgeBaseArticle extends Model implements HasMedia
 
     public function versions(): HasMany
     {
-        return $this->hasMany(KnowledgeBaseArticleVersion::class);
+        return $this->hasMany(KnowledgeBaseArticleVersion::class, 'article_id');
     }
 
     public function tickets(): BelongsToMany

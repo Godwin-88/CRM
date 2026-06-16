@@ -41,11 +41,27 @@ class CampaignWebController extends Controller
         return Inertia::render('Campaigns/Show', ['campaign' => $campaign]);
     }
 
+    public function abTest(string $campaign): Response
+    {
+        $campaign = Campaign::with(['segment', 'creator', 'abTest.variantATemplate', 'abTest.variantBTemplate'])->findOrFail($campaign);
+
+        return Inertia::render('Campaigns/AbTest', ['campaign' => $campaign]);
+    }
+
     public function analytics(): Response
     {
         $campaigns = Campaign::orderBy('created_at', 'desc')->limit(100)->get(['id', 'name', 'status']);
 
         return Inertia::render('Admin/CampaignAnalytics', [
+            'campaigns' => $campaigns,
+        ]);
+    }
+
+    public function analyticsDashboard(): Response
+    {
+        $campaigns = Campaign::orderBy('created_at', 'desc')->limit(100)->get(['id', 'name', 'status']);
+
+        return Inertia::render('Admin/CampaignAnalyticsDashboard', [
             'campaigns' => $campaigns,
         ]);
     }

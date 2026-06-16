@@ -13,6 +13,9 @@ const props = defineProps<{
     articles_count: number
   }>
 }>()
+
+const gettingStartedCategory = props.categories.find(c => c.slug === 'getting-started')
+const otherCategories = props.categories.filter(c => c.slug !== 'getting-started')
 </script>
 
 <template>
@@ -28,8 +31,22 @@ const props = defineProps<{
         </div>
       </div>
 
+      <div v-if="gettingStartedCategory" class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h2 class="text-xl font-semibold text-blue-900 mb-4">Getting Started</h2>
+        <div class="flex items-center gap-4">
+          <BookOpen class="h-10 w-10 text-blue-500" />
+          <div class="flex-1">
+            <h3 class="font-medium text-gray-900">{{ gettingStartedCategory.name }}</h3>
+            <p class="text-sm text-gray-600 mt-1">{{ gettingStartedCategory.description ?? 'Essential guides to get you started' }}</p>
+          </div>
+          <Link :href="`/docs/category/${gettingStartedCategory.slug}`" class="text-sm text-blue-600 hover:underline font-medium">
+            View Guides →
+          </Link>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card v-for="category in categories" :key="category.id" class="hover:shadow-md transition-shadow">
+        <Card v-for="category in otherCategories" :key="category.id" class="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle class="flex items-center gap-2">
               <BookOpen class="h-5 w-5 text-blue-500" />

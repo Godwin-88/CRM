@@ -76,4 +76,44 @@ class ReactivationWebController extends Controller
             'contacts' => $contacts,
         ]);
     }
+
+    public function analytics(): Response
+    {
+        $contacts = ReactivationContact::with(['contact', 'config'])->orderBy('created_at', 'desc')->limit(200)->get();
+
+        $enrolled = ReactivationContact::where('status', 'enrolled')->count();
+        $reEngaged = ReactivationContact::where('status', 're_engaged')->count();
+        $completed = ReactivationContact::where('status', 'completed')->count();
+        $dormant = ReactivationContact::where('status', 'dormant')->count();
+
+        $total = $enrolled + $reEngaged + $completed + $dormant;
+        $reEngagementRate = $total > 0 ? round(($reEngaged / $total) * 100, 2) : 0;
+
+        $analytics = [
+            'total_enrolled' => $enrolled,
+            'total_re_engaged' => $reEngaged,
+            'total_completed' => $completed,
+            'total_dormant' => $dormant,
+            're_engagement_rate' => $reEngagementRate,
+            'by_config' => ReactivationConfig::withCount('contacts')->get()->map(fn ($c) => [
+                'contact_type' => $c->contact_type,
+                'total' => $c->contacts_count,
+            ])->toArray(),
+        ];
+
+        $contactsData = $contacts->map(fn ($rc) => [
+            'id' => $rc->id,
+            'contact_name' => $rc->contact?->full_name ?? 'Unknown',
+            'contact_email' => $rc->contact?->email ?? '—',
+            'status' => $rc->status,
+            'enrolled_at' => $rc->created_at?->toDateTimeString() ?? now(),
+            're_engaged_at' => $rc->re_engaged_at?->toDateTimeString(),
+            'config_name' => $rc->config?->name ?? '—',
+        ])->toArray();
+
+        return Inertia::render('Admin/ReactivationAnalytics', [
+            'analytics' => $analytics,
+            'contacts' => $contactsData,
+        ]);
+    }
 }

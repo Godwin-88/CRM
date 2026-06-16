@@ -144,6 +144,7 @@ class RoleAndPermissionSeeder extends Seeder
 // Comments
              'comments.view',
              'attachments.sign',
+             'docs.manage',
              ];
 
         foreach ($permissions as $permission) {

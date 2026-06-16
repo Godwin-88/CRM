@@ -155,6 +155,9 @@ class KnowledgeBaseController extends Controller
             return response()->json(['articles' => []]);
         }
 
+        // Strip leading slash for config lookup
+        $route = ltrim($route, '/');
+
         $featureRefs = config('docs.route_feature_map.'.$route, []);
 
         $articles = KnowledgeBaseArticle::published()

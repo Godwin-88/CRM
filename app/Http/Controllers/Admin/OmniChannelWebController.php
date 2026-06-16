@@ -34,6 +34,11 @@ class OmniChannelWebController extends Controller
         ]);
     }
 
+    public function contactCenter(): Response
+    {
+        return Inertia::render('Admin/ContactCenter');
+    }
+
     public function tickets(): Response
     {
         $tickets = Ticket::with(['contact'])->orderBy('created_at', 'desc')->limit(200)->get();
@@ -43,25 +48,62 @@ class OmniChannelWebController extends Controller
         ]);
     }
 
-    public function contactCenter(): Response
-    {
-        $channels = InteractionChannel::all();
-        $agents = User::whereHas('roles', function ($q) {
-            $q->whereIn('name', ['agent', 'admin', 'manager']);
-        })->get();
-
-        return Inertia::render('Admin/ContactCenter', [
-            'channels' => $channels,
-            'agents' => $agents,
-        ]);
-    }
-
     public function kiosk(): Response
     {
         $integrations = KioskIntegration::with('location')->orderBy('created_at', 'desc')->get();
 
         return Inertia::render('Admin/Kiosk', [
             'integrations' => $integrations,
+        ]);
+    }
+
+    public function emailCompose(): Response
+    {
+        return Inertia::render('Admin/EmailCompose', [
+            'contacts' => [],
+            'emailTemplates' => [],
+            'deals' => [],
+            'tickets' => [],
+        ]);
+    }
+
+    public function smsCompose(): Response
+    {
+        return Inertia::render('Admin/SmsCompose', [
+            'contacts' => [],
+        ]);
+    }
+
+    public function callLog(): Response
+    {
+        return Inertia::render('Admin/CallLog', [
+            'contacts' => [],
+            'deals' => [],
+            'tickets' => [],
+        ]);
+    }
+
+    public function ivrTranscriptions(): Response
+    {
+        $interactions = Interaction::where('type', 'ivr')->with('contact')->orderByDesc('created_at')->limit(100)->get();
+
+        return Inertia::render('Admin/IvrTranscriptions', [
+            'interactions' => $interactions,
+        ]);
+    }
+
+    public function fieldChannel(): Response
+    {
+        return Inertia::render('Admin/FieldChannel', [
+            'snapshot' => ['last_sync' => now()->toIso8601String(), 'contacts' => [], 'accounts' => [], 'activities' => []],
+            'pendingCount' => 0,
+        ]);
+    }
+
+    public function chatInbox(): Response
+    {
+        return Inertia::render('Admin/ChatInbox', [
+            'sessions' => [],
         ]);
     }
 

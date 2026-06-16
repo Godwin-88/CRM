@@ -115,6 +115,10 @@ class AuthController extends Controller
 
     private function mfaRequired($user): bool
     {
+        if (! config('security.mfa_enabled', true)) {
+            return false;
+        }
+
         $requiredRoles = config('security.mfa_required_roles', ['admin', 'manager']);
         $requiresMfa = collect($requiredRoles)->some(fn ($role) => $user->hasRole($role));
 

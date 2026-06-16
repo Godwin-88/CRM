@@ -5,7 +5,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectLabel } from '@/components/ui/select';
-import { AlertCircle } from 'lucide-vue-next';
+import { supportedLocales, setI18nLocale } from '@/lib/i18n';
+import { Globe } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 const form = useForm({
   email: '',
@@ -13,7 +15,10 @@ const form = useForm({
   remember: false,
 });
 
+const locale = ref(supportedLocales[0].code);
+
 const submit = () => {
+  setI18nLocale(locale.value);
   form.post('/login', {
     onFinish: () => form.reset('password'),
   });
@@ -27,6 +32,17 @@ const submit = () => {
     <div class="w-full max-w-md">
       <Card>
         <CardHeader class="text-center">
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <Globe class="h-5 w-5 text-gray-500" />
+            <Select v-model="locale" class="w-28">
+              <SelectTrigger>
+                <SelectValue placeholder="Lang" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="l in supportedLocales" :key="l.code" :value="l.code">{{ l.flag }} {{ l.label }}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div class="flex items-center justify-center mb-4">
             <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <span class="text-white font-bold">CRM</span>

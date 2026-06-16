@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DollarSign, Package, BarChart3, Filter } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -13,8 +14,8 @@ const props = defineProps<{
   revenue_trend?: Array
   ar_aging?: {
     current?: { value: number; count: number }
-    '31_60'?: { value: number; count: number }
-    '61_90'?: { value: number; count: number }
+    31_60?: { value: number; count: number }
+    61_90?: { value: number; count: number }
     over_90?: { value: number; count: number }
   }
   last_calculated?: string
@@ -47,24 +48,24 @@ const timeRange = ref<'30d' | '90d' | '1y'>('30d')
           <CardTitle>Revenue by Product</CardTitle>
         </CardHeader>
         <CardContent>
-          <table class="w-full text-sm">
-            <thead class="border-b">
-              <tr class="text-left text-gray-500">
-                <th class="p-3">Product</th>
-                <th class="p-3">Category</th>
-                <th class="p-3">Revenue</th>
-                <th class="p-3">Deals</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in props.revenue_by_product" :key="row.product" class="border-b hover:bg-gray-50">
-                <td class="p-3 font-medium">{{ row.product }}</td>
-                <td class="p-3">{{ row.category ?? '-' }}</td>
-                <td class="p-3">{{ Number(row.total_revenue).toLocaleString() }}</td>
-                <td class="p-3">{{ row.deal_count }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="p-3">Product</TableHead>
+                <TableHead class="p-3">Category</TableHead>
+                <TableHead class="p-3">Revenue</TableHead>
+                <TableHead class="p-3">Deals</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="row in props.revenue_by_product" :key="row.product" class="border-b hover:bg-gray-50">
+                <TableCell class="p-3 font-medium">{{ row.product }}</TableCell>
+                <TableCell class="p-3">{{ row.category ?? '-' }}</TableCell>
+                <TableCell class="p-3">{{ Number(row.total_revenue).toLocaleString() }}</TableCell>
+                <TableCell class="p-3">{{ row.deal_count }}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -79,34 +80,20 @@ const timeRange = ref<'30d' | '90d' | '1y'>('30d')
               <p class="text-xl font-bold text-green-600">{{ Number(props.ar_aging?.current?.value ?? 0).toLocaleString() }}</p>
               <p class="text-sm text-gray-600">{{ props.ar_aging?.current?.count ?? 0 }} invoices</p>
             </div>
-            <div class="text-center p-4 bg-amber-50 rounded-lg">
-              <p class="text-xs text-gray-500">31-60 days</p>
-              <p class="text-xl font-bold text-amber-600">{{ Number(props.ar_aging?.['31_60']?.value ?? 0).toLocaleString() }}</p>
+            <div class="text-center p-4 bg-yellow-50 rounded-lg">
+              <p class="text-xs text-gray-500">31-60 Days</p>
+              <p class="text-xl font-bold text-yellow-600">{{ Number(props.ar_aging?.['31_60']?.value ?? 0).toLocaleString() }}</p>
               <p class="text-sm text-gray-600">{{ props.ar_aging?.['31_60']?.count ?? 0 }} invoices</p>
             </div>
             <div class="text-center p-4 bg-orange-50 rounded-lg">
-              <p class="text-xs text-gray-500">61-90 days</p>
+              <p class="text-xs text-gray-500">61-90 Days</p>
               <p class="text-xl font-bold text-orange-600">{{ Number(props.ar_aging?.['61_90']?.value ?? 0).toLocaleString() }}</p>
               <p class="text-sm text-gray-600">{{ props.ar_aging?.['61_90']?.count ?? 0 }} invoices</p>
             </div>
             <div class="text-center p-4 bg-red-50 rounded-lg">
-              <p class="text-xs text-gray-500">Over 90 days</p>
+              <p class="text-xs text-gray-500">Over 90 Days</p>
               <p class="text-xl font-bold text-red-600">{{ Number(props.ar_aging?.over_90?.value ?? 0).toLocaleString() }}</p>
               <p class="text-sm text-gray-600">{{ props.ar_aging?.over_90?.count ?? 0 }} invoices</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Revenue Trend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div class="h-64 flex items-end justify-between gap-2">
-            <div v-for="point in props.revenue_trend" :key="point.month" class="flex-1 flex flex-col items-center">
-              <div class="w-full bg-blue-200 rounded-t" :style="{ height: Math.max(point.revenue / 1000, 10) + 'px' }"></div>
-              <span class="text-xs text-gray-500 mt-1">{{ point.month }}</span>
             </div>
           </div>
         </CardContent>

@@ -27,9 +27,9 @@ const form = useForm({
 
 const submit = () => {
   if (props.account) {
-    form.put(`/api/v1/accounts/${props.account.id}`, { onSuccess: () => emit('close') });
+    form.put(`/accounts/${props.account.id}`, { onSuccess: () => emit('close') });
   } else {
-    form.post('/api/v1/accounts', { onSuccess: () => emit('close') });
+    form.post('/accounts', { onSuccess: () => emit('close') });
   }
 };
 </script>

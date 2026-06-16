@@ -1,36 +1,25 @@
 <template>
     <div class="max-w-7xl mx-auto py-6">
-        <h1 class="text-2xl font-bold mb-4">Webhooks</h1>
-
         <div class="flex justify-end mb-4">
-            <button
-                @click="showCreateModal = true"
-                class="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-                Create Webhook
-            </button>
+            <Button @click="showCreateModal = true">Create Webhook</Button>
         </div>
 
-        <table class="min-w-full bg-white border">
-            <thead>
-                <tr class="border-b">
-                    <th class="px-4 py-2 text-left">Name</th>
-                    <th class="px-4 py-2 text-left">URL</th>
-                    <th class="px-4 py-2 text-left">Events</th>
-                    <th class="px-4 py-2 text-left">Status</th>
-                    <th class="px-4 py-2 text-left">Last Success</th>
-                    <th class="px-4 py-2 text-left">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr
-                    v-for="webhook in webhooks.data"
-                    :key="webhook.id"
-                    class="border-b"
-                >
-                    <td class="px-4 py-2">{{ webhook.name }}</td>
-                    <td class="px-4 py-2">{{ webhook.url }}</td>
-                    <td class="px-4 py-2">
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>URL</TableHead>
+                    <TableHead>Events</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last Success</TableHead>
+                    <TableHead>Actions</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                <TableRow v-for="webhook in webhooks.data" :key="webhook.id">
+                    <TableCell>{{ webhook.name }}</TableCell>
+                    <TableCell>{{ webhook.url }}</TableCell>
+                    <TableCell>
                         <span
                             v-for="event in webhook.events"
                             :key="event"
@@ -38,36 +27,24 @@
                         >
                             {{ event }}
                         </span>
-                    </td>
-                    <td class="px-4 py-2">
-                        <span
-                            :class="
-                                webhook.is_active
-                                    ? 'text-green-600'
-                                    : 'text-gray-600'
-                            "
-                        >
-                            {{ webhook.is_active ? "Active" : "Paused" }}
-                        </span>
-                    </td>
-                    <td class="px-4 py-2">{{ webhook.last_success_at }}</td>
-                    <td class="px-4 py-2">
-                        <button
-                            @click="toggleStatus(webhook)"
-                            class="text-sm mr-2"
-                        >
-                            {{ webhook.is_active ? "Pause" : "Resume" }}
-                        </button>
-                        <button
-                            @click="deleteWebhook(webhook)"
-                            class="text-sm text-red-600"
-                        >
+                    </TableCell>
+                    <TableCell>
+                        <Badge :variant="webhook.is_active ? 'default' : 'secondary'">
+                            {{ webhook.is_active ? 'Active' : 'Paused' }}
+                        </Badge>
+                    </TableCell>
+                    <TableCell>{{ webhook.last_success_at }}</TableCell>
+                    <TableCell>
+                        <Button variant="ghost" size="sm" @click="toggleStatus(webhook)">
+                            {{ webhook.is_active ? 'Pause' : 'Resume' }}
+                        </Button>
+                        <Button variant="ghost" size="sm" class="text-red-600" @click="deleteWebhook(webhook)">
                             Delete
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                        </Button>
+                    </TableCell>
+                </TableRow>
+            </TableBody>
+        </Table>
     </div>
 </template>
 
@@ -75,6 +52,16 @@
 import { ref } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 defineProps({
     webhooks: Object,
@@ -98,8 +85,3 @@ function deleteWebhook(webhook) {
     }
 }
 </script>
-<style scoped>
-table {
-    border-collapse: collapse;
-}
-</style>

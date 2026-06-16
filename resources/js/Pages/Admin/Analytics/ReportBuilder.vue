@@ -4,7 +4,9 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Plus, Filter, BarChart3 } from 'lucide-vue-next'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 const props = defineProps<{
   reports?: Array
@@ -38,34 +40,32 @@ const showNewReportModal = ref(false)
           <CardTitle>Report Library</CardTitle>
         </CardHeader>
         <CardContent>
-          <table class="w-full text-sm">
-            <thead class="border-b">
-              <tr class="text-left text-gray-500">
-                <th class="p-3">Name</th>
-                <th class="p-3">Entity</th>
-                <th class="p-3">Owner</th>
-                <th class="p-3">Visibility</th>
-                <th class="p-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="report in props.reports?.data ?? []" :key="report.id" class="border-b hover:bg-gray-50">
-                <td class="p-3 font-medium">{{ report.name }}</td>
-                <td class="p-3">{{ report.entity_type }}</td>
-                <td class="p-3">{{ report.owner?.name ?? '-' }}</td>
-                <td class="p-3">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="p-3">Name</TableHead>
+                <TableHead class="p-3">Entity</TableHead>
+                <TableHead class="p-3">Owner</TableHead>
+                <TableHead class="p-3">Visibility</TableHead>
+                <TableHead class="p-3">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="report in props.reports?.data ?? []" :key="report.id" class="border-b hover:bg-gray-50">
+                <TableCell class="p-3 font-medium">{{ report.name }}</TableCell>
+                <TableCell class="p-3">{{ report.entity_type }}</TableCell>
+                <TableCell class="p-3">{{ report.owner?.name ?? '-' }}</TableCell>
+                <TableCell class="p-3">
                   <Badge :variant="report.visibility === 'shared' ? 'default' : 'secondary'">
                     {{ report.visibility }}
                   </Badge>
-                </td>
-                <td class="p-3">
-                  <Link :href="`/admin/analytics/report-builder/${report.id}`" class="text-blue-600 hover:underline">
-                    Run
-                  </Link>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </TableCell>
+                <TableCell class="p-3">
+                  <Button variant="ghost" size="sm">Edit</Button>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

@@ -3,21 +3,21 @@
         <h1 class="text-2xl font-bold mb-4">Integration Marketplace</h1>
 
         <div class="mb-4">
-            <input
-                v-model="search"
-                type="text"
-                placeholder="Search connectors..."
-                class="border rounded px-3 py-2 w-64"
-            />
-            <select v-model="category" class="border rounded px-3 py-2 ml-2">
-                <option value="">All categories</option>
-                <option value="communications">Communications</option>
-                <option value="finance">Finance</option>
-                <option value="productivity">Productivity</option>
-                <option value="identity">Identity</option>
-                <option value="e-signature">E-signature</option>
-                <option value="payments">Payments</option>
-            </select>
+            <Input v-model="search" placeholder="Search connectors..." class="w-64" />
+            <Select v-model="category">
+                <SelectTrigger class="ml-2">
+                    <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="">All categories</SelectItem>
+                    <SelectItem value="communications">Communications</SelectItem>
+                    <SelectItem value="finance">Finance</SelectItem>
+                    <SelectItem value="productivity">Productivity</SelectItem>
+                    <SelectItem value="identity">Identity</SelectItem>
+                    <SelectItem value="e-signature">E-signature</SelectItem>
+                    <SelectItem value="payments">Payments</SelectItem>
+                </SelectContent>
+            </Select>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -30,25 +30,17 @@
                     <div class="w-10 h-10 bg-gray-200 rounded mr-3"></div>
                     <div>
                         <h3 class="font-semibold">{{ connector.name }}</h3>
-                        <span class="text-xs text-gray-500">{{
-                            connector.category
-                        }}</span>
+                        <span class="text-xs text-gray-500">{{ connector.category }}</span>
                     </div>
                 </div>
-                <p class="text-sm text-gray-600 mb-3">
-                    {{ connector.description }}
-                </p>
-                <button
+                <p class="text-sm text-gray-600 mb-3">{{ connector.description }}</p>
+                <Button
                     @click="connect(connector)"
                     :disabled="isConnected(connector.provider)"
-                    class="w-full bg-blue-600 text-white px-3 py-1 rounded disabled:bg-gray-300"
+                    class="w-full"
                 >
-                    {{
-                        isConnected(connector.provider)
-                            ? "Connected"
-                            : "Connect"
-                    }}
-                </button>
+                    {{ isConnected(connector.provider) ? "Connected" : "Connect" }}
+                </Button>
             </div>
         </div>
     </div>
@@ -58,6 +50,15 @@
 import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 defineProps({
     catalog: Array,
@@ -72,8 +73,7 @@ const filteredCatalog = computed(() => {
         const matchesSearch =
             c.name.toLowerCase().includes(search.value.toLowerCase()) ||
             c.description.toLowerCase().includes(search.value.toLowerCase());
-        const matchesCategory =
-            !category.value || c.category === category.value;
+        const matchesCategory = !category.value || c.category === category.value;
         return matchesSearch && matchesCategory;
     });
 });
@@ -86,9 +86,7 @@ function connect(connector) {
     router.post(
         route("admin.integrations.connect", connector.provider),
         {},
-        {
-            preserveScroll: true,
-        },
+        { preserveScroll: true },
     );
 }
 </script>

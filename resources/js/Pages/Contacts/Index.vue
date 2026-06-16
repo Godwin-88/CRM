@@ -80,17 +80,13 @@ const exportContacts = () => {
   }
 };
 
-const deleteSelected = async () => {
+const deleteSelected = () => {
   if (confirm(`Delete ${selectedContacts.value.length} selected contacts?`)) {
-    const response = await fetch('/api/v1/contacts/bulk-delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content },
-      body: JSON.stringify({ ids: selectedContacts.value }),
+    router.post('/contacts/bulk-delete', { ids: selectedContacts.value }, {
+      onSuccess: () => {
+        selectedContacts.value = [];
+      }
     });
-    if (response.ok) {
-      selectedContacts.value = [];
-      router.reload();
-    }
   }
 };
 </script>
