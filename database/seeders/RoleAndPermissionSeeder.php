@@ -218,6 +218,9 @@ class RoleAndPermissionSeeder extends Seeder
             'segments.view',
         ]);
 
+        // Documentation
+        $admin->givePermissionTo('docs.manage');
+
         // Assign admin role to the first user (if exists)
         if ($user = User::first()) {
             $user->assignRole('admin');

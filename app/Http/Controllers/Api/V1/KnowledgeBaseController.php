@@ -52,6 +52,8 @@ class KnowledgeBaseController extends Controller
             'body' => 'required|string',
             'category_id' => 'required|exists:knowledge_base_categories,id',
             'status' => 'sometimes|in:draft,in_review,approved,published,archived',
+            'audience' => 'sometimes|in:agent,manager,admin,all',
+            'feature_refs' => 'sometimes|array',
         ]);
 
         $article = KnowledgeBaseArticle::create([
@@ -61,6 +63,8 @@ class KnowledgeBaseController extends Controller
             'category_id' => $validated['category_id'],
             'author_id' => Auth::id(),
             'status' => $validated['status'] ?? 'draft',
+            'audience' => $validated['audience'] ?? 'all',
+            'feature_refs' => $validated['feature_refs'] ?? null,
         ]);
 
         return response()->json($article->load(['category', 'author']), 201);
@@ -80,6 +84,8 @@ class KnowledgeBaseController extends Controller
             'body' => 'sometimes|string',
             'category_id' => 'sometimes|exists:knowledge_base_categories,id',
             'status' => 'sometimes|in:draft,in_review,approved,published,archived',
+            'audience' => 'sometimes|in:agent,manager,admin,all',
+            'feature_refs' => 'sometimes|array',
         ]);
 
         if (isset($validated['title'])) {
@@ -138,5 +144,46 @@ class KnowledgeBaseController extends Controller
         $this->knowledgeBaseService->restoreVersion($article, $version, Auth::user());
 
         return response()->json($article->fresh());
+    }
+
+    public function contextual(Request $request): JsonResponse
+    {
+        $route = $request->get('route');
+        $audience = $request->get('audience', 'all');
+
+        if (!$route) {
+            return response()->json(['articles' => []]);
+        }
+
+        $featureRefs = config('docs.route_feature_map.'.$route, []);
+
+        $articles = KnowledgeBaseArticle::published()
+            ->with(['category', 'author'])
+            ->when($featureRefs, function ($query) use ($featureRefs) {
+                $query->whereJsonContains('feature_refs', $featureRefs[0]);
+            })
+            ->where(function ($q) use ($audience) {
+                $q->where('audience', 'all')
+                  ->orWhere('audience', $audience);
+            })
+            ->limit(5)
+            ->get();
+
+        return response()->json($articles);
+    }
+
+    public function recordView(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'article_id' => 'required|exists:knowledge_base_articles,id',
+            'route' => 'required|string',
+        ]);
+
+        $article = KnowledgeBaseArticle::find($validated['article_id']);
+        if ($article) {
+            $article->incrementViewCount();
+        }
+
+        return response()->json(['recorded' => true]);
     }
 }

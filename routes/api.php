@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\V1\TranslationController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\LegalMatterController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
@@ -160,6 +161,25 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('knowledge-base/{knowledge_base}/rate', [KnowledgeBaseController::class, 'rate']);
     Route::post('knowledge-base/{knowledge_base}/restore-version', [KnowledgeBaseController::class, 'restoreVersion']);
     Route::get('knowledge-base/categories', [KnowledgeBaseCategoryController::class, 'index']);
+    Route::get('knowledge-base/contextual', [KnowledgeBaseController::class, 'contextual']);
+    Route::post('knowledge-base/record-view', [KnowledgeBaseController::class, 'recordView']);
+    Route::post('doc-requests', function (Request $request) {
+        $validated = $request->validate([
+            'screen_identifier' => 'required|string',
+            'comment' => 'sometimes|string',
+        ]);
+
+        $request = \App\Models\DocRequest::firstOrCreate(
+            ['screen_identifier' => $validated['screen_identifier'], 'user_id' => $request->user()->id],
+            ['comment' => $validated['comment'] ?? null]
+        );
+
+        if (!$request->wasRecentlyCreated) {
+            $request->incrementRequestCount();
+        }
+
+        return response()->json(['created' => true]);
+    });
     Route::apiResource('knowledge-base', KnowledgeBaseController::class);
 
     Route::get('canned-responses', [CannedResponseController::class, 'index']);

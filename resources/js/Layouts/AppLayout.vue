@@ -6,9 +6,10 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Menu } from "lucide-vue-next";
+import { ChevronDown, ChevronRight, Menu, HelpCircle } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import HelpPanel from "@/Components/HelpPanel.vue";
 
 interface User {
     id: string;
@@ -21,9 +22,11 @@ const page = usePage();
 const user = computed(() => page.props.user as User | null);
 const userRoles = computed(() => user.value?.roles || []);
 const isPrivileged = computed(() => page.props.is_privileged as boolean);
+const currentRoute = computed(() => page.url || '');
 
 const isExpanded = ref(true);
 const isHovered = ref(false);
+const showHelpPanel = ref(false);
 
 const canViewAdmin = computed(
     () =>
@@ -277,8 +280,17 @@ const toggleSidebar = () => {
         </aside>
 
         <!-- Main content -->
-        <main class="flex-1">
-            <slot />
+        <main class="flex-1 flex flex-col">
+            <header class="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center">
+                <div class="text-sm text-gray-500" v-if="isExpanded || isHovered">
+                    {{ currentRoute }}
+                </div>
+                <div class="flex-1"></div>
+                <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
+            </header>
+            <div class="flex-1 p-6">
+                <slot />
+            </div>
         </main>
     </div>
 </template>

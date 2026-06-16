@@ -48,7 +48,7 @@ use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\CalendarWebController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DocsWebController;
 use Inertia\Inertia;
 
 // ─── Authentication ───────────────────────────────────────────────────────────
@@ -472,5 +472,20 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::get('/notifications', [\App\Http\Controllers\Web\NotificationWebController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{notification}/read', [\App\Http\Controllers\Web\NotificationWebController::class, 'markRead'])->name('notifications.read');
         Route::post('/notifications/read-all', [\App\Http\Controllers\Web\NotificationWebController::class, 'markAllRead'])->name('notifications.readAll');
+
+        // Documentation Center
+        Route::get('/docs', [DocsWebController::class, 'index'])->name('docs.index');
+        Route::get('/docs/category/{category:slug}', [DocsWebController::class, 'category'])->name('docs.category');
+        Route::get('/docs/{article:slug}', [DocsWebController::class, 'show'])->name('docs.show');
+        Route::post('/docs/{article}/verify', [DocsWebController::class, 'verify'])->name('docs.verify');
+
+        // Onboarding Checklist
+        Route::get('/onboarding/checklist', [DocsWebController::class, 'onboardingChecklist'])->name('onboarding.checklist');
+        Route::post('/onboarding/checklist/complete', [DocsWebController::class, 'completeItem'])->name('onboarding.checklist.complete');
+        Route::post('/onboarding/checklist/dismiss', [DocsWebController::class, 'dismissChecklist'])->name('onboarding.checklist.dismiss');
+
+        // Admin - Docs Dashboard
+        Route::get('/admin/docs', [\App\Http\Controllers\Admin\DocsDashboardController::class, 'index'])->name('admin.docs.index');
+        Route::post('/admin/docs/{docRequest}/resolve', [\App\Http\Controllers\Admin\DocsDashboardController::class, 'resolveRequest'])->name('admin.docs.resolve-request');
     });
 });
