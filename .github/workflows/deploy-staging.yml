@@ -1,0 +1,160 @@
+name: Deploy to Remote Server
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  APP_IMAGE: ghcr.io/${{ github.repository }}:main
+  PGSQL_IMAGE: ghcr.io/${{ github.repository }}:main-pgsql
+  ML_IMAGE: ghcr.io/${{ github.repository }}:main-ml
+  REMOTE_DEPLOY_PATH: ${{ secrets.REMOTE_DEPLOY_PATH || '/CRM/' }}
+  REMOTE_NGINX_SITE_PATH: ${{ secrets.REMOTE_NGINX_SITE_PATH || '/etc/nginx/sites-available/enterprise-crm' }}
+  REMOTE_NGINX_SITES_ENABLED_PATH: ${{ secrets.REMOTE_NGINX_SITES_ENABLED_PATH || '/etc/nginx/sites-enabled' }}
+  REMOTE_NGINX_RELOAD_COMMAND: ${{ secrets.REMOTE_NGINX_RELOAD_COMMAND || 'sudo systemctl reload nginx' }}
+  APP_FPM_PORT: ${{ secrets.APP_FPM_PORT || '9000' }}
+  REVERB_PORT: ${{ secrets.REVERB_PORT || '8080' }}
+  APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+  APP_KEY: ${{ secrets.APP_KEY }}
+  APP_NAME: ${{ secrets.APP_NAME || 'Enterprise CRM' }}
+  REVERB_APP_ID: ${{ secrets.REVERB_APP_ID || 'laravel' }}
+  REVERB_APP_KEY: ${{ secrets.REVERB_APP_KEY || 'laravel' }}
+  REVERB_APP_SECRET: ${{ secrets.REVERB_APP_SECRET || 'laravel' }}
+  AGENT_API_KEY: ${{ secrets.AGENT_API_KEY }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER || 'minioadmin' }}
+  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD || 'minioadmin' }}
+  MEILI_MASTER_KEY: ${{ secrets.MEILI_MASTER_KEY || 'change_me' }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || 'minioadmin' }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || 'minioadmin' }}
+  AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION || 'us-east-1' }}
+  AWS_BUCKET: ${{ secrets.AWS_BUCKET || 'crm-local' }}
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  docker-build:
+    uses: ./.github/workflows/docker-image.yml
+
+  deploy-remote:
+    runs-on: ubuntu-latest
+    needs: [ci, docker-build]
+    steps:
+      - name: Copy remote Compose file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.REMOTE_HOST || secrets.STAGING_HOST }}
+          username: ${{ secrets.REMOTE_USER || secrets.STAGING_USER }}
+          key: ${{ secrets.REMOTE_SSH_KEY || secrets.STAGING_SSH_KEY }}
+          source: docker-compose.remote.yml
+          target: ${{ env.REMOTE_DEPLOY_PATH }}
+          strip_components: 0
+
+      - name: Deploy Docker stack behind host nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.REMOTE_HOST || secrets.STAGING_HOST }}
+          username: ${{ secrets.REMOTE_USER || secrets.STAGING_USER }}
+          key: ${{ secrets.REMOTE_SSH_KEY || secrets.STAGING_SSH_KEY }}
+          envs: REMOTE_DEPLOY_PATH,REMOTE_NGINX_SITE_PATH,REMOTE_NGINX_SITES_ENABLED_PATH,REMOTE_NGINX_RELOAD_COMMAND,APP_IMAGE,PGSQL_IMAGE,ML_IMAGE,APP_DOMAIN,APP_KEY,APP_NAME,APP_FPM_PORT,REVERB_PORT,REVERB_APP_ID,REVERB_APP_KEY,REVERB_APP_SECRET,AGENT_API_KEY,OPENAI_API_KEY,ANTHROPIC_API_KEY,GROQ_API_KEY,MINIO_ROOT_USER,MINIO_ROOT_PASSWORD,MEILI_MASTER_KEY,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_REGION,AWS_BUCKET
+          script_stop: true
+          script: |
+            set -euo pipefail
+
+            DEPLOY_PATH="${REMOTE_DEPLOY_PATH%/}"
+            export REMOTE_DEPLOY_PATH="$DEPLOY_PATH"
+            export APP_IMAGE PGSQL_IMAGE ML_IMAGE APP_DOMAIN APP_KEY APP_NAME APP_FPM_PORT REVERB_PORT
+            export REVERB_APP_ID REVERB_APP_KEY REVERB_APP_SECRET AGENT_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY GROQ_API_KEY
+            export MINIO_ROOT_USER MINIO_ROOT_PASSWORD MEILI_MASTER_KEY AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_DEFAULT_REGION AWS_BUCKET
+
+            : "${APP_DOMAIN:?APP_DOMAIN secret is required}"
+            : "${APP_KEY:?APP_KEY secret is required}"
+
+            rm -rf "${DEPLOY_PATH}/public"
+            mkdir -p \
+              "${DEPLOY_PATH}/public" \
+              "${DEPLOY_PATH}/storage/app" \
+              "${DEPLOY_PATH}/storage/framework/cache/data" \
+              "${DEPLOY_PATH}/storage/framework/sessions" \
+              "${DEPLOY_PATH}/storage/framework/views" \
+              "${DEPLOY_PATH}/storage/logs" \
+              "${DEPLOY_PATH}/bootstrap-cache"
+
+            sudo chown -R 82:82 "${DEPLOY_PATH}/storage" "${DEPLOY_PATH}/bootstrap-cache"
+            sudo chmod -R ug+rwX "${DEPLOY_PATH}/storage" "${DEPLOY_PATH}/bootstrap-cache"
+            sudo chmod -R a+rX "${DEPLOY_PATH}/public"
+
+            NGINX_SITE_PATH="${REMOTE_NGINX_SITE_PATH:-/etc/nginx/sites-available/enterprise-crm}"
+            NGINX_SITES_ENABLED_PATH="${REMOTE_NGINX_SITES_ENABLED_PATH:-/etc/nginx/sites-enabled}"
+            NGINX_RELOAD_COMMAND="${REMOTE_NGINX_RELOAD_COMMAND:-sudo systemctl reload nginx}"
+            APP_FPM_PORT="${APP_FPM_PORT:-9000}"
+            REVERB_PORT="${REVERB_PORT:-8080}"
+
+            sudo tee "${NGINX_SITE_PATH}" >/dev/null <<EOF
+            server {
+                listen 80;
+                server_name ${APP_DOMAIN};
+                root ${DEPLOY_PATH}/public;
+                index index.php;
+
+                client_max_body_size 50M;
+
+                location / {
+                    try_files \$uri \$uri/ /index.php?\$query_string;
+                }
+
+                location = /favicon.ico { access_log off; log_not_found off; }
+                location = /robots.txt { access_log off; log_not_found off; }
+
+                location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+                    expires 1y;
+                    access_log off;
+                    add_header Cache-Control "public, immutable" always;
+                }
+
+                location ~ \.php$ {
+                    include fastcgi_params;
+                    fastcgi_pass 127.0.0.1:${APP_FPM_PORT};
+                    fastcgi_param SCRIPT_FILENAME ${DEPLOY_PATH}/public\$fastcgi_script_name;
+                    fastcgi_param DOCUMENT_ROOT ${DEPLOY_PATH}/public;
+                    fastcgi_hide_header X-Powered-By;
+                    fastcgi_read_timeout 300;
+                }
+
+                location /laravel-reverb {
+                    proxy_pass http://127.0.0.1:${REVERB_PORT}/laravel-reverb;
+                    proxy_http_version 1.1;
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection "upgrade";
+                    proxy_read_timeout 3600;
+                }
+            }
+            EOF
+
+            sudo ln -sf "${NGINX_SITE_PATH}" "${NGINX_SITES_ENABLED_PATH}/$(basename "${NGINX_SITE_PATH}")"
+            sudo nginx -t
+            eval "${NGINX_RELOAD_COMMAND}"
+
+            cd "${DEPLOY_PATH}"
+
+            docker compose -f docker-compose.remote.yml pull app pgsql ml-agents
+            docker compose -f docker-compose.remote.yml up -d
+            docker compose -f docker-compose.remote.yml exec -T app php artisan migrate --force
+            docker compose -f docker-compose.remote.yml exec -T app php artisan storage:link --force
+            docker compose -f docker-compose.remote.yml exec -T app php artisan config:cache
+            docker compose -f docker-compose.remote.yml exec -T app php artisan route:cache
+            docker compose -f docker-compose.remote.yml exec -T app php artisan view:cache
+            docker compose -f docker-compose.remote.yml cp app:/var/www/html/public/. "${DEPLOY_PATH}/public/"
+            sudo chmod -R a+rX "${DEPLOY_PATH}/public"
+            docker compose -f docker-compose.remote.yml restart queue-worker scheduler reverb
