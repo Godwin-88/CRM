@@ -71,6 +71,8 @@ const menuItems = computed(() => [
             { href: "/admin/quote-templates", label: "Quote Templates" },
             { href: "/admin/quotes", label: "Quotes" },
             { href: "/admin/scoring-rules", label: "Scoring Rules" },
+            { href: "/admin/custom-fields", label: "Custom Fields" },
+            { href: "/admin/duplicates", label: "Duplicate Merge" },
         ],
     },
     {
@@ -109,6 +111,7 @@ const menuItems = computed(() => [
         children: [
             { href: "/deals", label: "Deals" },
             { href: "/deals/board", label: "Kanban Board" },
+            { href: "/admin/deal-automations", label: "Automations" },
             { href: "/quotes", label: "Quotes" },
             { href: "/analytics/forecast", label: "Forecast" },
         ],

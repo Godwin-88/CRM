@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\CampaignWebController;
 use App\Http\Controllers\Admin\CannedResponseController;
 use App\Http\Controllers\Admin\ClvAnalyticsWebController;
 use App\Http\Controllers\Admin\ContractTemplateController;
+use App\Http\Controllers\Admin\CustomFieldWebController;
+use App\Http\Controllers\Admin\DuplicateContactsWebController;
 use App\Http\Controllers\Admin\GuidedJourneyWebController;
 use App\Http\Controllers\Admin\InteractionWebController;
 use App\Http\Controllers\Admin\LoyaltyProgramWebController;
@@ -276,6 +278,9 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::get('/admin/win-loss-reasons', [WinLossReasonWebController::class, 'index'])->name('admin.win-loss-reasons.index');
         Route::get('/admin/quote-templates', [QuoteTemplateWebController::class, 'index'])->name('admin.quote-templates.index');
         Route::get('/admin/scoring-rules', [ScoringRuleWebController::class, 'index'])->name('admin.scoring-rules.index');
+        Route::get('/admin/custom-fields', [CustomFieldWebController::class, 'index'])->name('admin.custom-fields.index');
+        Route::get('/admin/duplicates', [DuplicateContactsWebController::class, 'index'])->name('admin.duplicates.index');
+        Route::get('/admin/deal-automations', [DealAutomationWebController::class, 'index'])->name('admin.deal-automations.index');
 
         // Campaigns
         Route::get('/admin/campaigns', [CampaignWebController::class, 'index'])->name('admin.campaigns.index');

@@ -16,8 +16,7 @@ use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ComplianceAnalyticsController;
 use App\Http\Controllers\Api\V1\ContactCentreController;
 use App\Http\Controllers\Api\V1\ContactController;
-use App\Http\Controllers\Api\V1\CsatController;
-use App\Http\Controllers\Api\V1\DealController;
+use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\DripSequenceController;
 use App\Http\Controllers\Api\V1\IntegrationController;
 use App\Http\Controllers\Api\V1\InteractionController;
@@ -202,6 +201,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::delete('pipelines/{pipeline}', [App\Http\Controllers\Admin\PipelineController::class, 'destroy']);
         Route::patch('pipelines/{pipeline}/archive', [App\Http\Controllers\Admin\PipelineController::class, 'archive']);
 
+        // Deal Automations
+        Route::get('deal-automations', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'index']);
+        Route::post('deal-automations', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'store']);
+        Route::get('deal-automations/{dealAutomation}', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'show']);
+        Route::put('deal-automations/{dealAutomation}', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'update']);
+        Route::delete('deal-automations/{dealAutomation}', [App\Http\Controllers\Api\V1\DealAutomationController::class, 'destroy']);
+
         // Win/Loss Reasons
         Route::get('win-loss-reasons', [WinLossReasonController::class, 'index']);
         Route::post('win-loss-reasons', [WinLossReasonController::class, 'store']);
@@ -223,6 +229,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::post('campaigns/{campaign}/steps', [CampaignController::class, 'addStep']);
         Route::post('campaigns/{campaign}/pause', [CampaignController::class, 'pause']);
         Route::post('campaigns/{campaign}/resume', [CampaignController::class, 'resume']);
+
+        // Custom Fields
+        Route::get('custom-fields', [CustomFieldController::class, 'index']);
+        Route::post('custom-fields', [CustomFieldController::class, 'store']);
+        Route::get('custom-fields/{customField}', [CustomFieldController::class, 'show']);
+        Route::put('custom-fields/{customField}', [CustomFieldController::class, 'update']);
+        Route::delete('custom-fields/{customField}', [CustomFieldController::class, 'destroy']);
 
         // Campaign Templates
         Route::get('campaign-templates', [CampaignTemplateController::class, 'index']);

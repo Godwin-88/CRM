@@ -246,6 +246,15 @@ const duplicateContract = async () => {
             </CardContent>
           </Card>
 
+          <!-- Compliance Monitor -->
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg flex items-center gap-2">Compliance Monitor</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p class="text-sm text-gray-500">Monitoring contract compliance &mdash; no alerts.</p>
+            </CardContent>
+          </Card>
           <!-- Versions -->
           <Card>
             <CardHeader>
