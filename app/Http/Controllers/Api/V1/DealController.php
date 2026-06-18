@@ -33,6 +33,20 @@ class DealController extends Controller
         if ($request->filled('owner_id')) {
             $query->where('owner_id', $request->owner_id);
         }
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
+        if ($request->filled('contact_id')) {
+            $query->where('contact_id', $request->contact_id);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhereHas('account', fn ($qa) => $qa->where('accounts.name', 'like', "%{$search}%"))
+                    ->orWhereHas('contact', fn ($qc) => $qc->whereRaw("concat_ws(' ', first_name, last_name) like ?", ["%{$search}%"]));
+            });
+        }
         if ($request->filled('expected_close_from')) {
             $query->whereDate('expected_close_date', '>=', $request->expected_close_from);
         }
@@ -144,6 +158,8 @@ class DealController extends Controller
 
     public function moveStage(Request $request, Deal $deal): JsonResponse
     {
+        $this->authorize('update', $deal);
+
         $validated = $request->validate([
             'stage' => 'required|string',
         ]);

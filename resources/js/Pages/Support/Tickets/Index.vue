@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3'
+import { Head, router, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -18,9 +18,13 @@ const props = defineProps<{
 }>()
 
 const form = useForm({
+  search: props.filters.search || '',
   status: props.filters.status || '',
   priority: props.filters.priority || '',
   category_id: props.filters.category_id || '',
+  account_id: props.filters.account_id || '',
+  contact_id: props.filters.contact_id || '',
+  sla: props.filters.sla || '',
 })
 
 const statusColors: Record<string, "default" | "outline" | "success" | "destructive" | "secondary"> = {
@@ -39,7 +43,15 @@ const priorityColors: Record<string, "default" | "outline" | "success" | "destru
 }
 
 const submitFilter = () => {
-  form.get('/support/tickets', { preserveState: true })
+  router.get('/support/tickets', {
+    search: form.search || undefined,
+    status: form.status || undefined,
+    priority: form.priority || undefined,
+    category_id: form.category_id || undefined,
+    account_id: form.account_id || undefined,
+    contact_id: form.contact_id || undefined,
+    sla: form.sla || undefined,
+  }, { preserveState: true })
 }
 
 const clearFilters = () => {
@@ -57,6 +69,12 @@ const clearFilters = () => {
         <div>
           <h1 class="text-3xl font-bold text-gray-900">Support Tickets</h1>
           <p class="text-gray-500">Manage and track customer support tickets.</p>
+          <p v-if="props.filters.account_name || props.filters.contact_name || props.filters.sla" class="mt-2 text-sm text-blue-600 dark:text-blue-400">
+            Assistant prefill:
+            <span v-if="props.filters.account_name">Account: {{ props.filters.account_name }}</span>
+            <span v-if="props.filters.contact_name">Contact: {{ props.filters.contact_name }}</span>
+            <span v-if="props.filters.sla">SLA: {{ props.filters.sla }}</span>
+          </p>
         </div>
         <Button @click="$inertia.visit('/support/tickets/create')">
           Create Ticket
@@ -68,8 +86,10 @@ const clearFilters = () => {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select v-model="form.status" @change="submitFilter">
+        <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
+          <Input v-model="form.search" placeholder="Search tickets..." @change="submitFilter" />
+
+          <Select v-model="form.status" @change="submitFilter">
               <option value="">All Statuses</option>
               <option value="open">Open</option>
               <option value="in_progress">In Progress</option>
@@ -92,6 +112,15 @@ const clearFilters = () => {
                 {{ cat.name }}
               </option>
             </Select>
+
+            <Select v-model="form.sla" @change="submitFilter">
+              <option value="">All SLA States</option>
+              <option value="breached">Breached</option>
+            </Select>
+
+            <Input v-model="form.account_id" placeholder="Account ID" @change="submitFilter" />
+
+            <Input v-model="form.contact_id" placeholder="Contact ID" @change="submitFilter" />
 
             <div class="flex gap-2">
               <Button @click="clearFilters" variant="outline">Clear</Button>

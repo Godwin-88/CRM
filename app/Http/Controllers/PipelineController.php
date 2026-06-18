@@ -4,17 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\Deal;
 use App\Models\Pipeline;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PipelineController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $pipelines = Pipeline::with('stages')->get();
 
         return Inertia::render('Pipelines/Index', [
             'pipelines' => $pipelines,
+            'prefill' => [
+                'name' => $request->filled('assistant_prefill_name') ? $request->assistant_prefill_name : '',
+                'stages' => $request->filled('assistant_prefill_stages') ? array_map('trim', explode(',', $request->assistant_prefill_stages)) : [],
+            ],
         ]);
     }
 

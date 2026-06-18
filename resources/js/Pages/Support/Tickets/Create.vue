@@ -10,15 +10,17 @@ import { ref, watch } from 'vue'
 const props = defineProps<{
   categories: { id: string; name: string; default_priority?: string }[]
   agents: { id: string; name: string }[]
+  prefill?: Record<string, string>
 }>()
 
 const form = useForm({
-  subject: '',
-  description: '',
-  contact_id: '',
-  priority: 'medium',
-  category_id: '',
-  assigned_to: '',
+  subject: props.prefill?.subject || '',
+  description: props.prefill?.description || '',
+  contact_id: props.prefill?.contact_id || '',
+  account_id: props.prefill?.account_id || '',
+  priority: props.prefill?.priority || 'medium',
+  category_id: props.prefill?.category_id || '',
+  assigned_to: props.prefill?.assigned_to || '',
 })
 
 const suggestedArticles = ref<Array<{id: string; title: string; excerpt: string}>>([])
@@ -103,6 +105,11 @@ const submit = () => {
                   <option value="urgent">Urgent</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Account ID</label>
+              <Input v-model="form.account_id" type="text" placeholder="Account ULID" />
             </div>
 
             <div>

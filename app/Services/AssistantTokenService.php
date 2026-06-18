@@ -22,6 +22,8 @@ class AssistantTokenService
         self::ABILITY_ASSISTANT_TOOL_USE,
     ];
 
+    private const RATE_LIMIT_PER_MINUTE = 60;
+
     public function mintToken(User $user, array $requestedAbilities = []): AgentInternalToken
     {
         $rawToken = Str::random(64);
@@ -75,17 +77,44 @@ class AssistantTokenService
             return null;
         }
 
+        if (! $this->consumeRateLimit($token)) {
+            $this->deleteToken($token);
+
+            return null;
+        }
+
         $token->increment('used_count');
         $token->update(['last_used_at' => now()]);
 
         if ($token->used_count > 100) {
-            $token->delete();
-            Cache::forget("assistant_token:{$token->id}");
+            $this->deleteToken($token);
 
             return null;
         }
 
         return $token->user()->first();
+    }
+
+    private function consumeRateLimit(AgentInternalToken $token): bool
+    {
+        $key = "assistant_token_rate:{$token->id}";
+
+        try {
+            Cache::add($key, 0, now()->addMinute());
+            $count = Cache::increment($key);
+
+            return $count <= self::RATE_LIMIT_PER_MINUTE;
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
+        }
+    }
+
+    private function deleteToken(AgentInternalToken $token): void
+    {
+        Cache::forget("assistant_token:{$token->id}");
+        $token->delete();
     }
 
     private function tokenAllowsRoute(AgentInternalToken $token, string $routeAction): bool

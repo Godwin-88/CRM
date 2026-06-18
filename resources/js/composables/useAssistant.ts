@@ -13,7 +13,7 @@ export function useAssistant() {
   });
 
   async function sendMessage(message: string, extra: Record<string, any> = {}) {
-    if (!message && Object.keys(extra).length === 0) return;
+    if (!message && !extra.confirmed_actions?.length) return;
 
     store.startLoading();
     store.clearError();
@@ -36,11 +36,15 @@ export function useAssistant() {
         store.setSessionId(response.data.session_id);
       }
 
-      const assistantContent = response.data?.response || 'I processed your request.';
+      const assistantContent = response.data?.response !== undefined ? response.data.response : 'I processed your request.';
       const metadata: any = {};
 
       if (response.data?.intent) metadata.intent = response.data.intent;
+      if (response.data?.help_type) metadata.helpType = response.data.help_type;
       if (response.data?.confidence) metadata.confidence = response.data.confidence;
+      if (response.data?.feature_refs) metadata.featureRefs = response.data.feature_refs;
+      if (response.data?.low_confidence) metadata.lowConfidence = true;
+      if (response.data?.clarifying_options) metadata.clarifyingOptions = response.data.clarifying_options;
       if (response.data?.tool_calls && response.data.tool_calls.length > 0) {
         metadata.toolCalls = response.data.tool_calls;
         metadata.toolsToCall = response.data.tool_calls;
@@ -67,7 +71,9 @@ export function useAssistant() {
         metadata.executedActions = response.data.executed_actions;
       }
 
-      store.addAssistantMessage(assistantContent, metadata);
+      if (assistantContent) {
+        store.addAssistantMessage(assistantContent, metadata);
+      }
       return response.data;
     } catch (e: any) {
       const message = e?.response?.data?.message || e?.message || 'Something went wrong. Please try again.';
@@ -138,7 +144,11 @@ export function useAssistant() {
               if (data.done) {
                 const metadata: any = {};
                 if (data.intent) metadata.intent = data.intent;
+                if (data.help_type) metadata.helpType = data.help_type;
                 if (data.confidence) metadata.confidence = data.confidence;
+                if (data.feature_refs) metadata.featureRefs = data.feature_refs;
+                if (data.low_confidence) metadata.lowConfidence = true;
+                if (data.clarifying_options) metadata.clarifyingOptions = data.clarifying_options;
                 if (data.tool_calls) {
                   metadata.toolCalls = data.tool_calls;
                   metadata.toolsToCall = data.tool_calls;

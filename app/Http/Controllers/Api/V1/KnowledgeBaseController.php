@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\KnowledgeBaseArticle;
+use App\Services\AssistantIntentService;
 use App\Services\KnowledgeBaseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -14,6 +16,7 @@ class KnowledgeBaseController extends Controller
 {
     public function __construct(
         protected KnowledgeBaseService $knowledgeBaseService,
+        protected AssistantIntentService $assistantIntentService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -192,39 +195,34 @@ class KnowledgeBaseController extends Controller
 
     public function retrieveForAssistant(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'query' => 'required|string|max:500',
-            'category_id' => 'nullable|string',
+            'feature_refs' => 'sometimes|array',
+            'feature_refs.*' => 'string',
             'per_page' => 'nullable|integer|min:1|max:10',
         ]);
 
-        $perPage = (int) ($request->input('per_page', 5));
+        $perPage = (int) ($validated['per_page'] ?? 5);
+        $context = [
+            'route' => $request->input('route'),
+            'path' => $request->input('path'),
+            'message' => $validated['query'],
+        ];
+        $analysis = $this->assistantIntentService->analyze($validated['query'], $context, $request->user());
+        $articles = $analysis['articles'];
 
-        $query = KnowledgeBaseArticle::published()
-            ->with(['category', 'author'])
-            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
-            ->where(function ($q) use ($request) {
-                $q->where('title', 'like', '%'.$request->query.'%')
-                  ->orWhere('body', 'like', '%'.$request->query.'%')
-                  ->orWhereJsonContains('feature_refs', $request->query);
-            })
-            ->orderByDesc('published_at')
-            ->limit($perPage);
-
-        $articles = $query->get()->map(function ($article) {
-            return [
-                'id' => $article->id,
-                'title' => $article->title,
-                'slug' => $article->slug,
-                'snippet' => \Illuminate\Support\Str::limit(strip_tags($article->body), 240),
-                'category' => $article->category?->name,
-                'url' => '/docs/'.$article->slug,
-                'published_at' => $article->published_at,
-            ];
-        });
+        if (! empty($validated['feature_refs'])) {
+            $articles = $this->assistantIntentService->retrieveDocumentsForAssistant(
+                $validated['query'],
+                $validated['feature_refs'],
+                $perPage,
+                $request->user()
+            );
+        }
 
         return response()->json([
-            'query' => $request->query,
+            'query' => $validated['query'],
+            'intent_analysis' => Arr::only($analysis, ['help_type', 'intent', 'resolved_intent', 'confidence', 'feature_refs', 'low_confidence']),
             'results' => $articles,
         ]);
     }

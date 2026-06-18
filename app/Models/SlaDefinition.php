@@ -15,6 +15,7 @@ class SlaDefinition extends Model
     protected $fillable = [
         'name',
         'description',
+        'priority',
         'support_category',
         'loyalty_tier_id',
         'account_type',

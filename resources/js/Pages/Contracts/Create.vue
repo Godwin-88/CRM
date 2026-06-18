@@ -15,12 +15,14 @@ const props = defineProps<{
   contractTypes: string[];
   preselectedAccountId?: string | null;
   preselectedContactId?: string | null;
+  assistantStep?: string | null;
+  assistantType?: string | null;
 }>();
 
 const form = useForm({
-  title: '',
-  type: '',
-  template_id: '',
+  title: props.assistantStep === 'variables' ? 'Variable fill' : '',
+  type: props.assistantType || '',
+  template_id: props.assistantStep === 'template' ? '' : '',
   account_id: props.preselectedAccountId || '',
   contact_id: props.preselectedContactId || '',
   value: '',
@@ -30,12 +32,16 @@ const form = useForm({
 });
 
 const submit = () => {
-  form.post('/contracts', {
-    data: {
-      template_id: form.template_id === 'manual' ? null : form.template_id,
-      account_id: form.account_id === 'none' ? null : form.account_id,
-      contact_id: form.contact_id === 'none' ? null : form.contact_id,
-    },
+  const templateId = form.template_id;
+  const accountId = form.account_id;
+  const contactId = form.contact_id;
+
+  form.transform((data) => ({
+    ...data,
+    template_id: templateId === 'manual' ? null : templateId,
+    account_id: accountId === 'none' ? null : accountId,
+    contact_id: contactId === 'none' ? null : contactId,
+  })).post('/contracts', {
     onSuccess: () => {
       form.reset();
     },

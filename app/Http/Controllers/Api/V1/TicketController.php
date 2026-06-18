@@ -53,6 +53,23 @@ class TicketController extends Controller
             $query->where('assigned_to', $request->assigned_to);
         }
 
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
+
+        if ($request->filled('contact_id')) {
+            $query->where('contact_id', $request->contact_id);
+        }
+
+        if ($request->filled('sla') && $request->sla === 'breached') {
+            $query->whereHas('slaInstance', function ($q) {
+                $q->where('first_response_breached', true)
+                    ->orWhere('resolution_breached', true)
+                    ->orWhereNotNull('first_response_deadline')
+                    ->orWhereNotNull('resolution_deadline');
+            });
+        }
+
         $sortField = $request->get('sort', 'created_at');
         $sortDir = $request->get('dir', 'desc');
         $query->orderBy($sortField, $sortDir);
@@ -62,6 +79,8 @@ class TicketController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Ticket::class);
+
         $validated = $request->validate([
             'subject' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -84,6 +103,8 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket): JsonResponse
     {
+        $this->authorize('view', $ticket);
+
         $ticket->load([
             'contact',
             'account',
@@ -102,6 +123,8 @@ class TicketController extends Controller
 
     public function updateStatus(Request $request, Ticket $ticket): JsonResponse
     {
+        $this->authorize('update', $ticket);
+
         $validated = $request->validate([
             'status' => 'required|in:open,in_progress,waiting_on_customer,resolved,closed',
         ]);

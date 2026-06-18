@@ -35,6 +35,7 @@ class SlaController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'priority' => 'nullable|string|max:50',
             'support_category' => 'nullable|string|max:100',
             'loyalty_tier_id' => 'nullable|exists:loyalty_tiers,id',
             'account_type' => 'nullable|string|max:100',
@@ -67,6 +68,7 @@ class SlaController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
+            'priority' => 'nullable|string|max:50',
             'support_category' => 'nullable|string|max:100',
             'loyalty_tier_id' => 'nullable|exists:loyalty_tiers,id',
             'account_type' => 'nullable|string|max:100',

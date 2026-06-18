@@ -52,6 +52,22 @@
       </header>
 
       <div class="space-y-4 overflow-y-auto px-4 py-4">
+        <div v-if="store.messages.length > 0" class="mb-2 rounded-lg border border-gray-200 bg-gray-50 p-2 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+          <div class="flex flex-wrap items-center gap-2">
+            <Badge v-if="lastAssistantMessage?.metadata?.helpType" variant="secondary" class="text-[10px]">
+              {{ helpTypeLabel(lastAssistantMessage.metadata.helpType) }}
+            </Badge>
+            <span v-if="lastAssistantMessage?.metadata?.confidence !== undefined">
+              Confidence: {{ Math.round(lastAssistantMessage.metadata.confidence * 100) }}%
+            </span>
+            <span v-if="lastAssistantMessage?.metadata?.lowConfidence" class="text-amber-600 dark:text-amber-400">
+              Low documentation confidence
+            </span>
+          </div>
+          <p v-if="lastAssistantMessage?.metadata?.featureRefs?.length" class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+            Mapped features: {{ lastAssistantMessage.metadata.featureRefs.join(', ') }}
+          </p>
+        </div>
         <div v-if="isEmpty" class="flex h-full min-h-[280px] flex-col items-center justify-center text-center text-sm text-gray-600 dark:text-gray-400">
           <p>Hello! I can help you navigate, explain, or execute CRM tasks.</p>
           <p class="mt-2 max-w-xs text-xs text-gray-500">
@@ -79,7 +95,32 @@
             />
 
             <div v-if="message.metadata?.navigation" class="mt-2">
+              <div v-if="message.metadata.navigation.allowed === false && message.metadata.navigation.disambiguation?.length" class="space-y-2">
+                <p class="text-xs font-medium text-gray-700 dark:text-gray-200">
+                  {{ message.metadata.navigation.message || 'Choose a record to open' }}
+                </p>
+                <div class="space-y-1">
+                  <button
+                    v-for="option in message.metadata.navigation.disambiguation"
+                    :key="`${option.type || 'record'}-${option.id || option.label}`"
+                    type="button"
+                    class="block w-full rounded-md border border-gray-200 bg-white px-2 py-2 text-left text-xs text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                    @click="navigateTo({ route: option.route, label: option.label })"
+                  >
+                    <span class="font-medium">{{ option.label }}</span>
+                    <span v-if="option.description" class="block text-gray-500 dark:text-gray-400">
+                      {{ option.description }}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div v-else-if="message.metadata.navigation.allowed === false" class="rounded-md border border-amber-200 bg-amber-50 px-2 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                {{ message.metadata.navigation.message || 'This navigation is not available for your role.' }}
+              </div>
+
               <button
+                v-else
                 type="button"
                 @click="navigateTo(message.metadata.navigation)"
                 class="inline-flex items-center gap-1 text-xs font-medium underline underline-offset-2"
@@ -90,6 +131,10 @@
                 </svg>
                 {{ message.metadata.navigation.label || 'Open screen' }}
               </button>
+
+              <p v-if="message.metadata.navigation.summary" class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                {{ message.metadata.navigation.summary }}
+              </p>
             </div>
 
             <div v-if="message.metadata?.fallbackArticles?.length" class="mt-3 space-y-2 rounded-lg border border-gray-200 bg-white p-2 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
@@ -186,19 +231,13 @@ import QuickReplies from './QuickReplies.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import Textarea from '@/components/ui/textarea/Textarea.vue';
-import type { ChatMessage } from '@/stores/assistant';
+import type { AssistantNavigation, ChatMessage } from '@/stores/assistant';
 
 interface AssistantPageProps {
+  [key: string]: any;
   user?: {
     id: string | number;
   };
-}
-
-interface AssistantNavigation {
-  route?: string;
-  href?: string;
-  label?: string;
-  query?: Record<string, string>;
 }
 
 const page = usePage<AssistantPageProps>();
@@ -213,6 +252,10 @@ const currentScreenLabel = computed(() => {
 });
 
 const isEmpty = computed(() => store.messages.length === 0 && !store.isLoading);
+
+const lastAssistantMessage = computed(() => {
+  return store.messages.filter(m => m.role === 'assistant').at(-1) || null;
+});
 
 const pendingConfirmation = computed(() => {
   const last = store.messages.filter(m => m.role === 'assistant').at(-1);
@@ -276,6 +319,15 @@ function assistantStorageKey() {
   return `crm_assistant_session:user:${userId || 'anonymous'}`;
 }
 
+function helpTypeLabel(value: string) {
+  return {
+    navigate: 'Navigate',
+    explain: 'Explain',
+    execute: 'Execute',
+    clarify: 'Clarify',
+  }[value] || value;
+}
+
 function buildRouteContext() {
   return {
     context: {
@@ -295,6 +347,12 @@ function close() {
 }
 
 function navigateTo(nav: AssistantNavigation) {
+  if (nav.allowed === false) return;
+
+  if (nav.prefill && (nav.route || nav.href)) {
+    localStorage.setItem(`assistant_navigation_prefill:${nav.route || nav.href}`, JSON.stringify(nav.prefill));
+  }
+
   router.visit(resolveHref(nav.href || nav.route || '/', nav.query));
 }
 
@@ -377,7 +435,7 @@ watch(
 );
 
 function renderMessageContent(content: string) {
-  const pattern = /(\[[^\]]+]?\([^)]*\)|https?:\/\/[^\s]+|\/(?:accounts|contacts|deals|tickets|contracts|invoices|assets|vendors|purchase-orders|banking|employees|finance|analytics|admin|docs|legal|portal)(?:\/[^\s]+)?)/gi;
+  const pattern = /(\[[^\]]+]?\([^)]*\)|https?:\/\/[^\s]+|\/(?:support|accounts|contacts|deals|tickets|contracts|invoices|assets|vendors|purchase-orders|banking|employees|finance|analytics|admin|docs|legal|portal)(?:\/[^\s]+)?)/gi;
   let html = '';
   let lastIndex = 0;
   let match: RegExpExecArray | null;

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\AssistantLowConfidenceRoute;
+use App\Http\Controllers\Api\V1\AgentToolController;
 use App\Models\User;
+use App\Services\AssistantIntentService;
 use App\Services\AssistantTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -16,6 +18,7 @@ class AssistantChatController extends Controller
 {
     public function __construct(
         protected AssistantTokenService $tokenService,
+        protected AssistantIntentService $intentService,
     ) {}
 
     public function chat(Request $request): JsonResponse
@@ -32,13 +35,29 @@ class AssistantChatController extends Controller
         }
 
         $payload = $request->validate([
-            'message' => 'required|string|max:4000',
+            'message' => 'nullable|string|max:4000',
             'session_id' => 'nullable|string|max:255',
             'context' => 'sometimes|array',
             'confirmed_actions' => 'sometimes|array',
             'confirmed_actions.*.tool' => 'required|string',
             'confirmed_actions.*.arguments' => 'sometimes|array',
         ]);
+
+        if (blank($payload['message'] ?? null) && empty($payload['confirmed_actions'] ?? [])) {
+            return response()->json([
+                'response' => '',
+                'session_id' => $request->input('session_id') ?: Str::ulid(),
+                'intent' => null,
+                'help_type' => null,
+                'confidence' => null,
+                'feature_refs' => [],
+                'quick_replies' => [],
+                'clarifying_options' => [],
+                'navigation' => null,
+                'tool_calls' => [],
+                'requires_confirmation' => false,
+            ]);
+        }
 
         $mlServiceUrl = rtrim(config('services.ml_service.url', env('ML_SERVICE_URL', 'http://ml-agents:8000')), '/');
         $apiKey = config('services.ml_service.api_key', env('ML_SERVICE_API_KEY', 'change_me'));
@@ -49,6 +68,35 @@ class AssistantChatController extends Controller
 
         $toolResults = [];
         $confirmedActions = $payload['confirmed_actions'] ?? [];
+        $analysis = $this->intentService->analyze($payload['message'], $payload['context'] ?? [], $user);
+
+        if ($analysis['help_type'] === AssistantIntentService::HELP_CLARIFY && empty($confirmedActions)) {
+            return response()->json([
+                'response' => $analysis['response'],
+                'session_id' => $sessionId,
+                'intent' => $analysis['intent'],
+                'help_type' => $analysis['help_type'],
+                'confidence' => $analysis['confidence'],
+                'feature_refs' => $analysis['feature_refs'],
+                'quick_replies' => $analysis['quick_replies'],
+                'clarifying_options' => $analysis['clarifying_options'],
+                'navigation' => $analysis['navigation'],
+                'tool_calls' => [],
+                'requires_confirmation' => false,
+            ]);
+        }
+
+        if ($analysis['low_confidence']) {
+            $this->intentService->recordDocumentationGap(
+                $sessionId,
+                $payload['message'],
+                $analysis['resolved_intent'],
+                $analysis['confidence'],
+                $user
+            );
+        }
+
+        $availableTools = app(AgentToolController::class)->availableToolsForUser($user);
 
         foreach ($confirmedActions as $action) {
             $toolName = $action['tool'];
@@ -106,6 +154,11 @@ class AssistantChatController extends Controller
                 'context' => $payload['context'] ?? [],
                 'confirmed_actions' => $confirmedActions,
                 'tool_results' => $toolResults,
+                'system_prompt' => $this->intentService->systemPrompt(),
+                'feature_index' => $this->intentService->featureIndex(),
+                'intent_analysis' => $analysis,
+                'retrieved_documents' => $analysis['articles'],
+                'available_tools' => $availableTools['tools'],
             ];
 
             $response = Http::timeout(60)
@@ -123,32 +176,41 @@ class AssistantChatController extends Controller
                     'user_id' => $user->id,
                 ]);
 
-                return $this->fallbackResponse($user);
+                return $this->fallbackResponse($user, $analysis, $sessionId);
             }
 
             $data = $response->json();
             $crmResponse = $data['crm_response'] ?? $data;
 
             $applicablePermissions = $user->getAllPermissions()->pluck('name')->toArray();
-
-            return response()->json(array_merge([
+            $toolsToCall = $crmResponse['tools_to_call'] ?? [];
+            $assistantResponse = array_merge([
                 'response' => $crmResponse['response'] ?? $data['response'] ?? 'No response generated.',
                 'session_id' => $crmResponse['session_id'] ?? $sessionId,
-                'intent' => $crmResponse['intent'] ?? null,
-                'tool_calls' => $crmResponse['tools_to_call'] ?? [],
-                'requires_confirmation' => $crmResponse['tools_to_call'][0]['required_confirmation'] ?? false,
-                'confidence' => $crmResponse['confidence'] ?? null,
+                'intent' => $crmResponse['intent'] ?? $analysis['intent'],
+                'help_type' => $crmResponse['help_type'] ?? $analysis['help_type'],
+                'confidence' => $crmResponse['confidence'] ?? $analysis['confidence'],
+                'feature_refs' => $crmResponse['feature_refs'] ?? $analysis['feature_refs'],
+                'quick_replies' => $crmResponse['quick_replies'] ?? $analysis['quick_replies'],
+                'articles' => $crmResponse['articles'] ?? $analysis['articles'],
+                'low_confidence' => ($crmResponse['low_confidence'] ?? false) || $analysis['low_confidence'],
+                'decomposed_intents' => $crmResponse['decomposed_intents'] ?? $analysis['decomposed_intents'],
                 'applicable_permissions' => $applicablePermissions,
-                'navigation' => $crmResponse['navigation'] ?? null,
+                'available_tools' => $availableTools['tools'],
+                'navigation' => $analysis['navigation'] ?? ($crmResponse['navigation'] ?? null),
+                'tool_calls' => $toolsToCall,
+                'requires_confirmation' => $toolsToCall[0]['required_confirmation'] ?? false,
                 'tool_results' => $toolResults,
-            ], $toolResults ? ['executed_actions' => $toolResults] : []));
+            ], $toolResults ? ['executed_actions' => $toolResults] : []);
+
+            return response()->json($assistantResponse);
         } catch (\Throwable $e) {
             Log::error('Assistant chat proxy failed', [
                 'error' => $e->getMessage(),
                 'user_id' => $user->id,
             ]);
 
-            return $this->fallbackResponse($user);
+            return $this->fallbackResponse($user, $analysis, $sessionId);
         }
     }
 
@@ -156,8 +218,21 @@ class AssistantChatController extends Controller
     {
         $user = $request->user();
         $proactiveKey = "assistant:proactive:{$user->id}";
-        $items = redis()->get($proactiveKey);
-        redis()->del($proactiveKey);
+        $items = null;
+
+        try {
+            $items = redis()->get($proactiveKey);
+            redis()->del($proactiveKey);
+        } catch (\Throwable $e) {
+            Log::warning('Assistant proactive Redis read failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $user?->id,
+            ]);
+        }
+
+        if (! $items) {
+            $items = Cache::pull($proactiveKey);
+        }
 
         if (! $items) {
             return response()->json(['proactive_items' => []]);
@@ -223,7 +298,7 @@ class AssistantChatController extends Controller
         return response()->json(['success' => true]);
     }
 
-    private function fallbackResponse(User $user): JsonResponse
+    private function fallbackResponse(User $user, array $analysis = [], ?string $sessionId = null): JsonResponse
     {
         try {
             $request = request();
@@ -242,10 +317,20 @@ class AssistantChatController extends Controller
         }
 
         return response()->json([
-            'response' => 'I\'m currently experiencing technical difficulties. Here are some relevant documentation articles while I recover:',
+            'response' => $analysis['response'] ?? 'I\'m currently experiencing technical difficulties. Here are some relevant documentation articles while I recover:',
+            'session_id' => $sessionId ?? Str::ulid(),
             'fallback' => true,
             'error_code' => 'ml_service_unavailable',
-            'articles' => $articles,
+            'intent' => $analysis['intent'] ?? null,
+            'help_type' => $analysis['help_type'] ?? null,
+            'confidence' => $analysis['confidence'] ?? null,
+            'feature_refs' => $analysis['feature_refs'] ?? [],
+            'quick_replies' => $analysis['quick_replies'] ?? [],
+            'articles' => $articles ?: ($analysis['articles'] ?? []),
+            'low_confidence' => $analysis['low_confidence'] ?? false,
+            'navigation' => $analysis['navigation'] ?? null,
+            'tool_calls' => [],
+            'requires_confirmation' => false,
         ]);
     }
 }

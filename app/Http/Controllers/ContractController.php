@@ -126,6 +126,8 @@ class ContractController extends Controller
             'contractTypes' => $contractTypes,
             'preselectedAccountId' => $request->get('account_id'),
             'preselectedContactId' => $request->get('contact_id'),
+            'assistantStep' => $request->get('step'),
+            'assistantType' => $request->get('type'),
         ]);
     }
 

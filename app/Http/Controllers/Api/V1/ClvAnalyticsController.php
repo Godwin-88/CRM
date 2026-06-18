@@ -44,9 +44,10 @@ class ClvAnalyticsController extends Controller
 
     public function show(Request $request, string $contact_id): JsonResponse
     {
-        $this->authorize('view', \App\Models\Contact::class);
+        $contact = \App\Models\Contact::findOrFail($contact_id);
+        $this->authorize('view', $contact);
 
-        $clv = ClvCalculation::where('contact_id', $contact_id)
+        $clv = ClvCalculation::where('contact_id', $contact->id)
             ->with('contact')
             ->firstOrFail();
 

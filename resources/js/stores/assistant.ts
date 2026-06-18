@@ -6,20 +6,42 @@ export interface AssistantArticleLink {
   url: string;
 }
 
+export interface AssistantNavigationOption {
+  type?: string;
+  id?: string;
+  label: string;
+  route: string;
+  description?: string;
+  allowed?: boolean;
+}
+
+export interface AssistantNavigation {
+  allowed?: boolean;
+  route?: string;
+  href?: string;
+  label?: string;
+  query?: Record<string, string>;
+  prefill?: Record<string, any>;
+  summary?: string;
+  reason?: string;
+  message?: string;
+  who_can_access?: string[];
+  disambiguation?: AssistantNavigationOption[];
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
   metadata?: {
+    helpType?: 'navigate' | 'explain' | 'execute' | 'clarify';
     intent?: string;
     confidence?: number;
-    navigation?: {
-      route?: string;
-      href?: string;
-      label?: string;
-      query?: Record<string, string>;
-    };
+    featureRefs?: string[];
+    lowConfidence?: boolean;
+    clarifyingOptions?: string[];
+    navigation?: AssistantNavigation;
     toolCalls?: any[];
     requiresConfirmation?: boolean;
     confirmationMessage?: string;

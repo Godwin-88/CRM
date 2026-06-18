@@ -24,6 +24,7 @@ class LoyaltyProgramController extends Controller
         ]);
 
         $contact = \App\Models\Contact::findOrFail($request->input('contact_id'));
+        $this->authorize('view', $contact);
 
         $points = \App\Models\PointsLedger::where('contact_id', $contact->id)->sum('points');
 
