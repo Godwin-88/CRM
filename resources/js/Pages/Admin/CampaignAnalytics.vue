@@ -113,7 +113,7 @@ const lineChartOptions = { responsive: true };
         </div>
         <div class="flex flex-col gap-2">
           <Label>Campaign</Label>
-          <Select v-model="selectedCampaignId" @update:model-value="(v) => { selectedCampaignId = v; fetchMetrics(v); fetchTimeSeries(v); fetchPerContact(v); }">
+           <Select v-model="selectedCampaignId" @update:model-value="(v: any) => { if(v) { selectedCampaignId = v; fetchMetrics(v); fetchTimeSeries(v); fetchPerContact(v); } }">
             <SelectTrigger class="w-64">
               <SelectValue placeholder="Select campaign" />
             </SelectTrigger>

@@ -89,7 +89,7 @@ const submit = () => {
                     type="checkbox"
                     :value="clause.id"
                     @change="
-                      (e) => {
+                      (e: any) => {
                         if (e.target.checked) {
                           form.clauses.push({ id: clause.id, is_mandatory: true });
                         } else {

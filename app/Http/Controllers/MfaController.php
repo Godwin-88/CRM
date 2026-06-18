@@ -20,7 +20,7 @@ class MfaController extends Controller
         }
 
         if ($user->mfa_enabled) {
-            return redirect()->route('deals.index');
+            return redirect()->route('admin.analytics.dashboard');
         }
 
         $qrCode = null;
@@ -138,7 +138,7 @@ class MfaController extends Controller
 
         $this->logSecurityEvent('mfa_login_success', $user);
 
-        return redirect()->intended('/deals');
+        return redirect()->intended(route('admin.analytics.dashboard'));
     }
 
     public function verifyRecoveryCode(Request $request, $user)
@@ -164,7 +164,7 @@ class MfaController extends Controller
 
         $this->logSecurityEvent('mfa_recovery_used', $user);
 
-        return redirect()->intended('/deals');
+        return redirect()->intended(route('admin.analytics.dashboard'));
     }
 
     public function disable(Request $request)

@@ -9,7 +9,7 @@ import { Phone, MessageSquare, Mail, Ticket } from 'lucide-vue-next'
 
 const props = defineProps<{
   stats: { open_tickets: number; calls_today: number; chat_active: number; sms_sent_today: number; kiosk_integrations: number }
-  recentInteractions: { id: string; channel: { name: string }; contact?: { first_name: string; last_name: string }; direction: string; created_at: string }[]
+  recentInteractions: { id: string; channel: { name: string }; contact?: { first_name: string; last_name: string }; direction: string; created_at: string; subject?: string; type?: string }[]
   recentTickets: { id: string; subject: string; priority: string; status: string; contact?: { first_name: string; last_name: string } }[]
 }>()
 
@@ -67,7 +67,7 @@ const iconFor = (name: string) => {
                 <div class="flex items-center gap-3">
                   <component :is="iconFor(item.channel.name)" class="h-4 w-4 text-gray-500" />
                   <div>
-                    <p class="text-sm font-medium">{{ item.subject }}</p>
+                    <p class="text-sm font-medium">{{ item.subject ?? item.type }}</p>
                     <p class="text-xs text-gray-500">{{ item.contact ? `${item.contact.first_name} ${item.contact.last_name}` : 'Unknown' }}</p>
                   </div>
                 </div>

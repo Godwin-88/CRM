@@ -118,7 +118,7 @@ const selectedProgram = () => programs.value.find(p => p.id === selectedProgramI
                   <div class="space-y-2">
                     <Label>Status</Label>
                     <div class="flex items-center gap-2 pt-2">
-                      <Checkbox :checked="newProgram.is_active" @update:checked="v => newProgram.is_active = v" />
+                      <Checkbox :checked="newProgram.is_active" @update:checked="(v: boolean | 'indeterminate') => newProgram.is_active = v as boolean" />
                       <span class="text-sm font-medium">Active &amp; Enrolling</span>
                     </div>
                   </div>

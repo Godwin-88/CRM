@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\PipelineWebController;
 use App\Http\Controllers\Admin\QuoteTemplateWebController;
 use App\Http\Controllers\Admin\QuoteWebController;
 use App\Http\Controllers\Admin\ReactivationWebController;
+use App\Http\Controllers\Admin\DealAutomationWebController;
 use App\Http\Controllers\Admin\ScoringRuleWebController;
 use App\Http\Controllers\Admin\SlaBreachController;
 use App\Http\Controllers\Admin\SlaWebController;
@@ -103,9 +104,9 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             ->name('admin.integrations.index');
         Route::get('/admin/integrations/marketplace', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'marketplace'])
             ->name('admin.integrations.marketplace');
-        Route::post('/admin/integrations/{integration}/connect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'connect'])
+        Route::post('/admin/integrations/{provider}/connect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'connect'])
             ->name('admin.integrations.connect');
-        Route::post('/admin/integrations/{integration}/disconnect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'disconnect'])
+        Route::post('/admin/integrations/{identifier}/disconnect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'disconnect'])
             ->name('admin.integrations.disconnect');
         Route::get('/admin/integrations/webhooks', [\App\Http\Controllers\Admin\WebhookWebController::class, 'index'])
             ->name('admin.integrations.webhooks');
@@ -192,11 +193,12 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::get('/quotes', [DealController::class, 'quotes'])->name('quotes.index');
 
     // Analytics
-    Route::get('/analytics/forecast', [DealController::class, 'forecast'])->name('analytics.forecast');
+    Route::get('/analytics/forecast', [AnalyticsWebController::class, 'forecast'])->name('analytics.forecast');
+
+    Route::get('/admin/analytics/dashboard', [AnalyticsWebController::class, 'dashboard'])->name('admin.analytics.dashboard');
 
     // Admin Analytics (manager+ access)
     Route::middleware(['role:manager|admin'])->group(function () {
-        Route::get('/admin/analytics/dashboard', [AnalyticsWebController::class, 'dashboard'])->name('admin.analytics.dashboard');
         Route::get('/admin/analytics/customer', [AnalyticsWebController::class, 'customerAnalytics'])->name('admin.analytics.customer');
         Route::get('/admin/analytics/growth', [AnalyticsWebController::class, 'growthAnalytics'])->name('admin.analytics.growth');
         Route::get('/admin/analytics/finance', [AnalyticsWebController::class, 'financeAnalytics'])->name('admin.analytics.finance');
@@ -220,6 +222,9 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::post('/support/tickets/{ticket}/escalate', [TicketController::class, 'escalate'])->name('support.tickets.escalate');
     Route::post('/support/tickets/{ticket}/resolve', [TicketController::class, 'resolve'])->name('support.tickets.resolve');
     Route::post('/support/tickets/{ticket}/close', [TicketController::class, 'close'])->name('support.tickets.close');
+    Route::post('/support/tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('support.tickets.reply');
+    Route::post('/support/tickets/suggest-articles', [TicketController::class, 'suggestArticles'])->name('support.tickets.suggest-articles');
+    Route::get('/support/categories/{ticketCategory}/form', [TicketController::class, 'getCategoryForm'])->name('support.categories.form');
 
     Route::get('/support/knowledge-base', [KnowledgeBaseController::class, 'index'])->name('support.knowledge-base.index');
     Route::get('/support/knowledge-base/{article}', [KnowledgeBaseController::class, 'show'])->name('support.knowledge-base.show');
@@ -227,6 +232,29 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::post('/support/knowledge-base/{article}/link', [KnowledgeBaseController::class, 'linkToTicket'])->name('support.knowledge-base.link');
 
     Route::get('/support/performance', [PerformanceController::class, 'index'])->name('support.performance.index');
+    Route::get('/support/performance/export', [PerformanceController::class, 'export'])->name('support.performance.export');
+
+    // Self-Service Portal (Customer-facing)
+    Route::prefix('portal')->name('self-service.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\SelfService\PortalController::class, 'dashboard'])
+            ->name('dashboard');
+        Route::get('/tickets/create', [\App\Http\Controllers\SelfService\PortalController::class, 'createTicket'])
+            ->name('tickets.create');
+        Route::post('/tickets', [\App\Http\Controllers\SelfService\PortalController::class, 'storeTicket'])
+            ->name('tickets.store');
+        Route::get('/tickets/{ticket}', [\App\Http\Controllers\SelfService\PortalController::class, 'showTicket'])
+            ->name('tickets.show');
+        Route::post('/tickets/{ticket}/rate/{score}', [\App\Http\Controllers\SelfService\PortalController::class, 'rateTicket'])
+            ->name('tickets.rate');
+
+        // Knowledge Base in portal
+        Route::get('/knowledge-base', [\App\Http\Controllers\SelfService\PortalController::class, 'knowledgeBase'])
+            ->name('knowledge-base.index');
+        Route::get('/knowledge-base/{article}', [\App\Http\Controllers\SelfService\PortalController::class, 'showArticle'])
+            ->name('knowledge-base.show');
+        Route::get('/knowledge-base/search/suggest', [\App\Http\Controllers\SelfService\PortalController::class, 'searchArticles'])
+            ->name('knowledge-base.search');
+    });
 
     Route::middleware('role:manager|admin')->group(function () {
         Route::get('/admin/support/categories', [SupportCategoryController::class, 'index'])->name('admin.support.categories.index');
@@ -394,6 +422,37 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             Route::post('/kiosk', [OmniChannelWebController::class, 'storeKiosk'])->name('kiosk.store');
         });
 
+        // Email
+        Route::prefix('admin/email')->name('admin.email.')->group(function () {
+            Route::get('/compose', [OmniChannelWebController::class, 'emailCompose'])->name('compose');
+        });
+
+        // SMS
+        Route::prefix('admin/sms')->name('admin.sms.')->group(function () {
+            Route::get('/compose', [OmniChannelWebController::class, 'smsCompose'])->name('compose');
+        });
+
+        // Call
+        Route::prefix('admin/call')->name('admin.call.')->group(function () {
+            Route::get('/log', [OmniChannelWebController::class, 'callLog'])->name('log');
+        });
+
+        // Chat
+        Route::prefix('admin/chat')->name('admin.chat.')->group(function () {
+            Route::get('/inbox', [OmniChannelWebController::class, 'chatInbox'])->name('inbox');
+        });
+
+        // IVR
+        Route::prefix('admin/ivr')->name('admin.ivr.')->group(function () {
+            Route::get('/transcriptions', [OmniChannelWebController::class, 'ivrTranscriptions'])->name('transcriptions');
+        });
+
+        // Field Channel
+        Route::get('/admin/field-channel', [OmniChannelWebController::class, 'fieldChannel'])->name('admin.field-channel');
+
+        // Queue Stats
+        Route::get('/admin/queue-stats', [OmniChannelWebController::class, 'dashboard'])->name('admin.queue-stats');
+
         // Assets
         Route::middleware(['permission:assets.manage'])->group(function () {
             Route::get('/assets/create', [AssetController::class, 'create'])->name('assets.create');
@@ -471,6 +530,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             Route::get('/banking/{bankingRelationship}/edit', [BankingRelationshipController::class, 'edit'])->name('banking.edit');
             Route::put('/banking/{bankingRelationship}', [BankingRelationshipController::class, 'update'])->name('banking.update');
             Route::delete('/banking/{bankingRelationship}', [BankingRelationshipController::class, 'destroy'])->name('banking.destroy');
+            Route::post('/banking/{bankingRelationship}/notes', [BankingRelationshipController::class, 'addNote'])->name('banking.notes.store');
         });
 
         Route::middleware(['permission:banking.view'])->group(function () {

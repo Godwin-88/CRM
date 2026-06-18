@@ -112,7 +112,7 @@ const getIcon = (type: string) => {
       </div>
 
       <div v-if="notifications.meta.current_page < notifications.meta.last_page" class="mt-6 text-center">
-        <Button @click="$inertia.visit(notifications.links.next)" variant="outline">
+        <Button @click="notifications.links.next && $inertia.visit(notifications.links.next)" variant="outline">
           Load more
         </Button>
       </div>

@@ -51,7 +51,12 @@ const filters = ref({
 });
 
 watch(filters, (newFilters) => {
-  router.get('/legal', newFilters, { preserveState: true, replace: true });
+  router.get('/legal', {
+    ...newFilters,
+    status: newFilters.status === 'all' ? '' : newFilters.status,
+    type: newFilters.type === 'all' ? '' : newFilters.type,
+    assigned_to: newFilters.assigned_to === 'all' ? '' : newFilters.assigned_to,
+  }, { preserveState: true, replace: true });
 }, { deep: true });
 
 const getTypeBadge = (type: string) => {
@@ -98,30 +103,30 @@ const getStatusBadge = (status: string) => {
             <SelectTrigger class="w-[180px]">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
-            <SelectContent>
-<SelectItem value="">All Statuses</SelectItem>
+<SelectContent>
+               <SelectItem value="all">All Statuses</SelectItem>
                <SelectItem v-for="status in statuses" :key="status" :value="status">
-                {{ status }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <Select v-model="filters.type">
-            <SelectTrigger class="w-[180px]">
-              <SelectValue placeholder="All types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value=" ">All Types</SelectItem>
-              <SelectItem v-for="type in types" :key="type" :value="type">
-                {{ type }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <Select v-model="filters.assigned_to">
-            <SelectTrigger class="w-[180px]">
-              <SelectValue placeholder="All assignees" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value=" ">All Assignees</SelectItem>
+                 {{ status }}
+               </SelectItem>
+             </SelectContent>
+           </Select>
+           <Select v-model="filters.type">
+             <SelectTrigger class="w-[180px]">
+               <SelectValue placeholder="All types" />
+             </SelectTrigger>
+             <SelectContent>
+               <SelectItem value="all">All Types</SelectItem>
+               <SelectItem v-for="type in types" :key="type" :value="type">
+                 {{ type }}
+               </SelectItem>
+             </SelectContent>
+           </Select>
+           <Select v-model="filters.assigned_to">
+             <SelectTrigger class="w-[180px]">
+               <SelectValue placeholder="All assignees" />
+             </SelectTrigger>
+             <SelectContent>
+               <SelectItem value="all">All Assignees</SelectItem>
               <SelectItem v-for="user in users" :key="user.id" :value="user.id">
                 {{ user.name }}
               </SelectItem>

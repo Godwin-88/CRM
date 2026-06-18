@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import { Tip } from 'lucide-vue-next';
+import { AlertCircle } from 'lucide-vue-next';
 
 interface Deal {
   id: string;
@@ -48,6 +48,7 @@ const deal = ref(props.deal);
 const pipelines = ref(props.pipelines);
 
 const isCloseModalOpen = ref(false);
+const currentUserId = (window as any).userId;
 const closeLoading = ref(false);
 const closeType = ref<'won' | 'lost'>('won');
 const closeReasonId = ref('');
@@ -67,6 +68,7 @@ const demoSuccess = ref<string | null>(null);
 
 const quoteForm = ref({ template_id: '', product_id: '', quantity: 1, discount_pct: 0 });
 const createQuoteLoading = ref(false);
+const quoteSuccess = ref<string | null>(null);
 const updateStatusDraft = ref<Record<string, string>>({});
 
 const activitySummary = computed(() => {
@@ -87,7 +89,7 @@ const isClosed = computed(() => {
 
 const canWrite = computed(() => {
   if (!props.deal.owner) return false;
-  return props.deal.owner.id === (window as any).userId;
+  return String(props.deal.owner?.id) === String(currentUserId);
 });
 
 const csrf = () => (document.querySelector('meta[name="csrf-token"]') as any)?.content;
@@ -398,7 +400,7 @@ const createQuote = async () => {
                       <div class="flex items-center gap-2">
                         <span class="text-xs text-gray-500">{{ new Date(comment.created_at).toLocaleString() }}</span>
                         <span v-if="comment.edited_at" class="text-xs text-gray-400">(edited)</span>
-                        <Button v-if="comment.user_id === (window as any).userId" variant="ghost" size="sm" @click="deleteComment(comment.id, comment.user_id)">
+                        <Button v-if="String(comment.user_id) === String(currentUserId)" variant="ghost" size="sm" @click="deleteComment(comment.id, comment.user_id)">
                           Delete
                         </Button>
                       </div>

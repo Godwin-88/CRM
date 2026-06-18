@@ -32,7 +32,11 @@ const filters = ref({
 });
 
 watch(filters, (newFilters) => {
-  router.get('/deals', newFilters, { preserveState: true, replace: true });
+  router.get('/deals', {
+    ...newFilters,
+    stage: newFilters.stage === 'all' ? '' : newFilters.stage,
+    pipeline_id: newFilters.pipeline_id === 'all' ? '' : newFilters.pipeline_id,
+  }, { preserveState: true, replace: true });
 }, { deep: true });
 </script>
 
@@ -63,7 +67,7 @@ watch(filters, (newFilters) => {
               <SelectValue placeholder="All stages" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value=" ">All Stages</SelectItem>
+              <SelectItem value="all">All Stages</SelectItem>
               <SelectItem value="qualification">Qualification</SelectItem>
               <SelectItem value="demo">Demo</SelectItem>
               <SelectItem value="proposal">Proposal</SelectItem>
@@ -77,7 +81,7 @@ watch(filters, (newFilters) => {
               <SelectValue placeholder="All pipelines" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value=" ">All Pipelines</SelectItem>
+              <SelectItem value="all">All Pipelines</SelectItem>
               <SelectItem v-for="pipeline in pipelines" :key="pipeline.id" :value="pipeline.id">
                 {{ pipeline.name }}
               </SelectItem>

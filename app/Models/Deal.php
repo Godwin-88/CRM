@@ -66,6 +66,11 @@ class Deal extends Model implements HasMedia
         return $this->belongsTo(Pipeline::class);
     }
 
+    public function pipelineStage(): BelongsTo
+    {
+        return $this->belongsTo(PipelineStage::class, 'stage', 'name');
+    }
+
     public function winLossReason(): BelongsTo
     {
         return $this->belongsTo(WinLossReason::class, 'win_loss_reason_id');

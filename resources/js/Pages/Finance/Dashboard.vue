@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,7 @@ const props = defineProps<{
     over_90: number;
   };
   topAccounts: any[];
-  vendorSpend: any[];
+  vendorSpend: Record<string, number>;
   topVendors: any[];
   filters: any;
   currencies: string[];
@@ -44,8 +44,7 @@ const props = defineProps<{
         </form>
       </div>
 
-      <!-- Metrics Row -->
-      <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardHeader><CardTitle class="text-sm">Total Invoiced</CardTitle></CardHeader>
           <CardContent><p class="text-2xl font-bold">${{ Number(metrics.total_invoiced).toLocaleString() }}</p></CardContent>
@@ -64,8 +63,22 @@ const props = defineProps<{
         </Card>
       </div>
 
-      <div class="grid grid-cols-2 gap-6 mb-6">
-        <!-- Aging Buckets -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardHeader><CardTitle class="text-sm">Overdue Invoices</CardTitle></CardHeader>
+          <CardContent><p class="text-2xl font-bold">{{ metrics.overdue_count }}</p></CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle class="text-sm">Overdue Value</CardTitle></CardHeader>
+          <CardContent><p class="text-2xl font-bold">${{ Number(metrics.overdue_value).toLocaleString() }}</p></CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle class="text-sm">PO Spend (Period)</CardTitle></CardHeader>
+          <CardContent><p class="text-2xl font-bold">${{ Number(metrics.po_spend).toLocaleString() }}</p></CardContent>
+        </Card>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card>
           <CardHeader><CardTitle>Accounts Receivable Aging</CardTitle></CardHeader>
           <CardContent>
@@ -78,7 +91,6 @@ const props = defineProps<{
           </CardContent>
         </Card>
 
-        <!-- Top Accounts -->
         <Card>
           <CardHeader><CardTitle>Top 10 Accounts by Outstanding</CardTitle></CardHeader>
           <CardContent>
@@ -88,6 +100,38 @@ const props = defineProps<{
                 <tr v-for="account in topAccounts" :key="account.id">
                   <td>{{ account.name }}</td>
                   <td class="text-right">${{ Number(account.outstanding_balance || 0).toLocaleString() }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader><CardTitle>Procurement Spend by Category</CardTitle></CardHeader>
+          <CardContent>
+            <table class="w-full text-sm">
+              <thead><tr><th class="text-left">Category</th><th class="text-right">Spend</th></tr></thead>
+              <tbody>
+                <tr v-for="(spend, category) in vendorSpend" :key="category">
+                  <td class="capitalize">{{ category }}</td>
+                  <td class="text-right">${{ Number(spend).toLocaleString() }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Top 5 Vendors</CardTitle></CardHeader>
+          <CardContent>
+            <table class="w-full text-sm">
+              <thead><tr><th class="text-left">Vendor</th><th class="text-right">Spend</th></tr></thead>
+              <tbody>
+                <tr v-for="vendor in topVendors" :key="vendor.vendor_id">
+                  <td>{{ vendor.vendor?.name }}</td>
+                  <td class="text-right">${{ Number(vendor.total_spend).toLocaleString() }}</td>
                 </tr>
               </tbody>
             </table>

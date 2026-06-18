@@ -16,7 +16,7 @@ const props = defineProps<{
   };
 }>();
 
-const summary = props.financialSummary || {};
+const summary = props.financialSummary ?? { total_invoiced: 0, total_paid: 0, outstanding_balance: 0, overdue_count: 0, avg_payment_delay: 0 };
 </script>
 
 <template>

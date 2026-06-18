@@ -98,7 +98,7 @@ const submit = () => {
                     :value="clause.id"
                     :checked="form.clauses.some((c: any) => c.id === clause.id)"
                     @change="
-                      (e) => {
+                      (e: any) => {
                         if (e.target.checked) {
                           form.clauses.push({ id: clause.id });
                         } else {

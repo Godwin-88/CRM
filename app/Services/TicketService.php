@@ -319,6 +319,10 @@ class TicketService
             throw new \InvalidArgumentException('Agent-created tickets are excluded from CSAT.');
         }
 
+        if ($ticket->contact?->support_opt_out) {
+            throw new \InvalidArgumentException('Contact has opted out of support communications.');
+        }
+
         return $ticket->rating()->create([
             'score' => $score,
             'comment' => $comment,

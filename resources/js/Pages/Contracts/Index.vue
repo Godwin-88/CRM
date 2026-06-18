@@ -48,7 +48,11 @@ const filters = ref({
 });
 
 watch(filters, (newFilters) => {
-  router.get('/contracts', newFilters, { preserveState: true, replace: true });
+  router.get('/contracts', {
+    ...newFilters,
+    status: newFilters.status === 'all' ? '' : newFilters.status,
+    type: newFilters.type === 'all' ? '' : newFilters.type,
+  }, { preserveState: true, replace: true });
 }, { deep: true });
 
 const getStatusVariant = (status: string) => {
@@ -87,19 +91,19 @@ const getStatusVariant = (status: string) => {
             <SelectTrigger class="w-[180px]">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
-            <SelectContent>
-<SelectItem value="">All Statuses</SelectItem>
+<SelectContent>
+               <SelectItem value="all">All Statuses</SelectItem>
                <SelectItem v-for="status in statuses" :key="status" :value="status">
-                {{ status }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <Select v-model="filters.type">
-            <SelectTrigger class="w-[180px]">
-              <SelectValue placeholder="All types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value=" ">All Types</SelectItem>
+                 {{ status }}
+               </SelectItem>
+             </SelectContent>
+           </Select>
+           <Select v-model="filters.type">
+             <SelectTrigger class="w-[180px]">
+               <SelectValue placeholder="All types" />
+             </SelectTrigger>
+             <SelectContent>
+               <SelectItem value="all">All Types</SelectItem>
               <SelectItem v-for="type in contractTypes" :key="type" :value="type">
                 {{ type }}
               </SelectItem>

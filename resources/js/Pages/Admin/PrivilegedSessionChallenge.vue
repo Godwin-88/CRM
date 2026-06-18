@@ -29,7 +29,7 @@ const form = useForm({
 
                     <form
                         @submit.prevent="
-                            () => form.post(route('admin.privileged.enter'))
+                            () => form.post($route('admin.privileged.enter'))
                         "
                         class="space-y-4"
                     >

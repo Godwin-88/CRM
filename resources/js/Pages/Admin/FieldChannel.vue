@@ -104,8 +104,7 @@ const resetFieldForm = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Select contact" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+<SelectContent>
                       <SelectItem v-for="c in snapshot.contacts" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }}</SelectItem>
                     </SelectContent>
                   </Select>
@@ -117,7 +116,7 @@ const resetFieldForm = () => {
                       <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem v-for="a in snapshot.accounts" :key="a.id" :value="a.id">{{ a.name }}</SelectItem>
                     </SelectContent>
                   </Select>

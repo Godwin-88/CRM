@@ -156,7 +156,7 @@ const submit = () => {
                 <SelectValue placeholder="Select owner" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=" ">Unassigned</SelectItem>
+                <SelectItem value="none">Unassigned</SelectItem>
                 <SelectItem v-for="user in users" :key="user.id" :value="user.id">
                   {{ user.name }}
                 </SelectItem>

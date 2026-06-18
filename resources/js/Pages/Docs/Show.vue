@@ -27,7 +27,7 @@ const rateArticle = (helpful: boolean) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+      'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content || '',
     },
     body: JSON.stringify({ helpful }),
   })

@@ -61,8 +61,8 @@ const testTypeLabels: Record<string, string> = {
   send_time: 'Send Time',
 };
 
-const statusColor = (status: string) => {
-  const colors: Record<string, string> = {
+const statusColor = (status: string): "default" | "outline" | "secondary" | "destructive" | "success" | null | undefined => {
+  const colors: Record<string, "default" | "outline" | "secondary" | "destructive" | "success"> = {
     pending: 'secondary',
     running: 'default',
     concluded: 'outline',

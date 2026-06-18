@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Support;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendCsatRequest;
 use App\Models\CannedResponse;
+use App\Models\KnowledgeBaseArticle;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Models\User;
@@ -66,7 +67,7 @@ class TicketController extends Controller
         $cannedResponses = CannedResponse::active()
             ->orderBy('usage_count', 'desc')
             ->limit(50)
-            ->get(['id', 'title', 'body']);
+            ->get(['id', 'title', 'body', 'category_tag']);
 
         return Inertia::render('Support/Tickets/Show', [
             'ticket' => $ticket,
@@ -85,6 +86,26 @@ class TicketController extends Controller
         ]);
     }
 
+    public function suggestArticles(Request $request)
+    {
+        $validated = $request->validate([
+            'subject' => 'required|string',
+        ]);
+
+        $query = KnowledgeBaseArticle::search($validated['subject'])
+            ->published()
+            ->take(5)
+            ->get();
+
+        return response()->json([
+            'articles' => $query->map(fn ($article) => [
+                'id' => $article->id,
+                'title' => $article->title,
+                'excerpt' => \Illuminate\Support\Str::limit(strip_tags($article->body), 150),
+            ]),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -92,7 +113,7 @@ class TicketController extends Controller
             'description' => 'nullable|string',
             'contact_id' => 'required|exists:contacts,id',
             'priority' => 'sometimes|in:low,medium,high,urgent',
-            'category_id' => 'nullable|exists:ticket_categories,id',
+            'category_id' => 'required|exists:ticket_categories,id',
             'assigned_to' => 'nullable|exists:users,id',
             'form_response' => 'sometimes|array',
         ]);
@@ -148,5 +169,39 @@ class TicketController extends Controller
         $this->ticketService->closeTicket($ticket);
 
         return back()->with('success', 'Ticket closed successfully.');
+    }
+
+    public function reply(Request $request, Ticket $ticket)
+    {
+        $validated = $request->validate([
+            'subject' => 'sometimes|string',
+            'body' => 'required|string',
+        ]);
+
+        $ticket->interactions()->create([
+            'contact_id' => $ticket->contact_id,
+            'account_id' => $ticket->account_id,
+            'type' => 'email',
+            'direction' => 'outbound',
+            'subject' => $validated['subject'] ?? "Re: {$ticket->subject}",
+            'body' => $validated['body'],
+        ]);
+
+        // Update SLA first response if this is the first outbound reply
+        $this->slaService->checkFirstResponseMet($ticket);
+
+        return back()->with('success', 'Reply sent successfully.');
+    }
+
+    public function getCategoryForm(TicketCategory $category)
+    {
+        $form = $category->form;
+        return response()->json([
+            'form' => $form ? [
+                'id' => $form->id,
+                'name' => $form->name,
+                'fields' => $form->fields ?? [],
+            ] : null,
+        ]);
     }
 }

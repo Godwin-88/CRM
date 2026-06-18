@@ -79,9 +79,9 @@ watch(previewTemplate, (v) => {
                 <label class="text-sm font-medium">Content (HTML)</label>
                 <Textarea v-model="newTemplate.content" rows="10" placeholder="Use {{deal_value}}, {{contact_name}}, etc." />
               </div>
-              <div class="text-xs text-gray-500">
-                Available placeholders: {{deal_value}}, {{contact_name}}, {{account_name}}, {{validity_date}}, {{agent_name}}, {{agent_signature}}
-              </div>
+                <div class="text-xs text-gray-500">
+                  Available placeholders: <span v-text="'{{deal_value}}, {{contact_name}}, {{account_name}}, {{validity_date}}, {{agent_name}}, {{agent_signature}}'"></span>
+                </div>
               <Button @click="createTemplate">Create Template</Button>
             </div>
           </DialogContent>

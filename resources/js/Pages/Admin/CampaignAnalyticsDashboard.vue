@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -118,7 +118,7 @@ const barOptions = { responsive: true, plugins: { legend: { display: false } } }
         <CardContent class="pt-6">
           <div class="grid grid-cols-4 gap-4">
             <div class="space-y-2"><Label>Campaigns</Label>
-              <Select multiple :model-value="selectedCampaignIds" @update:model-value="updateCampaigns">
+              <Select multiple :model-value="selectedCampaignIds" @update:model-value="(v: any) => updateCampaigns(v)">
                 <SelectTrigger class="w-full"><SelectValue placeholder="Select campaigns" /></SelectTrigger>
                 <SelectContent>
                   <SelectGroup>

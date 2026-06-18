@@ -72,12 +72,12 @@ const submit = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select template" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value=" ">None</SelectItem>
-                    <SelectItem v-for="template in templates" :key="template.id" :value="template.id">
-                      {{ template.name }}
-                    </SelectItem>
-                  </SelectContent>
+<SelectContent>
+                     <SelectItem value="none">None</SelectItem>
+                     <SelectItem v-for="template in templates" :key="template.id" :value="template.id">
+                       {{ template.name }}
+                     </SelectItem>
+                   </SelectContent>
                 </Select>
               </div>
             </div>

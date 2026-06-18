@@ -23,7 +23,7 @@ const form = useForm({
   category_id: props.filters.category_id || '',
 })
 
-const statusColors = {
+const statusColors: Record<string, "default" | "outline" | "success" | "destructive" | "secondary"> = {
   open: 'destructive',
   in_progress: 'default',
   waiting_on_customer: 'secondary',
@@ -31,10 +31,10 @@ const statusColors = {
   closed: 'outline',
 }
 
-const priorityColors = {
+const priorityColors: Record<string, "default" | "outline" | "success" | "destructive" | "secondary"> = {
   low: 'outline',
   medium: 'secondary',
-  high: 'warning',
+  high: 'default',
   urgent: 'destructive',
 }
 

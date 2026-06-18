@@ -64,9 +64,13 @@ class InvoiceController extends Controller
         $this->authorize('create', Invoice::class);
 
         $accounts = Account::select(['id', 'name'])->orderBy('name')->get();
+        $contacts = Contact::select(['id', 'first_name', 'last_name'])->orderBy('last_name')->get();
+        $deals = Deal::select(['id', 'name', 'contact_id'])->orderBy('name')->get();
 
         return Inertia::render('Invoices/Create', [
             'accounts' => $accounts,
+            'contacts' => $contacts,
+            'deals' => $deals,
             'nextInvoiceNumber' => Invoice::generateInvoiceNumber(),
         ]);
     }

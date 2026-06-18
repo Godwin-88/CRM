@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Link } from '@inertiajs/vue3';
 
 const props = defineProps<{
-  templates: any[];
+  templates: { data: any[] };
 }>();
 
 const openTemplate = (id: string) => {

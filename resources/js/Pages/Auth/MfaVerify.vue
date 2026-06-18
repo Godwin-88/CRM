@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from "@inertiajs/vue3";
+import { Head, useForm, router } from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ const form = useForm({
                 </CardHeader>
                 <CardContent>
                     <form
-                        @submit.prevent="() => form.post(route('mfa.verify'))"
+                        @submit.prevent="form.post($route('mfa.verify'))"
                         class="space-y-4"
                     >
                         <p class="text-sm text-gray-600">

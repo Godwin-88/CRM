@@ -16,7 +16,9 @@ use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ComplianceAnalyticsController;
 use App\Http\Controllers\Api\V1\ContactCentreController;
 use App\Http\Controllers\Api\V1\ContactController;
+use App\Http\Controllers\Api\V1\CsatController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
+use App\Http\Controllers\Api\V1\DealController;
 use App\Http\Controllers\Api\V1\DripSequenceController;
 use App\Http\Controllers\Api\V1\IntegrationController;
 use App\Http\Controllers\Api\V1\InteractionController;
@@ -105,11 +107,21 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Analytics
     Route::get('analytics/forecast', [AnalyticsController::class, 'forecast']);
+    Route::post('analytics/forecast/target', [AnalyticsApiController::class, 'updateRevenueTarget']);
     Route::get('analytics/win-loss', [AnalyticsController::class, 'winLossAnalysis']);
     Route::get('analytics/dashboard', [AnalyticsApiController::class, 'dashboard']);
+    Route::get('analytics/dashboard-widgets', [AnalyticsApiController::class, 'dashboardWidgets']);
+    Route::put('analytics/dashboard-widgets', [AnalyticsApiController::class, 'updateDashboardWidgets']);
     Route::get('analytics/growth', [AnalyticsApiController::class, 'growthMetrics']);
     Route::get('analytics/finance', [AnalyticsApiController::class, 'financeMetrics']);
     Route::get('analytics/deal-score/{deal}', [AnalyticsApiController::class, 'dealScore']);
+    Route::get('analytics/deal-scores', [AnalyticsApiController::class, 'dealScores']);
+    Route::post('analytics/deal-scores/recalculate', [AnalyticsApiController::class, 'recalculateDealScores']);
+    Route::post('analytics/deal-score/{deal}', [AnalyticsApiController::class, 'updateDealScore']);
+    Route::delete('analytics/deal-score/{deal}', [AnalyticsApiController::class, 'clearDealScore']);
+    Route::get('analytics/scoring-weights', [AnalyticsApiController::class, 'scoringWeights']);
+    Route::put('analytics/scoring-weights', [AnalyticsApiController::class, 'updateScoringWeights']);
+    Route::get('analytics/customer', [AnalyticsApiController::class, 'customerMetrics']);
     Route::get('analytics/campaign-performance', [CampaignAnalyticsController::class, 'performance']);
     Route::get('analytics/campaign-time-series/{campaign}', [CampaignAnalyticsController::class, 'timeSeries']);
     Route::get('analytics/campaign-per-contact/{campaign}', [CampaignAnalyticsController::class, 'perContact']);
@@ -124,11 +136,18 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::put('reports/{report}', [ReportBuilderController::class, 'update']);
     Route::delete('reports/{report}', [ReportBuilderController::class, 'destroy']);
     Route::post('reports/{report}/schedule', [ReportBuilderController::class, 'schedule']);
+    Route::post('reports/{report}/run', [ReportBuilderController::class, 'run']);
+    Route::get('reports/{report}/export/csv', [ReportBuilderController::class, 'exportCsv']);
+    Route::get('reports/{report}/export/pdf', [ReportBuilderController::class, 'exportPdf']);
+    Route::post('scheduled-reports/{scheduledReport}/deliver', [ReportBuilderController::class, 'deliver']);
 
     // Compliance
     Route::get('audit-trail', [ComplianceAnalyticsController::class, 'auditTrail']);
     Route::get('audit-stats', [ComplianceAnalyticsController::class, 'auditStats']);
     Route::get('audit-anomalies', [ComplianceAnalyticsController::class, 'anomalies']);
+    Route::post('audit-anomalies/{anomalyId}/acknowledge', [ComplianceAnalyticsController::class, 'acknowledgeAnomaly']);
+    Route::get('audit-retention', [ComplianceAnalyticsController::class, 'retentionSettings']);
+    Route::put('audit-retention', [ComplianceAnalyticsController::class, 'updateRetentionSettings']);
 
     // Contracts
     Route::get('contracts', [ContractController::class, 'indexApi']);

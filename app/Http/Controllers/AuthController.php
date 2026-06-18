@@ -63,7 +63,7 @@ class AuthController extends Controller
         }
 
         Auth::login($user);
-        return redirect()->intended('/deals');
+        return redirect()->intended(route('admin.analytics.dashboard'));
     }
 
     public function registerForm()

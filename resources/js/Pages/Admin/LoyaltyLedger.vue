@@ -83,8 +83,8 @@ const applyFilters = () => {
     const matchesSearch = !searchQuery.value ||
       entry.contact_name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       entry.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesProgram = !selectedProgram.value || entry.program_name === selectedProgram.value
-    const matchesType = !selectedType.value || entry.type === selectedType.value
+    const matchesProgram = selectedProgram.value === 'all' || !selectedProgram.value || entry.program_name === selectedProgram.value
+    const matchesType = selectedType.value === 'all' || !selectedType.value || entry.type === selectedType.value
     return matchesSearch && matchesProgram && matchesType
   })
 }
@@ -221,17 +221,17 @@ const typeIcon = (type: string) => {
             <div class="w-48">
               <Select v-model="selectedProgram" @update:model-value="applyFilters">
                 <SelectTrigger><SelectValue placeholder="All Programs" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Programs</SelectItem>
-                  <SelectItem v-for="prog in programs" :key="prog.id" :value="prog.name">{{ prog.name }}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div class="w-40">
-              <Select v-model="selectedType" @update:model-value="applyFilters">
-                <SelectTrigger><SelectValue placeholder="All Types" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+<SelectContent>
+                   <SelectItem value="all">All Programs</SelectItem>
+                   <SelectItem v-for="prog in programs" :key="prog.id" :value="prog.name">{{ prog.name }}</SelectItem>
+                 </SelectContent>
+               </Select>
+             </div>
+             <div class="w-40">
+               <Select v-model="selectedType" @update:model-value="applyFilters">
+                 <SelectTrigger><SelectValue placeholder="All Types" /></SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="credit">Credit</SelectItem>
                   <SelectItem value="debit">Debit</SelectItem>
                 </SelectContent>

@@ -12,6 +12,7 @@ use App\Models\Employee;
 use App\Models\Invoice;
 use App\Models\LegalMatter;
 use App\Models\PurchaseOrder;
+use App\Models\ReportDefinition;
 use App\Models\Segment;
 use App\Models\Vendor;
 use App\Models\Comment;
@@ -25,6 +26,7 @@ use App\Policies\IntegrationOAuthClientPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\LegalMatterPolicy;
 use App\Policies\PurchaseOrderPolicy;
+use App\Policies\ReportDefinitionPolicy;
 use App\Policies\SegmentPolicy;
 use App\Policies\TeamPolicy;
 use App\Policies\VendorPolicy;
@@ -65,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Gate::policy(ReportDefinition::class, ReportDefinitionPolicy::class);
         Gate::policy(Segment::class, SegmentPolicy::class);
         Gate::policy(Deal::class, DealPolicy::class);
         Gate::policy(Contract::class, ContractPolicy::class);

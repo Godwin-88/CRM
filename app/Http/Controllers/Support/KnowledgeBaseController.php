@@ -23,11 +23,8 @@ class KnowledgeBaseController extends Controller
             ->published();
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%'.$request->search.'%')
-                ->orWhere('body', 'like', '%'.$request->search.'%');
-        }
-
-        if ($request->filled('category_id')) {
+            $query = KnowledgeBaseArticle::search($request->search)->published();
+        } elseif ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 

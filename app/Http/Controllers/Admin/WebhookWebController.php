@@ -35,7 +35,7 @@ class WebhookWebController extends Controller
             'created_by' => auth()->id(),
         ]);
 
-        return response()->json(['data' => $webhook], 201);
+        return back()->with('status', 'Webhook created successfully.');
     }
 
     public function show(Webhook $webhook)

@@ -81,46 +81,46 @@ const submit = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select template" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value=" ">None</SelectItem>
-                    <SelectItem v-for="template in templates" :key="template.id" :value="template.id">
-                      {{ template.name }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+<SelectContent>
+                     <SelectItem value="none">None</SelectItem>
+                     <SelectItem v-for="template in templates" :key="template.id" :value="template.id">
+                       {{ template.name }}
+                     </SelectItem>
+                   </SelectContent>
+                 </Select>
+               </div>
+             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <Label for="account_id">Account</Label>
-                <Select v-model="form.account_id">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value=" ">None</SelectItem>
-                    <SelectItem v-for="account in accounts" :key="account.id" :value="account.id">
-                      {{ account.name }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label for="contact_id">Contact</Label>
-                <Select v-model="form.contact_id">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select contact" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value=" ">None</SelectItem>
-                    <SelectItem v-for="contact in contacts" :key="contact.id" :value="contact.id">
-                      {{ contact.first_name }} {{ contact.last_name }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+             <div class="grid grid-cols-2 gap-4">
+               <div>
+                 <Label for="account_id">Account</Label>
+                 <Select v-model="form.account_id">
+                   <SelectTrigger>
+                     <SelectValue placeholder="Select account" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="none">None</SelectItem>
+                     <SelectItem v-for="account in accounts" :key="account.id" :value="account.id">
+                       {{ account.name }}
+                     </SelectItem>
+                   </SelectContent>
+                 </Select>
+               </div>
+               <div>
+                 <Label for="contact_id">Contact</Label>
+                 <Select v-model="form.contact_id">
+                   <SelectTrigger>
+                     <SelectValue placeholder="Select contact" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="none">None</SelectItem>
+                     <SelectItem v-for="contact in contacts" :key="contact.id" :value="contact.id">
+                       {{ contact.first_name }} {{ contact.last_name }}
+                     </SelectItem>
+                   </SelectContent>
+                 </Select>
+               </div>
+             </div>
 
             <div class="grid grid-cols-3 gap-4">
               <div>
