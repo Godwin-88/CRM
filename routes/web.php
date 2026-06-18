@@ -205,6 +205,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::get('/admin/analytics/compliance', [AnalyticsWebController::class, 'complianceAnalytics'])->name('admin.analytics.compliance');
         Route::get('/admin/analytics/predictive-scoring', [AnalyticsWebController::class, 'predictiveScoring'])->name('admin.analytics.predictive-scoring');
         Route::get('/admin/analytics/report-builder', [AnalyticsWebController::class, 'reportBuilder'])->name('admin.analytics.report-builder');
+        Route::post('/admin/analytics/report-builder', [AnalyticsWebController::class, 'storeReport'])->name('admin.analytics.report-builder.store');
     });
 
     // Pipelines
@@ -280,6 +281,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::put('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy'])->name('contracts.destroy');
     Route::post('/contracts/{contract}/duplicate', [ContractController::class, 'duplicate'])->name('contracts.duplicate');
+    Route::post('/contracts/{contract}/send-signature', [ContractController::class, 'sendForSignature'])->name('contracts.send-signature');
     Route::post('/contracts/{contract}/regenerate', [ContractController::class, 'regenerate'])->name('contracts.regenerate');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'downloadSignedUrl'])->name('contracts.download');
     Route::post('/contracts/bulk-export', [ContractController::class, 'bulkExport'])->name('contracts.bulk-export');
@@ -295,6 +297,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::post('/legal/{legalMatter}/restore', [LegalMatterController::class, 'restore'])->name('legal.restore');
     Route::post('/legal/{legalMatter}/notes', [LegalMatterController::class, 'addNote'])->name('legal.notes.add');
     Route::post('/legal/{legalMatter}/attachments', [LegalMatterController::class, 'uploadAttachment'])->name('legal.attachments.upload');
+    Route::post('/legal/{legalMatter}/attachments/signed-url', [LegalMatterController::class, 'attachmentSignedUrl'])->name('legal.attachments.signed-url');
 
     // Admin Contract Templates (manager+)
     Route::middleware(['role:manager|admin'])->group(function () {

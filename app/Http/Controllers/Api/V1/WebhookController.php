@@ -62,6 +62,25 @@ class WebhookController extends Controller
         ], 201);
     }
 
+    public function deliveries(Request $request, Webhook $webhook)
+    {
+        $this->authorize('view', $webhook);
+
+        $deliveries = WebhookDelivery::where('webhook_id', $webhook->id)
+            ->orderByDesc('created_at')
+            ->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'data' => $deliveries->items(),
+            'meta' => [
+                'current_page' => $deliveries->currentPage(),
+                'last_page' => $deliveries->lastPage(),
+                'per_page' => $deliveries->perPage(),
+                'total' => $deliveries->total(),
+            ],
+        ]);
+    }
+
     public function show(Webhook $webhook)
     {
         $this->authorize('view', $webhook);

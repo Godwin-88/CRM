@@ -53,6 +53,12 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
             ],
+            'route_context' => [
+                'name' => $request->route()->getName(),
+                'path' => $request->path(),
+                'params' => $request->route()->parameters(),
+            ],
+            'assistantEnabled' => true,
         ];
     }
 }

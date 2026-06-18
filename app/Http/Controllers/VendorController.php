@@ -58,7 +58,7 @@ class VendorController extends Controller
         return Inertia::render('Vendors/Create', [
             'categories' => [Vendor::CATEGORY_GOODS, Vendor::CATEGORY_SERVICES, Vendor::CATEGORY_BOTH],
             'statuses' => [Vendor::STATUS_ACTIVE, Vendor::STATUS_INACTIVE],
-            'canViewFinancials' => auth()->user()->can('viewFinancials', Vendor::class),
+            'canViewFinancials' => auth()->user()->hasPermissionTo('vendors.financials'),
         ]);
     }
 

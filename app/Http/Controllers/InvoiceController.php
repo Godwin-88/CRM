@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Contact;
+use App\Models\Deal;
 use App\Models\Invoice;
+use App\Models\InvoiceLineItem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -65,7 +68,7 @@ class InvoiceController extends Controller
 
         $accounts = Account::select(['id', 'name'])->orderBy('name')->get();
         $contacts = Contact::select(['id', 'first_name', 'last_name'])->orderBy('last_name')->get();
-        $deals = Deal::select(['id', 'name', 'contact_id'])->orderBy('name')->get();
+        $deals = Deal::query()->selectRaw('id, title as name, contact_id')->orderBy('title')->get();
 
         return Inertia::render('Invoices/Create', [
             'accounts' => $accounts,

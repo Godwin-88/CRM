@@ -38,7 +38,12 @@ const summary = props.financialSummary ?? { total_invoiced: 0, total_paid: 0, ou
                   <CardTitle class="text-2xl">{{ account.name }}</CardTitle>
                   <p class="text-gray-500">{{ account.type }} · {{ account.industry }}</p>
                 </div>
-                <Badge :variant="account.status === 'active' ? 'default' : 'secondary'">{{ account.status }}</Badge>
+                <div class="flex flex-wrap gap-2">
+                  <Link :href="`/contracts/create?account_id=${account.id}`">
+                    <Button size="sm" variant="secondary">Generate Contract</Button>
+                  </Link>
+                  <Badge :variant="account.status === 'active' ? 'default' : 'secondary'">{{ account.status }}</Badge>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -150,6 +155,20 @@ const summary = props.financialSummary ?? { total_invoiced: 0, total_paid: 0, ou
                 </div>
               </div>
               <p v-else class="text-gray-400 text-sm">No deals</p>
+            </CardContent>
+          </Card>
+
+          <!-- Contracts -->
+          <Card>
+            <CardHeader><CardTitle class="text-lg">Contracts</CardTitle></CardHeader>
+            <CardContent>
+              <div v-if="account.contracts?.length" class="space-y-2">
+                <Link v-for="contract in account.contracts" :key="contract.id" :href="`/contracts/${contract.id}`" class="block rounded p-2 hover:bg-gray-50">
+                  <p class="text-sm font-medium">{{ contract.title }}</p>
+                  <p class="text-xs text-gray-500">{{ contract.status }} · {{ contract.end_date ? new Date(contract.end_date).toLocaleDateString() : 'No end date' }}</p>
+                </Link>
+              </div>
+              <p v-else class="text-gray-400 text-sm">No contracts yet. Generate one from this account.</p>
             </CardContent>
           </Card>
         </div>

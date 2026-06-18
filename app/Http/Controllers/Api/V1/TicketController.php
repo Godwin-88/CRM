@@ -100,6 +100,17 @@ class TicketController extends Controller
         return response()->json($ticket);
     }
 
+    public function updateStatus(Request $request, Ticket $ticket): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:open,in_progress,waiting_on_customer,resolved,closed',
+        ]);
+
+        $this->ticketService->changeStatus($ticket, $validated['status']);
+
+        return response()->json($ticket->fresh()->load(['contact', 'assignee', 'category']));
+    }
+
     public function update(Request $request, Ticket $ticket): JsonResponse
     {
         $validated = $request->validate([

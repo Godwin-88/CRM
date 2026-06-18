@@ -16,7 +16,6 @@ from fastapi import FastAPI, HTTPException, Depends, Header, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import text
 
 # Configuration
 from dotenv import load_dotenv
@@ -44,24 +43,18 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 # Database and Agent Initialization
 # ================================================================
 
-from utils.db import AsyncSessionLocal, engine
-from tools.db_queries import get_top_performing_posts, get_lead_context
-from agents import (
-    lead_scorer_agent,
-    content_brief_agent,
-    whatsapp_agent,
-    anomaly_diagnostics_agent,
-    contact_builder_agent,
-    opp_qualifier_agent,
-    proposal_drafter_agent,
-    nba_agent,
-    retention_agent,
-    case_manager_agent,
-    chat_agent
-)
+# NOTE: Legacy marketing agents and direct DB routes have been removed
+# per docs/agent.md §4.14 Feature 1. The ml-service must not query the
+# database directly. All data access routes through the Laravel agent tool API
+# (/api/v1/assistant/tool/*) only.
+#
+# Legacy imports (lead_scorer_agent, content_brief_agent, whatsapp_agent, etc.)
+# are intentionally not loaded here; re-enable only after they are refactored
+# to use the agent tool API instead of tools.db_queries direct SQL.
 
-# ... (rest of imports)
-
+# New CRM Assistant Orchestrator
+from agents.orchestrator import run_orchestrator
+from agents.self_service_orchestrator import run_self_service_orchestrator as run_self_service
 
 # ================================================================
 # Request/Response Models
@@ -169,6 +162,22 @@ class AnomalyDiagnosticsResponse(BaseModel):
     severity: str
     confidence: float
 
+class DealScoringRequest(BaseModel):
+    deal_id: str
+    stage: str
+    value: float
+    expected_close_date: str
+    days_in_stage: int
+    interactions_last_14_days: int
+    demo_trial_completed: bool
+    contact_engagement_score: Optional[float] = None
+
+class DealScoringResponse(BaseModel):
+    deal_id: str
+    score: float
+    label: str
+    signals: Dict[str, Any]
+
 # ================================================================
 # Authentication
 # ================================================================
@@ -228,35 +237,44 @@ class CreatePostRequest(BaseModel):
     content: str
     scheduled_at: str
 
+# ================================================================
+# Legacy endpoint stubs — direct-DB calls replaced with HTTP calls to
+# Laravel REST API per docs/agent.md §4.14 Feature 1.
+# N8N workflows depend on these endpoints; do not remove without
+# updating the consuming workflows.
+# ================================================================
+
+from agents.agents.laravel_client import call_rest
+
+
 @app.post("/agents/content/create-post", tags=["content"])
 async def create_post(request: CreatePostRequest, api_key: str = Depends(verify_api_key)):
-    # Persist post to DB
-    from utils.db import get_db
-    db = get_db()
-    # Assuming channel_id needs to be a UUID
-    query = """
-    INSERT INTO posts (channel_id, content_text, scheduled_at, status) 
-    VALUES (:channel_id::uuid, :content, :scheduled_at::timestamptz, 'draft') 
-    RETURNING id
-    """
-    result = await db.fetch_val(query, request.dict())
-    return {"status": "success", "post_id": result}
+    result = await call_rest(
+        "POST",
+        "/api/v1/social-posts",
+        json=request.dict(),
+        service_api_key=api_key,
+    )
+    return result
+
 
 @app.post("/agents/content/approve-post", tags=["content"])
 async def approve_post(request: Dict[str, Any], api_key: str = Depends(verify_api_key)):
-    # request should contain { post_id: uuid, status: 'approved' | 'rejected' }
     post_id = request.get("post_id")
     status = request.get("status")
-    
     if status not in ["approved", "rejected"]:
         raise HTTPException(status_code=400, detail="Invalid status")
-        
-    from utils.db import get_db
-    db = get_db()
-    
-    query = "UPDATE posts SET approval_status = :status WHERE id = :post_id"
-    await db.execute(query, {"status": status, "post_id": post_id})
-    return {"status": "success"}
+    result = await call_rest(
+        "POST",
+        f"/api/v1/social-posts/{post_id}/approve",
+        json={"status": status},
+        service_api_key=api_key,
+    )
+    return result
+# @app.post("/agents/score-lead", ...) — REMOVED
+# @app.post("/agents/generate-brief", ...) — REMOVED
+# @app.post("/agents/whatsapp-message", ...) — REMOVED
+
 
 @app.get("/health", tags=["health"])
 async def health_check() -> HealthResponse:
@@ -273,105 +291,203 @@ async def status_check(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]
 
 @app.post("/agents/crm/build-contact", response_model=AgentResponse, tags=["crm"])
 async def build_contact(request: CRMBuildContactRequest, api_key: str = Depends(verify_api_key)):
-    result = await contact_builder_agent.ainvoke({"context": request.dict()})
-    return AgentResponse(crm_response=result["crm_response"])
+    return AgentResponse(crm_response={
+        "response": "This legacy marketing endpoint is deprecated. The build-contact flow is being migrated to the CRM assistant orchestrated tool API. Contact your platform administrator.",
+        "deprecated": True,
+    })
 
 @app.post("/agents/crm/qualify-opportunity", response_model=AgentResponse, tags=["crm"])
 async def qualify_opp(request: CRMQualifyOppRequest, api_key: str = Depends(verify_api_key)):
-    result = await opp_qualifier_agent.ainvoke({"context": request.dict()})
-    return AgentResponse(crm_response=result["crm_response"])
+    return AgentResponse(crm_response={
+        "response": "This endpoint has been removed. Use the CRM assistant chat at /agents/crm/chat for opportunity qualification via the tool API.",
+        "deprecated": True,
+    })
 
 @app.post("/agents/crm/draft-proposal", response_model=AgentResponse, tags=["crm"])
 async def draft_proposal(request: CRMDraftProposalRequest, api_key: str = Depends(verify_api_key)):
-    result = await proposal_drafter_agent.ainvoke({"context": request.dict()})
-    return AgentResponse(crm_response=result["crm_response"])
+    return AgentResponse(crm_response={
+        "response": "This endpoint has been removed. Use the CRM assistant chat at /agents/crm/chat for proposal drafting via the tool API.",
+        "deprecated": True,
+    })
 
 @app.post("/agents/crm/next-best-action", response_model=AgentResponse, tags=["crm"])
 async def get_nba(request: CRMNBARequest, api_key: str = Depends(verify_api_key)):
-    result = await nba_agent.ainvoke({"context": request.dict()})
-    return AgentResponse(crm_response=result["crm_response"])
+    return AgentResponse(crm_response={
+        "response": "This endpoint has been removed. Use the CRM assistant chat at /agents/crm/chat for next-best-action via the tool API.",
+        "deprecated": True,
+    })
 
 @app.post("/agents/crm/retention-check", response_model=AgentResponse, tags=["crm"])
 async def retention_check(request: CRMRetentionRequest, api_key: str = Depends(verify_api_key)):
-    result = await retention_agent.ainvoke({"context": request.dict()})
-    return AgentResponse(crm_response=result["crm_response"])
+    return AgentResponse(crm_response={
+        "response": "This endpoint has been removed. Use the CRM assistant chat at /agents/crm/chat for retention analysis via the tool API.",
+        "deprecated": True,
+    })
 
 @app.post("/agents/score-lead", response_model=LeadScoringResponse, tags=["marketing"])
 async def score_lead(request: LeadScoringRequest, api_key: str = Depends(verify_api_key)):
-    async with AsyncSessionLocal() as db:
-        lead_data = await get_lead_context(db, request.lead_id)
-        context = {
-            "source_channel": lead_data.get("source_channel", request.source_channel),
-            "interaction_history": lead_data.get("interaction_history", request.interaction_history),
-            "content_interests": lead_data.get("content_interests", request.content_interests)
-        }
-        result = await lead_scorer_agent.ainvoke({
-            "lead_id": request.lead_id,
-            "email": lead_data.get("email", request.email),
-            "context": context
-        })
-        result["lead_id"] = request.lead_id
-        return LeadScoringResponse(**result)
+    return LeadScoringResponse(
+        lead_id=request.lead_id,
+        score=0,
+        stage="deprecated",
+        reasoning="This endpoint is deprecated. Use the CRM assistant chat for lead scoring via the tool API.",
+        recommended_action="manual_review",
+        confidence=0,
+    )
 
 @app.post("/agents/generate-brief", response_model=ContentBriefResponse, tags=["marketing"])
 async def generate_content_brief(request: ContentBriefRequest, api_key: str = Depends(verify_api_key)):
-    async with AsyncSessionLocal() as db:
-        top_posts = await get_top_performing_posts(db, limit=10)
-        context = {"top_posts": top_posts, "target_channels": request.target_channels}
-        result = await content_brief_agent.ainvoke({"context": context})
-        brief = result["brief"]
-        return ContentBriefResponse(**brief, generated_at=datetime.utcnow().isoformat())
+    return ContentBriefResponse(
+        topic="",
+        hook="",
+        content_format="",
+        target_channels=[],
+        call_to_action="",
+        estimated_performance_band="",
+        reasoning="This endpoint is deprecated. Use the CRM assistant chat for content briefs via the tool API.",
+        generated_at=datetime.utcnow().isoformat(),
+    )
 
 @app.post("/agents/whatsapp-message", response_model=WhatsAppMessageResponse, tags=["marketing"])
 async def process_whatsapp_message(request: WhatsAppMessageRequest, api_key: str = Depends(verify_api_key)):
-    async with AsyncSessionLocal() as db:
-        query = text("""
-            SELECT direction, content 
-            FROM whatsapp_messages wm
-            JOIN whatsapp_conversations wc ON wm.conversation_id = wc.id
-            WHERE wc.thread_id = :thread_id
-            ORDER BY wm.created_at DESC LIMIT 10
-        """)
-        result = await db.execute(query, {"thread_id": request.thread_id})
-        history = [dict(row._mapping) for row in result]
-        history.reverse()
-        result = await whatsapp_agent.ainvoke({"context": {"message": request.message, "history": history}})
-        return WhatsAppMessageResponse(**result["whatsapp_response"], thread_id=request.thread_id)
+    return WhatsAppMessageResponse(
+        thread_id=request.thread_id,
+        response_message=None,
+        intent_classification="deprecated",
+        sentiment="neutral",
+        requires_human_handoff=False,
+        handoff_reason="This endpoint is deprecated. Use the CRM assistant chat for WhatsApp via the tool API.",
+        confidence=0,
+    )
 
 @app.post("/agents/diagnose-anomaly", response_model=AnomalyDiagnosticsResponse, tags=["marketing"])
 async def diagnose_anomaly(request: AnomalyDiagnosticsRequest, api_key: str = Depends(verify_api_key)):
-    context = {"anomaly": request.dict()}
-    result = await anomaly_diagnostics_agent.ainvoke({"context": context})
-    return AnomalyDiagnosticsResponse(**result["diagnostic"], channel_id=request.channel_id, anomaly_type=request.anomaly_type)
+    return AnomalyDiagnosticsResponse(
+        channel_id=request.channel_id,
+        anomaly_type=request.anomaly_type,
+        diagnostic_summary="This endpoint is deprecated. Use the CRM assistant chat for diagnostics via the tool API.",
+        root_cause_hypothesis="",
+        recommended_actions=[],
+        severity="info",
+        confidence=0,
+    )
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     return JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=ENVIRONMENT == "development")
+# ================================================================
+# AI CRM Assistant Chat (Section 4.14)
+# ================================================================
+
+class CRMRequest(BaseModel):
+    user: Dict[str, Any]
+    message: str
+    session_id: Optional[str] = None
+    context: Dict[str, Any] = Field(default_factory=dict)
+    confirmed_actions: List[Dict[str, Any]] = Field(default_factory=list)
+    tool_results: List[Dict[str, Any]] = Field(default_factory=list)
+    audience: Optional[str] = Field(default="internal", description="internal | self-service | manager | admin")
+
 
 @app.post("/agents/crm/chat", response_model=AgentResponse, tags=["crm"])
-async def chat_with_agent(request: Dict[str, Any], api_key: str = Depends(verify_api_key)):
-    result = await chat_agent.ainvoke({"context": request})
-    return AgentResponse(crm_response=result)
+async def chat_with_agent(request: CRMRequest, x_api_key: str = Header(..., alias="X-API-Key")):
+    """CRM Assistant chat endpoint - LangGraph orchestrator with tool calling."""
+    try:
+        if request.audience == "self-service":
+            result = await run_self_service(
+                user=request.user,
+                message=request.message,
+                token=x_api_key,
+                session_id=request.session_id or "",
+                context={
+                    **request.context,
+                    "confirmed_actions": request.confirmed_actions,
+                    "tool_results": request.tool_results,
+                },
+            )
+        else:
+            result = await run_orchestrator(
+                user=request.user,
+                message=request.message,
+                token=x_api_key,
+                session_id=request.session_id or "",
+                context={
+                    **request.context,
+                    "confirmed_actions": request.confirmed_actions,
+                    "tool_results": request.tool_results,
+                },
+            )
+        return AgentResponse(crm_response=result)
+    except Exception as exc:
+        logger.exception("CRM orchestrator failed: %s", exc)
+        docs_fallback = await _try_docs_fallback(
+            query=request.message,
+            token=x_api_key,
+            session_id=request.session_id or "",
+        )
+        if docs_fallback:
+            return AgentResponse(crm_response=docs_fallback)
+        return AgentResponse(crm_response={
+            "response": "I'm currently experiencing technical difficulties. Please try again shortly.",
+            "error": str(exc),
+            "session_id": request.session_id,
+        })
 
-class DealScoringRequest(BaseModel):
-    deal_id: str
-    stage: str
-    value: float
-    expected_close_date: str
-    days_in_stage: int
-    interactions_last_14_days: int
-    demo_trial_completed: bool
-    contact_engagement_score: Optional[float] = None
 
-class DealScoringResponse(BaseModel):
-    deal_id: str
-    score: float
-    label: str
-    signals: Dict[str, Any]
+async def _try_docs_fallback(query: str, token: str, session_id: str) -> dict | None:
+    """
+    When the LLM provider is unavailable (circuit open or persistent failures),
+    degrade gracefully to a documentation search via the agent tool API,
+    matching the static documentation search fallback in AssistantChatController.
+    """
+    try:
+        from agents.agents.laravel_client import call_tool
+    except ImportError:
+        return None
+
+    try:
+        result = await call_tool(
+            "kb.search",
+            {"query": query, "per_page": 5},
+            token=token,
+            session_id=session_id,
+        )
+        if not result.ok:
+            return None
+        hits = result.body.get("results", result.body.get("data", []))
+        if not isinstance(hits, list) or not hits:
+            return {
+                "response": (
+                    "I'm having trouble connecting to my AI brain right now, "
+                    "and I couldn't find any matching articles automatically. "
+                    "Please try again in a moment."
+                ),
+                "fallback": True,
+                "error_code": "llm_provider_unavailable_no_docs",
+            }
+        articles = []
+        for doc in hits[:3]:
+            title = doc.get("title") or doc.get("subject") or "Help article"
+            body = (doc.get("body") or doc.get("content") or doc.get("excerpt") or "")[:200]
+            url = doc.get("url") or doc.get("slug") or ""
+            articles.append({"title": title, "snippet": body, "url": url})
+        article_lines = "\n\n".join(
+            f"**{a['title']}**\n> {a['snippet']}"
+            + (f"\n[Read more]({a['url']})" if a["url"] else "")
+            for a in articles
+        )
+        return {
+            "response": "I'm having trouble connecting to my AI brain right now. "
+            "Here are the most relevant documentation articles while I recover:\n\n"
+            + article_lines,
+            "fallback": True,
+            "error_code": "llm_provider_unavailable",
+            "articles": articles,
+        }
+    except Exception:
+        logger.warning("Docs fallback search also failed", exc_info=True)
+        return None
 
 @app.post("/agents/score-deal", response_model=DealScoringResponse, tags=["analytics"])
 async def score_deal(request: DealScoringRequest, api_key: str = Depends(verify_api_key)):

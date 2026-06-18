@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Http\FormResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -260,6 +261,24 @@ class LegalMatterController extends Controller
         $path = $request->file('attachment')->store('legal/'.$legalMatter->id.'/attachments', 'r2');
 
         return back()->with('success', 'Attachment uploaded.')->with('attachment_path', $path);
+    }
+
+    public function attachmentSignedUrl(Request $request, LegalMatter $legalMatter)
+    {
+        $this->authorize('update', $legalMatter);
+
+        $path = $request->validate([
+            'path' => ['required', 'string', 'starts_with:legal/'.$legalMatter->id.'/attachments/'],
+        ])['path'];
+
+        if (! Storage::disk('r2')->exists($path)) {
+            abort(404, 'Attachment not found.');
+        }
+
+        return response()->json([
+            'url' => Storage::disk('r2')->temporaryUrl($path, now()->addMinutes(15)),
+            'path' => $path,
+        ]);
     }
 
     public function indexApi(Request $request)

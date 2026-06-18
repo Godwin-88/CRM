@@ -258,7 +258,12 @@ const createQuote = async () => {
                     </Badge>
                   </div>
                 </div>
-                <div class="text-2xl font-bold">${{ Number(deal.value || 0).toLocaleString() }}</div>
+                <div class="flex flex-wrap gap-2">
+                  <Link :href="`/contracts/create?account_id=${deal.account?.id || ''}&contact_id=${deal.contact?.id || ''}`">
+                    <Button size="sm" variant="secondary">Generate Contract</Button>
+                  </Link>
+                  <div class="text-2xl font-bold">${{ Number(deal.value || 0).toLocaleString() }}</div>
+                </div>
               </div>
               <div v-if="!isClosed" class="flex gap-2 mt-4">
                 <Button variant="outline" @click="openCloseModal('won')">Close Won</Button>

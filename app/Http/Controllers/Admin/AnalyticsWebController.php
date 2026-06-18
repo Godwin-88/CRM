@@ -13,6 +13,7 @@ use App\Services\FinanceAnalyticsService;
 use App\Services\ForecastService;
 use App\Services\GrowthAnalyticsService;
 use App\Services\PredictiveScoringService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -164,6 +165,28 @@ class AnalyticsWebController extends Controller
             'sample_rows' => [],
             'export_formats' => ['csv', 'pdf'],
         ]);
+    }
+
+    public function storeReport(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'entity_type' => ['required', 'string'],
+            'visibility' => ['nullable', 'in:private,shared'],
+            'fields' => ['nullable', 'array'],
+            'fields.*' => ['string'],
+            'group_by' => ['nullable', 'string'],
+            'chart_type' => ['nullable', 'in:bar,line,pie,table'],
+        ]);
+
+        ReportDefinition::create([
+            ...$validated,
+            'owner_id' => $request->user()->id,
+            'visibility' => $validated['visibility'] ?? 'private',
+        ]);
+
+        return back()->with('success', 'Report created.');
     }
 
     protected function scoreOpenDeals(array $filters = []): array

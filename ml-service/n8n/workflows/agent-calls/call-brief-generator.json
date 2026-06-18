@@ -22,7 +22,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://ml-agents:8000/agents/generate-brief",
+        "url": "http://localhost/api/v1/analytics/top-content",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"lookback_days\": 7,\n  \"target_channels\": [\"facebook\", \"instagram\", \"tiktok\"]\n}",

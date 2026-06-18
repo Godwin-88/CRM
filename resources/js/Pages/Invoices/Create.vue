@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const props = defineProps<{
   accounts: { id: string; name: string }[];
   contacts: { id: string; first_name: string; last_name: string }[];
-  deals: { id: string; name: string }[];
+  deals: { id: string; name: string; contact_id: string }[];
   nextInvoiceNumber: string;
 }>();
 

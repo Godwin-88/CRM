@@ -24,8 +24,25 @@ class ContactController extends Controller
         protected ScoringService $scoringService,
     ) {}
 
+    public function timeline(Request $request, string $id): JsonResponse
+    {
+        $this->authorize('view', Contact::class);
+
+        $contact = Contact::findOrFail($id);
+
+        $timeline = \App\Models\Activity::where('contact_id', $contact->id)
+            ->orWhereHas('deal', function ($q) use ($contact) {
+                $q->where('contact_id', $contact->id);
+            })
+            ->with(['owner', 'deal', 'account'])
+            ->orderByDesc('created_at')
+            ->paginate($request->get('per_page', 20));
+
+        return response()->json($timeline);
+    }
+
     /**
-     * List contacts with filtering, pagination, and sorting.
+     * Import contacts from file (async job).
      */
     public function index(Request $request): JsonResponse
     {
@@ -187,24 +204,6 @@ class ContactController extends Controller
         $count = Contact::whereIn('id', $validated['ids'])->delete();
 
         return response()->json(['message' => "{$count} contacts deleted."]);
-    }
-
-    /**
-     * Get contact timeline (paginated, filterable).
-     */
-    public function timeline(string $id): JsonResponse
-    {
-        $contact = Contact::findOrFail($id);
-        $this->authorize('view', $contact);
-
-        $filters = request()->only(['types']);
-        if (request()->filled('types')) {
-            $filters['types'] = explode(',', request->types);
-        }
-
-        $timeline = $this->timelineService->getTimeline($contact, $filters);
-
-        return response()->json($timeline);
     }
 
     /**

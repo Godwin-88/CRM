@@ -189,4 +189,43 @@ class KnowledgeBaseController extends Controller
 
         return response()->json(['recorded' => true]);
     }
+
+    public function retrieveForAssistant(Request $request): JsonResponse
+    {
+        $request->validate([
+            'query' => 'required|string|max:500',
+            'category_id' => 'nullable|string',
+            'per_page' => 'nullable|integer|min:1|max:10',
+        ]);
+
+        $perPage = (int) ($request->input('per_page', 5));
+
+        $query = KnowledgeBaseArticle::published()
+            ->with(['category', 'author'])
+            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
+            ->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%'.$request->query.'%')
+                  ->orWhere('body', 'like', '%'.$request->query.'%')
+                  ->orWhereJsonContains('feature_refs', $request->query);
+            })
+            ->orderByDesc('published_at')
+            ->limit($perPage);
+
+        $articles = $query->get()->map(function ($article) {
+            return [
+                'id' => $article->id,
+                'title' => $article->title,
+                'slug' => $article->slug,
+                'snippet' => \Illuminate\Support\Str::limit(strip_tags($article->body), 240),
+                'category' => $article->category?->name,
+                'url' => '/docs/'.$article->slug,
+                'published_at' => $article->published_at,
+            ];
+        });
+
+        return response()->json([
+            'query' => $request->query,
+            'results' => $articles,
+        ]);
+    }
 }

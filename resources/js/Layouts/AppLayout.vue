@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { setI18nLocale, getI18nLocale, supportedLocales } from "@/lib/i18n";
 import HelpPanel from "@/Components/HelpPanel.vue";
+import AssistantIcon from "@/Components/CRM/AssistantIcon.vue";
 import ToastNotification from "@/Components/ToastNotification.vue";
+import AssistantChatPopup from "@/Components/CRM/AssistantChatPopup.vue";
 import {
     Dialog,
     DialogContent,
@@ -453,6 +455,7 @@ const toggleMenuItem = (title: string) => {
                          <span class="text-xl font-bold text-gray-900">CRM</span>
                     </div>
                     <div class="flex-1"></div>
+                    <AssistantIcon />
                     <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
                 </div>
             </header>
@@ -507,5 +510,6 @@ const toggleMenuItem = (title: string) => {
         </Dialog>
 
         <ToastNotification />
+        <AssistantChatPopup />
     </div>
 </template>

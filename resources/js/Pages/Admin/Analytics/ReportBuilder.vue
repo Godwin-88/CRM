@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Head, Link, router } from '@inertiajs/vue3'
+import { useForm } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Filter, BarChart3 } from 'lucide-vue-next'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const props = defineProps<{
   role?: string
@@ -29,8 +34,33 @@ const props = defineProps<{
 
 const showNewReportModal = ref(false)
 
+const reportForm = useForm({
+  name: '',
+  description: '',
+  entity_type: 'deals',
+  visibility: 'private',
+  fields: '',
+  group_by: '',
+  chart_type: 'table',
+})
+
 const runReport = (reportId: string) => {
   router.post(`/api/v1/reports/${reportId}/run`, {}, { preserveState: true })
+}
+
+const createReport = () => {
+  reportForm
+    .transform((data) => ({
+      ...data,
+      fields: data.fields.split(',').map((field) => field.trim()).filter(Boolean),
+    }))
+    .post('/admin/analytics/report-builder', {
+      preserveScroll: true,
+      onSuccess: () => {
+        showNewReportModal.value = false
+        reportForm.reset()
+      },
+    })
 }
 </script>
 
@@ -53,6 +83,98 @@ const runReport = (reportId: string) => {
           </Button>
         </div>
       </div>
+
+      <Dialog v-model:open="showNewReportModal">
+        <DialogContent class="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle>Create report</DialogTitle>
+            <DialogDescription>Save a reusable report definition that can be run, scheduled, and exported.</DialogDescription>
+          </DialogHeader>
+
+          <form @submit.prevent="createReport" class="space-y-4">
+            <div>
+              <Label for="report-name">Name</Label>
+              <Input id="report-name" v-model="reportForm.name" placeholder="Pipeline velocity" />
+              <p v-if="reportForm.errors.name" class="mt-1 text-sm text-red-600">{{ reportForm.errors.name }}</p>
+            </div>
+
+            <div>
+              <Label for="report-description">Description</Label>
+              <Input id="report-description" v-model="reportForm.description" placeholder="Open deals grouped by owner" />
+              <p v-if="reportForm.errors.description" class="mt-1 text-sm text-red-600">{{ reportForm.errors.description }}</p>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label for="report-entity">Entity</Label>
+                <Select v-model="reportForm.entity_type">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select entity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="deals">Deals</SelectItem>
+                    <SelectItem value="accounts">Accounts</SelectItem>
+                    <SelectItem value="contacts">Contacts</SelectItem>
+                    <SelectItem value="tickets">Tickets</SelectItem>
+                    <SelectItem value="contracts">Contracts</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p v-if="reportForm.errors.entity_type" class="mt-1 text-sm text-red-600">{{ reportForm.errors.entity_type }}</p>
+              </div>
+
+              <div>
+                <Label for="report-visibility">Visibility</Label>
+                <Select v-model="reportForm.visibility">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select visibility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="private">Private</SelectItem>
+                    <SelectItem value="shared">Shared</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p v-if="reportForm.errors.visibility" class="mt-1 text-sm text-red-600">{{ reportForm.errors.visibility }}</p>
+              </div>
+            </div>
+
+            <div>
+              <Label for="report-fields">Fields</Label>
+              <Input id="report-fields" v-model="reportForm.fields" placeholder="title, value, stage, owner" />
+              <p class="mt-1 text-xs text-gray-500">Comma-separated fields to include in the report output.</p>
+              <p v-if="reportForm.errors.fields" class="mt-1 text-sm text-red-600">{{ reportForm.errors.fields }}</p>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label for="report-group">Group by</Label>
+                <Input id="report-group" v-model="reportForm.group_by" placeholder="owner" />
+                <p v-if="reportForm.errors.group_by" class="mt-1 text-sm text-red-600">{{ reportForm.errors.group_by }}</p>
+              </div>
+
+              <div>
+                <Label for="report-chart">Default chart</Label>
+                <Select v-model="reportForm.chart_type">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select chart" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="table">Table</SelectItem>
+                    <SelectItem value="bar">Bar</SelectItem>
+                    <SelectItem value="line">Line</SelectItem>
+                    <SelectItem value="pie">Pie</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p v-if="reportForm.errors.chart_type" class="mt-1 text-sm text-red-600">{{ reportForm.errors.chart_type }}</p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" @click="showNewReportModal = false">Cancel</Button>
+              <Button type="submit" :disabled="reportForm.processing">Create report</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>

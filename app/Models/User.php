@@ -75,6 +75,11 @@ class User extends Authenticatable
         return $this->hasMany(DashboardWidget::class);
     }
 
+    public function assistantConversations(): HasMany
+    {
+        return $this->hasMany(AssistantConversation::class);
+    }
+
     public function isLockedOut(): bool
     {
         return $this->mfa_lockout_until && now()->isBefore($this->mfa_lockout_until);

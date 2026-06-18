@@ -2,8 +2,13 @@
 
 namespace App\Providers;
 
+use App\Events\AssistantLowConfidenceRouteDetected;
+use App\Events\SlaBreachWarning;
+use App\Events\TicketAssigned;
 use App\Events\WebhookEventOccurred;
+use App\Listeners\FlagAssistantLowConfidence;
 use App\Listeners\QueueWebhookDeliveries;
+use App\Listeners\PushAssistantProactiveSuggestion;
 use App\Models\Asset;
 use App\Models\BankingRelationship;
 use App\Models\Contract;
@@ -82,6 +87,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Comment::class, CommentPolicy::class);
         Gate::policy(IntegrationOAuthClient::class, IntegrationOAuthClientPolicy::class);
 
+        \Event::listen(TicketAssigned::class, PushAssistantProactiveSuggestion::class);
+        \Event::listen(SlaBreachWarning::class, PushAssistantProactiveSuggestion::class);
+        \Event::listen(AssistantLowConfidenceRouteDetected::class, FlagAssistantLowConfidence::class);
         \Event::listen(WebhookEventOccurred::class, QueueWebhookDeliveries::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendForSignature;
 use App\Models\Account;
 use App\Models\Contact;
 use App\Models\Contract;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class ContractController extends Controller
@@ -29,7 +31,18 @@ class ContractController extends Controller
                 AllowedFilter::exact('account_id'),
                 AllowedFilter::exact('account_manager_id')
             )
-            ->allowedIncludes('account', 'contact', 'template')
+            ->allowedSorts(
+                AllowedSort::field('title'),
+                AllowedSort::field('account', 'accounts.name'),
+                AllowedSort::field('status'),
+                AllowedSort::field('type'),
+                AllowedSort::field('value'),
+                AllowedSort::field('start_date'),
+                AllowedSort::field('end_date'),
+                AllowedSort::field('created_at')
+            )
+            ->when($request->filled('sort') && in_array($request->sort, ['account']), fn ($q) => $q->leftJoin('accounts', 'contracts.account_id', '=', 'accounts.id'))
+            ->allowedIncludes('account', 'contact', 'template', 'tags')
             ->when($request->filled('search'), function ($q, $search) {
                 $q->where(function ($qb) use ($search) {
                     $qb->where('title', 'like', "%{$search}%")
@@ -38,6 +51,12 @@ class ContractController extends Controller
                             ->orWhere('last_name', 'like', "%{$search}%"));
                 });
             })
+            ->when($request->filled('start_date_from'), fn ($q) => $q->whereDate('start_date', '>=', $request->start_date_from))
+            ->when($request->filled('start_date_to'), fn ($q) => $q->whereDate('start_date', '<=', $request->start_date_to))
+            ->when($request->filled('end_date_from'), fn ($q) => $q->whereDate('end_date', '>=', $request->end_date_from))
+            ->when($request->filled('end_date_to'), fn ($q) => $q->whereDate('end_date', '<=', $request->end_date_to))
+            ->when($request->filled('value_min'), fn ($q) => $q->where('value', '>=', $request->value_min))
+            ->when($request->filled('value_max'), fn ($q) => $q->where('value', '<=', $request->value_max))
             ->orderBy('end_date', 'asc')
             ->paginate($perPage)
             ->appends($request->query());
@@ -84,10 +103,14 @@ class ContractController extends Controller
         return Inertia::render('Contracts/Show', [
             'contract' => $contract,
             'activeVersion' => $activeVersion,
+            'versions' => $contract->versions,
+            'signatories' => $contract->signatories,
+            'milestones' => $contract->milestones,
+            'kpiValues' => $contract->kpiValues,
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $this->authorize('create', Contract::class);
 
@@ -101,6 +124,8 @@ class ContractController extends Controller
             'accounts' => $accounts,
             'contacts' => $contacts,
             'contractTypes' => $contractTypes,
+            'preselectedAccountId' => $request->get('account_id'),
+            'preselectedContactId' => $request->get('contact_id'),
         ]);
     }
 
@@ -233,6 +258,41 @@ class ContractController extends Controller
             ->log('contract_regenerated');
 
         return back()->with('success', 'Contract regeneration queued. New version: '.$contract->current_version);
+    }
+
+    public function sendForSignature(Request $request, Contract $contract): RedirectResponse
+    {
+        $this->authorize('sign', $contract);
+
+        $validated = $request->validate([
+            'provider' => ['nullable', 'string', 'in:internal,docusign'],
+            'mode' => ['nullable', 'string', 'in:sequential,parallel'],
+            'signatories' => ['required', 'array', 'min:1'],
+            'signatories.*.name' => ['required', 'string', 'max:255'],
+            'signatories.*.email' => ['required', 'email', 'max:255'],
+            'signatories.*.role' => ['nullable', 'string', 'max:50'],
+            'signatories.*.order' => ['nullable', 'integer', 'min:1'],
+            'signatories.*.is_sequential' => ['boolean'],
+        ]);
+
+        dispatch(new SendForSignature(
+            (int) $contract->getKey(),
+            $validated['signatories'],
+            auth()->id(),
+            request()->ip(),
+            request()->userAgent(),
+        ));
+
+        activity()
+            ->performedOn($contract)
+            ->withProperties([
+                'contract_id' => $contract->id,
+                'signatories' => count($validated['signatories']),
+                'provider' => $validated['provider'] ?? 'internal',
+            ])
+            ->log('contract_sent_for_signature');
+
+        return back()->with('success', 'Contract queued for e-signature.');
     }
 
     public function downloadSignedUrl(Contract $contract)
