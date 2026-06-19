@@ -26,7 +26,7 @@ onUnmounted(() => {
 })
 
 const loadStats = async () => {
-  const res = await fetch('/api/v1/queue-stats', { headers: { 'Accept': 'application/json' } })
+  const res = await fetch('/api/v1/contact-centre/stats', { headers: { 'Accept': 'application/json' } })
   if (res.ok) {
     const data = await res.json()
     if (prevTotalOpen.value !== null && stats.value) {
@@ -38,7 +38,7 @@ const loadStats = async () => {
 }
 
 const loadHistory = async () => {
-  const res = await fetch('/api/v1/queue-stats/history?hours=24', { headers: { 'Accept': 'application/json' } })
+  const res = await fetch('/api/v1/contact-centre/history?hours=24', { headers: { 'Accept': 'application/json' } })
   if (res.ok) {
     history.value = await res.json()
   }

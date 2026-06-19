@@ -38,11 +38,11 @@ const openCreate = () => {
 
 const submit = () => {
   const payload = {
-    ...form,
+    ...form.data(),
     type: String(form.type).toLowerCase(),
     status: String(form.status).toLowerCase(),
   }
-  router.post('/admin/surveys', payload, {
+  router.post('/admin/surveys', (payload as any), {
     onSuccess: () => {
       showCreateDialog.value = false
     },
@@ -107,10 +107,10 @@ const typeColors: Record<string, string> = {
                   <Label>Segment</Label>
                   <Select v-model="form.segment_id">
                     <SelectTrigger><SelectValue placeholder="All contacts" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value=" ">All contacts</SelectItem>
-                      <SelectItem v-for="seg in segments" :key="seg.id" :value="seg.id">{{ seg.name }}</SelectItem>
-                    </SelectContent>
+<SelectContent>
+                       <SelectItem value="all">All contacts</SelectItem>
+                       <SelectItem v-for="seg in segments" :key="seg.id" :value="seg.id">{{ seg.name }}</SelectItem>
+                     </SelectContent>
                   </Select>
                 </div>
               </div>

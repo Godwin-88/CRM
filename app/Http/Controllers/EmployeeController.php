@@ -16,6 +16,8 @@ class EmployeeController extends Controller
         $this->authorize('viewAny', Employee::class);
 
         $employees = Employee::query()
+            ->select('employees.*')
+            ->join('users', 'employees.user_id', '=', 'users.id')
             ->with(['user', 'reportingManager'])
             ->when($request->filled('search'), function ($query, $search) {
                 $query->where('employee_number', 'like', "%{$search}%")
@@ -23,7 +25,7 @@ class EmployeeController extends Controller
                     ->orWhere('job_title', 'like', "%{$search}%")
                     ->orWhereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"));
             })
-            ->orderBy('user.name')
+            ->orderBy('users.name')
             ->paginate(25)
             ->appends($request->query());
 

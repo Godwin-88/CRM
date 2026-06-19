@@ -14,9 +14,26 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://ml-agents:8000/agents/whatsapp-message",
-        "sendBody": true,
+        "method": "GET",
+        "url": "http://localhost/api/v1/whatsapp/conversations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "thread_id",
+              "value": "={{ $json.body.thread_id }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.body.message }}"
+            },
+            {
+              "name": "sender_phone",
+              "value": "={{ $json.body.from }}"
+            }
+          ]
+        },
+        "sendBody": false,
         "specifyBody": "json",
         "jsonBody": "={\n  \"thread_id\": \"{{ $json.body.thread_id }}\",\n  \"message\": \"{{ $json.body.message }}\",\n  \"sender_phone\": \"{{ $json.body.from }}\"\n}",
         "options": {}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head, router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
@@ -22,17 +22,33 @@ interface Deal {
 const props = defineProps<{
   deals: { data: Deal[] };
   pipelines: { id: string; name: string }[];
-  filters: { search?: string; stage?: string; pipeline_id?: string };
+  filters: { search?: string; stage?: string; pipeline_id?: string; account_id?: string; contact_id?: string; account_name?: string; contact_name?: string };
 }>();
 
 const filters = ref({
   search: props.filters?.search || '',
   stage: props.filters?.stage || '',
   pipeline_id: props.filters?.pipeline_id || '',
+  account_id: props.filters?.account_id || '',
+  contact_id: props.filters?.contact_id || '',
+});
+
+const assistantPrefillSummary = computed(() => {
+  const parts = [];
+  if (props.filters?.account_name) parts.push(`Account: ${props.filters.account_name}`);
+  if (props.filters?.contact_name) parts.push(`Contact: ${props.filters.contact_name}`);
+  if (props.filters?.stage) parts.push(`Stage: ${props.filters.stage}`);
+  return parts.length ? `Assistant prefill: ${parts.join(' • ')}` : '';
 });
 
 watch(filters, (newFilters) => {
-  router.get('/deals', newFilters, { preserveState: true, replace: true });
+  router.get('/deals', {
+    ...newFilters,
+    account_name: newFilters.account_id ? props.filters?.account_name : undefined,
+    contact_name: newFilters.contact_id ? props.filters?.contact_name : undefined,
+    stage: newFilters.stage === 'all' ? '' : newFilters.stage,
+    pipeline_id: newFilters.pipeline_id === 'all' ? '' : newFilters.pipeline_id,
+  }, { preserveState: true, replace: true });
 }, { deep: true });
 </script>
 
@@ -44,6 +60,9 @@ watch(filters, (newFilters) => {
         <div>
           <h1 class="text-3xl font-bold">Deals</h1>
           <p class="text-gray-500">Manage your sales opportunities.</p>
+          <p v-if="assistantPrefillSummary" class="mt-2 text-sm text-blue-600 dark:text-blue-400">
+            {{ assistantPrefillSummary }}
+          </p>
         </div>
         <div class="flex gap-2">
           <Link href="/deals/create">
@@ -63,7 +82,7 @@ watch(filters, (newFilters) => {
               <SelectValue placeholder="All stages" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value=" ">All Stages</SelectItem>
+              <SelectItem value="all">All Stages</SelectItem>
               <SelectItem value="qualification">Qualification</SelectItem>
               <SelectItem value="demo">Demo</SelectItem>
               <SelectItem value="proposal">Proposal</SelectItem>
@@ -77,7 +96,7 @@ watch(filters, (newFilters) => {
               <SelectValue placeholder="All pipelines" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value=" ">All Pipelines</SelectItem>
+              <SelectItem value="all">All Pipelines</SelectItem>
               <SelectItem v-for="pipeline in pipelines" :key="pipeline.id" :value="pipeline.id">
                 {{ pipeline.name }}
               </SelectItem>

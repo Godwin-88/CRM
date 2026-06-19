@@ -25,6 +25,8 @@ class SendForSignature implements ShouldQueue
         public int $contractId,
         public array $signatories = [],
         public ?int $userId = null,
+        public ?string $ipAddress = null,
+        public ?string $userAgent = null,
     ) {}
 
     public function handle(): void
@@ -53,8 +55,8 @@ class SendForSignature implements ShouldQueue
                     'signing_token' => Str::random(64),
                     'signing_order' => $signatory['order'] ?? 1,
                     'is_sequential' => $signatory['is_sequential'] ?? true,
-                    'ip_address' => request()->ip(),
-                    'user_agent' => request()->userAgent(),
+                    'ip_address' => $this->ipAddress,
+                    'user_agent' => $this->userAgent,
                 ]);
             }
 

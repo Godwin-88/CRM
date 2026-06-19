@@ -2,8 +2,13 @@
 
 namespace App\Providers;
 
+use App\Events\AssistantLowConfidenceRouteDetected;
+use App\Events\SlaBreachWarning;
+use App\Events\TicketAssigned;
 use App\Events\WebhookEventOccurred;
+use App\Listeners\FlagAssistantLowConfidence;
 use App\Listeners\QueueWebhookDeliveries;
+use App\Listeners\PushAssistantProactiveSuggestion;
 use App\Models\Asset;
 use App\Models\BankingRelationship;
 use App\Models\Contract;
@@ -12,6 +17,7 @@ use App\Models\Employee;
 use App\Models\Invoice;
 use App\Models\LegalMatter;
 use App\Models\PurchaseOrder;
+use App\Models\ReportDefinition;
 use App\Models\Segment;
 use App\Models\Vendor;
 use App\Models\Comment;
@@ -25,6 +31,7 @@ use App\Policies\IntegrationOAuthClientPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\LegalMatterPolicy;
 use App\Policies\PurchaseOrderPolicy;
+use App\Policies\ReportDefinitionPolicy;
 use App\Policies\SegmentPolicy;
 use App\Policies\TeamPolicy;
 use App\Policies\VendorPolicy;
@@ -65,6 +72,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Gate::policy(ReportDefinition::class, ReportDefinitionPolicy::class);
         Gate::policy(Segment::class, SegmentPolicy::class);
         Gate::policy(Deal::class, DealPolicy::class);
         Gate::policy(Contract::class, ContractPolicy::class);
@@ -79,6 +87,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Comment::class, CommentPolicy::class);
         Gate::policy(IntegrationOAuthClient::class, IntegrationOAuthClientPolicy::class);
 
+        \Event::listen(TicketAssigned::class, PushAssistantProactiveSuggestion::class);
+        \Event::listen(SlaBreachWarning::class, PushAssistantProactiveSuggestion::class);
+        \Event::listen(AssistantLowConfidenceRouteDetected::class, FlagAssistantLowConfidence::class);
         \Event::listen(WebhookEventOccurred::class, QueueWebhookDeliveries::class);
     }
 }

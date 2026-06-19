@@ -24,13 +24,16 @@ class CsatRequest extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         $baseUrl = config('app.url');
+        $ticketRef = $this->ticket->id;
 
         return (new MailMessage)
-            ->subject('How was your support experience? Ticket #'.$this->ticket->id)
-            ->line('Your ticket has been resolved. Please rate your support experience:')
+            ->subject('[Ticket #'.$ticketRef.'] How was your support experience?')
+            ->greeting('Hello '.$this->ticket->contact->first_name.',')
+            ->line('Your ticket #'.$ticketRef.' has been resolved. Please rate your support experience:')
             ->line('Click a score below to submit your rating (no login required):')
+            ->action('Rate 5 (Excellent)', $baseUrl.'/tickets/'.$ticketRef.'/rate/5')
+            ->line('Or click a different score:')
             ->line('1 (Poor) | 2 (Fair) | 3 (Good) | 4 (Very Good) | 5 (Excellent)')
-            ->action('Rate Your Experience', $baseUrl.'/tickets/'.$this->ticket->id.'/rate')
             ->line('Thank you for your feedback!');
     }
 

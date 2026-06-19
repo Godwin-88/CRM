@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -95,55 +95,15 @@ const refreshAnalytics = async () => {
 
       <!-- KPI Cards -->
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent class="pt-6 flex items-center gap-3">
-            <div class="p-2 bg-blue-100 rounded-full"><Mail class="h-5 w-5 text-blue-600" /></div>
-            <div>
-              <p class="text-sm text-gray-500">Total Enrolled</p>
-              <p class="text-xl font-bold">{{ analytics.total_enrolled }}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent class="pt-6 flex items-center gap-3">
-            <div class="p-2 bg-emerald-100 rounded-full"><TrendingUp class="h-5 w-5 text-emerald-600" /></div>
-            <div>
-              <p class="text-sm text-gray-500">Re-engaged</p>
-              <p class="text-xl font-bold">{{ analytics.total_re_engaged }}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent class="pt-6 flex items-center gap-3">
-            <div class="p-2 bg-purple-100 rounded-full"><UserPlus class="h-5 w-5 text-purple-600" /></div>
-            <div>
-              <p class="text-sm text-gray-500">Completed</p>
-              <p class="text-xl font-bold">{{ analytics.total_completed }}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent class="pt-6 flex items-center gap-3">
-            <div class="p-2 bg-gray-100 rounded-full"><Users class="h-5 w-5 text-gray-600" /></div>
-            <div>
-              <p class="text-sm text-gray-500">Dormant</p>
-              <p class="text-xl font-bold">{{ analytics.total_dormant }}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent class="pt-6 flex items-center gap-3">
-            <div class="p-2 bg-teal-100 rounded-full"><Mail class="h-5 w-5 text-teal-600" /></div>
-            <div>
-              <p class="text-sm text-gray-500">Re-engagement Rate</p>
-              <p class="text-xl font-bold text-emerald-600">{{ analytics.re_engagement_rate }}%</p>
-            </div>
-          </CardContent>
-        </Card>
+        <Card><CardContent class="pt-6 flex items-center gap-3"><div class="p-2 bg-blue-100 rounded-full"><Mail class="h-5 w-5 text-blue-600" /></div><div><p class="text-sm text-gray-500">Total Enrolled</p><p class="text-xl font-bold">{{ analytics?.total_enrolled ?? 0 }}</p></div></CardContent></Card>
+        <Card><CardContent class="pt-6 flex items-center gap-3"><div class="p-2 bg-emerald-100 rounded-full"><TrendingUp class="h-5 w-5 text-emerald-600" /></div><div><p class="text-sm text-gray-500">Re-engaged</p><p class="text-xl font-bold">{{ analytics?.total_re_engaged ?? 0 }}</p></div></CardContent></Card>
+        <Card><CardContent class="pt-6 flex items-center gap-3"><div class="p-2 bg-purple-100 rounded-full"><UserPlus class="h-5 w-5 text-purple-600" /></div><div><p class="text-sm text-gray-500">Completed</p><p class="text-xl font-bold">{{ analytics?.total_completed ?? 0 }}</p></div></CardContent></Card>
+        <Card><CardContent class="pt-6 flex items-center gap-3"><div class="p-2 bg-gray-100 rounded-full"><Users class="h-5 w-5 text-gray-600" /></div><div><p class="text-sm text-gray-500">Dormant</p><p class="text-xl font-bold">{{ analytics?.total_dormant ?? 0 }}</p></div></CardContent></Card>
+        <Card><CardContent class="pt-6 flex items-center gap-3"><div class="p-2 bg-teal-100 rounded-full"><Mail class="h-5 w-5 text-teal-600" /></div><div><p class="text-sm text-gray-500">Re-engagement Rate</p><p class="text-xl font-bold text-emerald-600">{{ analytics?.re_engagement_rate ?? 0 }}%</p></div></CardContent></Card>
       </div>
 
       <!-- By Config Breakdown -->
-      <Card v-if="analytics.by_config && analytics.by_config.length">
+      <Card v-if="analytics?.by_config && analytics.by_config.length">
         <CardHeader><CardTitle>By Campaign</CardTitle></CardHeader>
         <CardContent class="p-0">
           <Table>

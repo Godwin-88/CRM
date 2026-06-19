@@ -8,6 +8,10 @@
     "paths": {
       "@/*": ["resources/js/*"]
     },
-    "types": ["ziggy-js"]
+    "types": ["ziggy-js", "vite/client", "web-bluetooth"],
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"]
   }
 }

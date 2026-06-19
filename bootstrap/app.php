@@ -26,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'privileged' => PrivilegedSession::class,
             'mfa_verified' => RequireMfaVerified::class,
+            'api_key_auth' => \App\Http\Middleware\ApiKeyAuth::class,
+            'validate_assistant_token' => \App\Http\Middleware\ValidateAssistantToken::class,
         ]);
         $middleware->web(append: [
             HandleInertiaRequests::class,

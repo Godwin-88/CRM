@@ -81,7 +81,7 @@ const submitSegment = () => segmentForm.post('/segments', { onSuccess: () => isC
                             <Label>Segment Name</Label>
                             <Input v-model="segmentForm.name" required />
                         </div>
-                        <RuleBuilder @update="segmentForm.criteria = $event" />
+                        <RuleBuilder :rules="segmentForm.criteria" @update="segmentForm.criteria = $event" />
                         <Button type="submit">Save Segment</Button>
                     </form>
                 </DialogContent>

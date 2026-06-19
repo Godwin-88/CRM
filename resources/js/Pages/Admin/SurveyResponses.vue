@@ -56,8 +56,8 @@ const filteredResponses = computed(() => {
     const matchesSearch = !searchQuery.value ||
       r.contact_name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       r.survey_name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesSurvey = !selectedSurvey.value || r.survey_id === selectedSurvey.value
-    const matchesChannel = !selectedChannel.value || r.channel === selectedChannel.value
+    const matchesSurvey = selectedSurvey.value === 'all' || !selectedSurvey.value || r.survey_id === selectedSurvey.value
+    const matchesChannel = selectedChannel.value === 'all' || !selectedChannel.value || r.channel === selectedChannel.value
     const matchesTab = activeTab.value === 'all' || r.survey_type === activeTab.value
     return matchesSearch && matchesSurvey && matchesChannel && matchesTab
   })
@@ -165,17 +165,17 @@ const analytics = computed(() => {
             <div class="w-56">
               <Select v-model="selectedSurvey">
                 <SelectTrigger><SelectValue placeholder="All Surveys" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Surveys</SelectItem>
-                  <SelectItem v-for="survey in surveys" :key="survey.id" :value="survey.id">{{ survey.name }}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div class="w-40">
-              <Select v-model="selectedChannel">
-                <SelectTrigger><SelectValue placeholder="All Channels" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Channels</SelectItem>
+<SelectContent>
+                   <SelectItem value="all">All Surveys</SelectItem>
+                   <SelectItem v-for="survey in surveys" :key="survey.id" :value="survey.id">{{ survey.name }}</SelectItem>
+                 </SelectContent>
+               </Select>
+             </div>
+             <div class="w-40">
+               <Select v-model="selectedChannel">
+                 <SelectTrigger><SelectValue placeholder="All Channels" /></SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="all">All Channels</SelectItem>
                   <SelectItem value="email">Email</SelectItem>
                   <SelectItem value="sms">SMS</SelectItem>
                   <SelectItem value="portal">Portal</SelectItem>

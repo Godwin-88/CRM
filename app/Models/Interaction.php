@@ -47,6 +47,11 @@ class Interaction extends Model
         return $this->belongsTo(InteractionChannel::class, 'channel_id');
     }
 
+    public function scopeUnmatched($query)
+    {
+        return $query->whereNull('contact_id');
+    }
+
     public function agent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'agent_id');

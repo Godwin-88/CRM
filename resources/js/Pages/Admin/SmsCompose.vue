@@ -78,10 +78,9 @@ const submitSms = async () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select contact" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Select contact</SelectItem>
-                    <SelectItem v-for="c in contacts" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }} {{ c.phone ? `(${c.phone})` : '' }}</SelectItem>
-                  </SelectContent>
+<SelectContent>
+                     <SelectItem v-for="c in contacts" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }} {{ c.phone ? `(${c.phone})` : '' }}</SelectItem>
+                   </SelectContent>
                 </Select>
               </div>
               <div class="space-y-2">

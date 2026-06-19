@@ -16,7 +16,9 @@ use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ComplianceAnalyticsController;
 use App\Http\Controllers\Api\V1\ContactCentreController;
 use App\Http\Controllers\Api\V1\ContactController;
+use App\Http\Controllers\Api\V1\CsatController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
+use App\Http\Controllers\Api\V1\DealController;
 use App\Http\Controllers\Api\V1\DripSequenceController;
 use App\Http\Controllers\Api\V1\IntegrationController;
 use App\Http\Controllers\Api\V1\InteractionController;
@@ -27,6 +29,9 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PipelineController;
 use App\Http\Controllers\Api\V1\ReportBuilderController;
 use App\Http\Controllers\Api\V1\SegmentController;
+use App\Http\Controllers\Api\V1\AssistantTokenController;
+use App\Http\Controllers\Api\V1\AgentToolController;
+use App\Http\Controllers\Api\V1\AssistantChatController;
 use App\Http\Controllers\Api\V1\ServiceRegistryController;
 use App\Http\Controllers\Api\V1\SlaController;
 use App\Http\Controllers\Api\V1\SocialPostController;
@@ -105,11 +110,21 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Analytics
     Route::get('analytics/forecast', [AnalyticsController::class, 'forecast']);
+    Route::post('analytics/forecast/target', [AnalyticsApiController::class, 'updateRevenueTarget']);
     Route::get('analytics/win-loss', [AnalyticsController::class, 'winLossAnalysis']);
     Route::get('analytics/dashboard', [AnalyticsApiController::class, 'dashboard']);
+    Route::get('analytics/dashboard-widgets', [AnalyticsApiController::class, 'dashboardWidgets']);
+    Route::put('analytics/dashboard-widgets', [AnalyticsApiController::class, 'updateDashboardWidgets']);
     Route::get('analytics/growth', [AnalyticsApiController::class, 'growthMetrics']);
     Route::get('analytics/finance', [AnalyticsApiController::class, 'financeMetrics']);
     Route::get('analytics/deal-score/{deal}', [AnalyticsApiController::class, 'dealScore']);
+    Route::get('analytics/deal-scores', [AnalyticsApiController::class, 'dealScores']);
+    Route::post('analytics/deal-scores/recalculate', [AnalyticsApiController::class, 'recalculateDealScores']);
+    Route::post('analytics/deal-score/{deal}', [AnalyticsApiController::class, 'updateDealScore']);
+    Route::delete('analytics/deal-score/{deal}', [AnalyticsApiController::class, 'clearDealScore']);
+    Route::get('analytics/scoring-weights', [AnalyticsApiController::class, 'scoringWeights']);
+    Route::put('analytics/scoring-weights', [AnalyticsApiController::class, 'updateScoringWeights']);
+    Route::get('analytics/customer', [AnalyticsApiController::class, 'customerMetrics']);
     Route::get('analytics/campaign-performance', [CampaignAnalyticsController::class, 'performance']);
     Route::get('analytics/campaign-time-series/{campaign}', [CampaignAnalyticsController::class, 'timeSeries']);
     Route::get('analytics/campaign-per-contact/{campaign}', [CampaignAnalyticsController::class, 'perContact']);
@@ -124,11 +139,18 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::put('reports/{report}', [ReportBuilderController::class, 'update']);
     Route::delete('reports/{report}', [ReportBuilderController::class, 'destroy']);
     Route::post('reports/{report}/schedule', [ReportBuilderController::class, 'schedule']);
+    Route::post('reports/{report}/run', [ReportBuilderController::class, 'run']);
+    Route::get('reports/{report}/export/csv', [ReportBuilderController::class, 'exportCsv']);
+    Route::get('reports/{report}/export/pdf', [ReportBuilderController::class, 'exportPdf']);
+    Route::post('scheduled-reports/{scheduledReport}/deliver', [ReportBuilderController::class, 'deliver']);
 
     // Compliance
     Route::get('audit-trail', [ComplianceAnalyticsController::class, 'auditTrail']);
     Route::get('audit-stats', [ComplianceAnalyticsController::class, 'auditStats']);
     Route::get('audit-anomalies', [ComplianceAnalyticsController::class, 'anomalies']);
+    Route::post('audit-anomalies/{anomalyId}/acknowledge', [ComplianceAnalyticsController::class, 'acknowledgeAnomaly']);
+    Route::get('audit-retention', [ComplianceAnalyticsController::class, 'retentionSettings']);
+    Route::put('audit-retention', [ComplianceAnalyticsController::class, 'updateRetentionSettings']);
 
     // Contracts
     Route::get('contracts', [ContractController::class, 'indexApi']);
@@ -161,6 +183,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::delete('ticket-categories/{ticketCategory}', [TicketCategoryController::class, 'destroy']);
 
     Route::get('knowledge-base/search', [KnowledgeBaseController::class, 'search']);
+    Route::post('knowledge-base/retrieve-for-assistant', [KnowledgeBaseController::class, 'retrieveForAssistant']);
     Route::post('knowledge-base/{knowledge_base}/rate', [KnowledgeBaseController::class, 'rate']);
     Route::post('knowledge-base/{knowledge_base}/restore-version', [KnowledgeBaseController::class, 'restoreVersion']);
     Route::get('knowledge-base/categories', [KnowledgeBaseCategoryController::class, 'index']);
@@ -457,3 +480,64 @@ Route::middleware('api_key_auth')->group(function () {
     Route::post('webhooks/docusign', [WebhookController::class, 'docusign'])->name('webhooks.inbound.docusign');
     Route::post('webhooks/mailgun', [WebhookController::class, 'mailgun'])->name('webhooks.inbound.mailgun');
 });
+
+// ================================================================
+// AI CRM ASSISTANT — AGENT TOOL API (Section 4.14 Feature 1 & 5)
+// ================================================================
+
+// Internal token minting for the assistant service
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('assistant')->group(function () {
+        Route::post('token', [AssistantTokenController::class, 'mint'])->name('assistant.token.mint');
+        Route::delete('token', [AssistantTokenController::class, 'revoke'])->name('assistant.token.revoke');
+        Route::post('chat', [AssistantChatController::class, 'chat'])->name('assistant.chat');
+        Route::get('proactive', [AssistantChatController::class, 'proactive'])->name('assistant.proactive');
+        Route::post('feedback', [AssistantChatController::class, 'feedback'])->name('assistant.feedback');
+
+        // Agent tool API — allowlist-based, uses validate_assistant_token middleware
+        Route::middleware('validate_assistant_token')->prefix('tool')->group(function () {
+            Route::post('contacts/search', [AgentToolController::class, 'handle'])->name('assistant.tool.contacts.search');
+            Route::post('contacts/get', [AgentToolController::class, 'handle'])->name('assistant.tool.contacts.get');
+            Route::post('contacts/timeline', [AgentToolController::class, 'handle'])->name('assistant.tool.contacts.timeline');
+            Route::post('deals/search', [AgentToolController::class, 'handle'])->name('assistant.tool.deals.search');
+            Route::post('deals/get', [AgentToolController::class, 'handle'])->name('assistant.tool.deals.get');
+            Route::post('deals/move_stage', [AgentToolController::class, 'handle'])->name('assistant.tool.deals.move_stage');
+            Route::post('deals/create', [AgentToolController::class, 'handle'])->name('assistant.tool.deals.create');
+            Route::post('accounts/search', [AgentToolController::class, 'handle'])->name('assistant.tool.accounts.search');
+            Route::post('accounts/get', [AgentToolController::class, 'handle'])->name('assistant.tool.accounts.get');
+            Route::post('tickets/search', [AgentToolController::class, 'handle'])->name('assistant.tool.tickets.search');
+            Route::post('tickets/get', [AgentToolController::class, 'handle'])->name('assistant.tool.tickets.get');
+            Route::post('tickets/create', [AgentToolController::class, 'handle'])->name('assistant.tool.tickets.create');
+            Route::post('tickets/update_status', [AgentToolController::class, 'handle'])->name('assistant.tool.tickets.update_status');
+            Route::post('activities/create', [AgentToolController::class, 'handle'])->name('assistant.tool.activities.create');
+            Route::post('segments/preview', [AgentToolController::class, 'handle'])->name('assistant.tool.segments.preview');
+            Route::post('segments/preview_count', [AgentToolController::class, 'handle'])->name('assistant.tool.segments.preview_count');
+            Route::post('kb/search', [AgentToolController::class, 'handle'])->name('assistant.tool.kb.search');
+            Route::post('dashboards/summary', [AgentToolController::class, 'handle'])->name('assistant.tool.dashboards.summary');
+            Route::post('analytics/metric', [AgentToolController::class, 'handle'])->name('assistant.tool.analytics.metric');
+            Route::post('reports/run', [AgentToolController::class, 'handle'])->name('assistant.tool.reports.run');
+            Route::post('contracts/search', [AgentToolController::class, 'handle'])->name('assistant.tool.contracts.search');
+            Route::post('contracts/get_status', [AgentToolController::class, 'handle'])->name('assistant.tool.contracts.get_status');
+            Route::post('loyalty/get_balance', [AgentToolController::class, 'handle'])->name('assistant.tool.loyalty.get_balance');
+            Route::post('clv/get_score', [AgentToolController::class, 'handle'])->name('assistant.tool.clv.get_score');
+            Route::post('users/my_permissions', [AgentToolController::class, 'handle'])->name('assistant.tool.users.my_permissions');
+            Route::post('integrations/status', [AgentToolController::class, 'handle'])->name('assistant.tool.integrations.status');
+            Route::post('webhooks/get_delivery_log', [AgentToolController::class, 'handle'])->name('assistant.tool.webhooks.get_delivery_log');
+            Route::post('notifications/get_unread', [AgentToolController::class, 'handle'])->name('assistant.tool.notifications.get_unread');
+            Route::post('calendar/upcoming', [AgentToolController::class, 'handle'])->name('assistant.tool.calendar.upcoming');
+            Route::post('comments/post', [AgentToolController::class, 'handle'])->name('assistant.tool.comments.post');
+            Route::post('tasks/create', [AgentToolController::class, 'handle'])->name('assistant.tool.tasks.create');
+            Route::post('invoices/search', [AgentToolController::class, 'handle'])->name('assistant.tool.invoices.search');
+            Route::post('invoices/get_ledger', [AgentToolController::class, 'handle'])->name('assistant.tool.invoices.get_ledger');
+            Route::get('tools/available', [AgentToolController::class, 'availableTools'])->name('assistant.tools.available');
+        });
+
+        Route::post('internal/low-confidence', [AssistantChatController::class, 'flagLowConfidence'])
+            ->name('assistant.internal.low-confidence');
+    });
+});
+
+// ================================================================
+// LEGACY / EXISTING ROUTES END HERE
+// ================================================================
+

@@ -30,7 +30,7 @@ interface EmailBlock {
   id: string;
   type: 'header' | 'text' | 'image' | 'button' | 'divider' | 'spacer' | 'social_links';
   content?: string;
-  settings?: Record<string, any>;
+  settings: Record<string, any>;
 }
 
 type VariablePlaceholder = {
@@ -53,7 +53,7 @@ const props = defineProps<{
 const templates = ref(props.templates);
 const isCreateOpen = ref(false);
 const isEditorOpen = ref(false);
-const editingTemplate = ref<CampaignTemplate | null>(null);
+const editingTemplate = ref<Partial<CampaignTemplate> | null>(null);
 const isMobilePreview = ref(false);
 const editorMode = ref<'visual' | 'html'>('visual');
 
@@ -109,6 +109,10 @@ const deleteBlock = (block: EmailBlock) => {
 const reorderBlocks = (fromIndex: number, toIndex: number) => {
   const [item] = blocks.value.splice(fromIndex, 1);
   blocks.value.splice(toIndex, 0, item);
+};
+
+const handleDragStart = (block: EmailBlock, index: number) => {
+  draggingBlock.value = block;
 };
 
 const generateHtml = (): string => {
@@ -185,8 +189,8 @@ const saveTemplate = async () => {
   }
 };
 
-const openEditor = (template?: CampaignTemplate) => {
-  editingTemplate.value = template || null;
+const openEditor = (template?: Partial<CampaignTemplate>) => {
+  editingTemplate.value = template ? { ...template } : null;
   blocks.value = template?.blocks || [];
   rawHtml.value = template?.raw_html || template?.html_content || '';
   selectedBlock.value = null;
@@ -473,14 +477,14 @@ const handleDragEnd = () => {
             <!-- Variable Placeholder Selector -->
             <div class="mt-6 pt-4 border-t" v-if="selectedBlock && (selectedBlock.type === 'text' || selectedBlock.type === 'header')">
               <h4 class="font-medium mb-2">Insert Variable</h4>
-              <Select v-model="selectedVariable" @update:model-value="(v) => { if(v) insertVariable(v); }">
+              <Select v-model="selectedVariable" @update:model-value="(v: any) => { if(v) insertVariable(v); }">
                 <SelectTrigger>
                   <SelectValue placeholder="Select a variable..." />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Select a variable...</SelectItem>
-                  <SelectItem v-for="v in availableVariables" :key="v.key" :value="v.key">{{ v.label }}</SelectItem>
-                </SelectContent>
+<SelectContent>
+                       <SelectItem value="__placeholder__">Select a variable...</SelectItem>
+                       <SelectItem v-for="v in availableVariables" :key="v.key" :value="v.key">{{ v.label }}</SelectItem>
+                     </SelectContent>
               </Select>
             </div>
           </div>

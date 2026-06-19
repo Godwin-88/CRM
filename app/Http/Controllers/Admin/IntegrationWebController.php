@@ -39,18 +39,50 @@ class IntegrationWebController extends Controller
         ]);
     }
 
-    public function connect(Integration $integration)
+    public function connect($provider)
     {
-        $integration->update([
+        $data = request()->only(['name', 'api_key', 'client_id', 'client_secret']);
+        
+        $integration = Integration::firstOrCreate(
+            ['provider' => $provider],
+            [
+                'name' => $data['name'] ?? ucfirst($provider),
+                'type' => $provider,
+                'connection_status' => 'pending',
+                'created_by' => auth()->id(),
+            ]
+        );
+
+        $updateData = [
             'connection_status' => 'connected',
             'last_active_at' => now(),
-        ]);
+            'is_active' => true,
+        ];
+
+        if (!empty($data['api_key'])) {
+            $updateData['api_key'] = encrypt($data['api_key']);
+        }
+        if (!empty($data['client_id'])) {
+            $updateData['config']['client_id'] = $data['client_id'];
+        }
+        if (!empty($data['client_secret'])) {
+            $updateData['config']['client_secret'] = $data['client_secret'];
+        }
+        if (!empty($data['name'])) {
+            $updateData['name'] = $data['name'];
+        }
+
+        $integration->update($updateData);
 
         return back()->with('status', 'Integration connected successfully.');
     }
 
-    public function disconnect(Integration $integration)
+    public function disconnect($identifier)
     {
+        $integration = Integration::where('id', $identifier)
+            ->orWhere('provider', $identifier)
+            ->firstOrFail();
+
         $integration->update([
             'connection_status' => 'not_connected',
             'is_active' => false,

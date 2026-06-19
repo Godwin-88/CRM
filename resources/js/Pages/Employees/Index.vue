@@ -27,6 +27,21 @@ const props = defineProps<{
         </Link>
       </div>
 
+      <Card class="mb-6">
+        <CardHeader><CardTitle>Headcount Summary</CardTitle></CardHeader>
+        <CardContent>
+          <div class="grid grid-cols-4 gap-4">
+            <div v-for="dept in departments" :key="dept.id" class="text-center">
+              <p class="text-sm text-gray-500">{{ dept.name }}</p>
+              <p class="text-2xl font-bold">{{ headcountSummary[dept.name] || 0 }} / {{ dept.target_count }}</p>
+              <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div class="bg-blue-600 h-2 rounded-full" :style="{ width: Math.min(100, ((headcountSummary[dept.name] || 0) / dept.target_count * 100)) + '%' }"></div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent class="pt-6">
           <Table>

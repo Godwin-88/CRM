@@ -36,6 +36,11 @@ class ReportDefinition extends Model
         return $this->belongsTo(User::class, 'owner_id');
     }
 
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
     public function scheduledDeliveries(): HasMany
     {
         return $this->hasMany(ScheduledReport::class, 'report_id');

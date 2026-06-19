@@ -14,6 +14,49 @@ use Inertia\Response;
 
 class OmniChannelWebController extends Controller
 {
+    public function workspace(): Response
+    {
+        return Inertia::render('Admin/OmniWorkspace');
+    }
+
+    public function tools(): Response
+    {
+        return Inertia::render('Admin/OmniTools');
+    }
+
+    public function supervisor(): Response
+    {
+        $stats = [
+            'open_tickets' => Ticket::whereIn('status', ['open', 'in_progress'])->count(),
+            'calls_today' => Interaction::where('type', 'call')->whereDate('created_at', today())->count(),
+            'chat_active' => Interaction::where('type', 'chat')->whereDate('created_at', today())->count(),
+            'sms_sent_today' => Interaction::where('type', 'sms')->where('direction', 'outbound')->whereDate('created_at', today())->count(),
+            'kiosk_integrations' => KioskIntegration::count(),
+        ];
+
+        $recentInteractions = Interaction::with(['contact', 'channel'])->orderBy('created_at', 'desc')->limit(50)->get();
+        $recentTickets = Ticket::with('contact')->orderBy('created_at', 'desc')->limit(20)->get();
+
+        return Inertia::render('Admin/OmniSupervisor', [
+            'stats' => $stats,
+            'recentInteractions' => $recentInteractions,
+            'recentTickets' => $recentTickets,
+        ]);
+    }
+
+    public function settings(): Response
+    {
+        $channels = InteractionChannel::orderBy('name')->get();
+        $interactions = Interaction::with(['contact', 'channel'])->orderBy('created_at', 'desc')->limit(100)->get();
+        $unmatchedItems = \App\Models\UnmatchedItem::orderBy('created_at', 'desc')->limit(50)->get();
+
+        return Inertia::render('Admin/OmniSettings', [
+            'channels' => $channels,
+            'interactions' => $interactions,
+            'unmatchedItems' => $unmatchedItems,
+        ]);
+    }
+
     public function dashboard(): Response
     {
         $stats = [

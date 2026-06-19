@@ -28,17 +28,23 @@ class DealController extends Controller
         if ($request->filled('pipeline_id')) {
             $query->where('pipeline_id', $request->pipeline_id);
         }
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
+        if ($request->filled('contact_id')) {
+            $query->where('contact_id', $request->contact_id);
+        }
 
         $pipelines = Pipeline::where('is_active', true)->get(['id', 'name']);
 
         return Inertia::render('Deals/Index', [
             'deals' => $query->paginate(20),
             'pipelines' => $pipelines,
-            'filters' => $request->only(['search', 'stage', 'pipeline_id']),
+            'filters' => $request->only(['search', 'stage', 'pipeline_id', 'account_id', 'contact_id']),
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $pipelines = Pipeline::with('stages')
             ->where('is_active', true)
@@ -51,8 +57,8 @@ class DealController extends Controller
             'pipelines' => $pipelines,
             'accounts' => $accounts,
             'contacts' => $contacts,
-            'preselectedContactId' => null,
-            'preselectedAccountId' => null,
+            'preselectedContactId' => $request->filled('contact_id') ? $request->contact_id : null,
+            'preselectedAccountId' => $request->filled('account_id') ? $request->account_id : null,
         ]);
     }
 

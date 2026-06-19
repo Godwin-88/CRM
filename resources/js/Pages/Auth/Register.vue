@@ -119,9 +119,9 @@ const submit = () => {
               <p v-if="form.errors.role" class="text-sm text-red-600">{{ form.errors.role }}</p>
             </div>
             
-            <Alert v-if="form.errors.general" variant="destructive" class="mt-4">
+            <Alert v-if="(form.errors as any).general" variant="destructive" class="mt-4">
               <AlertCircle class="h-4 w-4" />
-              <AlertDescription>{{ form.errors.general }}</AlertDescription>
+              <AlertDescription>{{ (form.errors as any).general }}</AlertDescription>
             </Alert>
             
             <Button type="submit" class="w-full" :disabled="form.processing">

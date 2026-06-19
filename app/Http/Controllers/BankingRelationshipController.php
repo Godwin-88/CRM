@@ -41,9 +41,12 @@ class BankingRelationshipController extends Controller
     {
         $this->authorize('view', $bankingRelationship);
 
+        $bankingRelationship->load(['notes.user']);
+
         return Inertia::render('Banking/Show', [
             'relationship' => $bankingRelationship,
             'canViewFinancials' => auth()->user()->can('viewFinancials', $bankingRelationship),
+            'canViewDocuments' => auth()->user()->can('viewDocuments', $bankingRelationship),
         ]);
     }
 
@@ -142,5 +145,25 @@ class BankingRelationshipController extends Controller
             ->log('banking_relationship_deleted');
 
         return redirect()->route('banking.index')->with('success', 'Banking relationship deleted.');
+    }
+
+    public function addNote(Request $request, BankingRelationship $bankingRelationship)
+    {
+        $this->authorize('update', $bankingRelationship);
+
+        $validated = $request->validate([
+            'content' => ['required', 'string'],
+        ]);
+
+        $bankingRelationship->notes()->create([
+            'user_id' => auth()->id(),
+            'content' => $validated['content'],
+        ]);
+
+        \activity()
+            ->performedOn($bankingRelationship)
+            ->log('banking_note_added');
+
+        return back()->with('success', 'Note added.');
     }
 }

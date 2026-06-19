@@ -33,6 +33,7 @@ class Contact extends Model implements HasMedia
         'last_activity_at',
         'loyalty_tier',
         'preferred_channel',
+        'support_opt_out',
         'score',
         'marketing_consent',
         'data_processing_consent',
@@ -45,6 +46,7 @@ class Contact extends Model implements HasMedia
         'score' => 'integer',
         'marketing_consent' => 'boolean',
         'data_processing_consent' => 'boolean',
+        'support_opt_out' => 'boolean',
         'consent_timestamp' => 'datetime',
     ];
 
@@ -67,6 +69,11 @@ class Contact extends Model implements HasMedia
         return $this->belongsToMany(Account::class, 'contact_account')
             ->withPivot('is_primary')
             ->withTimestamps();
+    }
+
+    public function segments(): BelongsToMany
+    {
+        return $this->belongsToMany(Segment::class, 'contact_segments');
     }
 
     public function owner(): BelongsTo

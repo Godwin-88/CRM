@@ -69,8 +69,8 @@ const createPost = async () => {
   }
 };
 
-const statusColor = (status: string) => {
-  const colors: Record<string, string> = {
+const statusColor = (status: string): "default" | "outline" | "secondary" | "destructive" | "success" | null | undefined => {
+  const colors: Record<string, "default" | "outline" | "secondary" | "destructive" | "success"> = {
     draft: 'outline',
     scheduled: 'secondary',
     published: 'default',

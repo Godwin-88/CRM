@@ -104,7 +104,7 @@ const submit = () => {
                                 {{ code }}
                             </div>
                         </div>
-                        <Button @click="() => (window.location.href = '/deals')"
+                        <Button @click="() => router.visit('/deals')"
                             >Continue to Dashboard</Button
                         >
                     </div>

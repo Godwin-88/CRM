@@ -23,10 +23,10 @@ class InteractionWebController extends Controller
 
     public function inbox(): Response
     {
-        $interactions = Interaction::unmatched()->with(['channel'])->orderBy('created_at', 'desc')->limit(100)->get();
+        $items = UnmatchedItem::with(['channel', 'contact'])->orderBy('created_at', 'desc')->limit(100)->get();
 
         return Inertia::render('Admin/InteractionInbox', [
-            'interactions' => $interactions,
+            'interactions' => $items,
         ]);
     }
 

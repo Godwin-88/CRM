@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 const props = defineProps<{
   categories: string[];
   statuses: string[];
+  canViewFinancials: boolean;
 }>();
 
 const form = useForm({
@@ -20,6 +22,13 @@ const form = useForm({
   primary_contact_phone: '',
   registration_number: '',
   tax_identification_number: '',
+  account_name: '',
+  account_number: '',
+  bank_name: '',
+  branch_code: '',
+  swift_code: '',
+  physical_address: '',
+  website: '',
   status: 'active',
 });
 
@@ -58,19 +67,51 @@ const submit = () => {
               </Select>
             </div>
 
-            <div>
-              <Label for="primary_contact_name">Contact Name</Label>
-              <Input id="primary_contact_name" v-model="form.primary_contact_name" />
-            </div>
-
-            <div>
-              <Label for="primary_contact_email">Contact Email</Label>
-              <Input id="primary_contact_email" type="email" v-model="form.primary_contact_email" />
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <Label for="primary_contact_name">Contact Name</Label>
+                <Input id="primary_contact_name" v-model="form.primary_contact_name" />
+              </div>
+              <div>
+                <Label for="primary_contact_email">Contact Email</Label>
+                <Input id="primary_contact_email" type="email" v-model="form.primary_contact_email" />
+              </div>
             </div>
 
             <div>
               <Label for="primary_contact_phone">Contact Phone</Label>
               <Input id="primary_contact_phone" v-model="form.primary_contact_phone" />
+            </div>
+
+            <div>
+              <Label for="registration_number">Registration Number</Label>
+              <Input id="registration_number" v-model="form.registration_number" />
+            </div>
+
+            <div>
+              <Label for="tax_identification_number">Tax ID Number</Label>
+              <Input id="tax_identification_number" v-model="form.tax_identification_number" />
+            </div>
+
+            <div v-if="canViewFinancials">
+              <Label>Bank Details (encrypted)</Label>
+              <div class="grid grid-cols-2 gap-4 mt-2">
+                <div><Label for="account_name">Account Name</Label><Input id="account_name" v-model="form.account_name" /></div>
+                <div><Label for="account_number">Account Number</Label><Input id="account_number" v-model="form.account_number" /></div>
+                <div><Label for="bank_name">Bank Name</Label><Input id="bank_name" v-model="form.bank_name" /></div>
+                <div><Label for="branch_code">Branch Code</Label><Input id="branch_code" v-model="form.branch_code" /></div>
+                <div><Label for="swift_code">SWIFT Code</Label><Input id="swift_code" v-model="form.swift_code" /></div>
+              </div>
+            </div>
+
+            <div>
+              <Label for="physical_address">Physical Address</Label>
+              <Textarea id="physical_address" v-model="form.physical_address" />
+            </div>
+
+            <div>
+              <Label for="website">Website</Label>
+              <Input id="website" type="url" v-model="form.website" placeholder="https://" />
             </div>
 
             <Button type="submit" :disabled="form.processing">Create Vendor</Button>

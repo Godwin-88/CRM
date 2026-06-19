@@ -18,7 +18,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://ml-agents:8000/agents/diagnose-anomaly",
+        "url": "http://localhost/api/v1/analytics/anomalies",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n   \"anomaly_id\": \"{{ $json.body.anomaly_id }}\",\n   \"anomaly_type\": \"{{ $json.body.anomaly_type }}\",\n   \"details\": \"{{ $json.body.anomaly_description }}\"\n}",

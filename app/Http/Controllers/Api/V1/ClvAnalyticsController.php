@@ -16,6 +16,9 @@ class ClvAnalyticsController extends Controller
 
         $query = ClvCalculation::query()->with('contact');
 
+        if ($request->filled('contact_id')) {
+            $query->where('contact_id', $request->input('contact_id'));
+        }
         if ($request->filled('contact_type')) {
             $query->whereHas('contact', fn ($q) => $q->where('type', $request->contact_type));
         }
@@ -37,6 +40,18 @@ class ClvAnalyticsController extends Controller
         $query->orderBy($sortField, $sortDir);
 
         return response()->json($query->paginate($request->get('per_page', 50)));
+    }
+
+    public function show(Request $request, string $contact_id): JsonResponse
+    {
+        $contact = \App\Models\Contact::findOrFail($contact_id);
+        $this->authorize('view', $contact);
+
+        $clv = ClvCalculation::where('contact_id', $contact->id)
+            ->with('contact')
+            ->firstOrFail();
+
+        return response()->json($clv);
     }
 
     public function dashboard(Request $request): JsonResponse

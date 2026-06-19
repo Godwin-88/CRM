@@ -15,7 +15,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://ml-agents:8000/agents/score-lead",
+        "url": "http://localhost/api/v1/leads/score",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"lead_id\": \"{{ $json.body.lead_id }}\",\n  \"email\": \"{{ $json.body.email }}\",\n  \"source_channel\": \"{{ $json.body.source_channel || 'web_form' }}\",\n  \"interaction_history\": {{ JSON.stringify($json.body.interaction_history || []) }},\n  \"content_interests\": {{ JSON.stringify($json.body.content_interests || []) }}\n}",

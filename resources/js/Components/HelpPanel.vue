@@ -37,6 +37,8 @@ const isOpen = computed({
 const audience = computed(() => {
   if (props.userRoles.includes('admin')) return 'admin'
   if (props.userRoles.includes('manager')) return 'manager'
+  if (props.userRoles.includes('finance-manager')) return 'finance-manager'
+  if (props.userRoles.includes('operations-manager')) return 'operations-manager'
   return 'agent'
 })
 

@@ -53,8 +53,8 @@ const submitLog = async () => {
       duration_seconds: logDuration.value ? parseInt(logDuration.value) : 0,
       outcome: logOutcome.value || undefined,
       notes: logNotes.value || undefined,
-      deal_id: logDealId.value || undefined,
-      ticket_id: logTicketId.value || undefined,
+      deal_id: logDealId.value && logDealId.value !== 'none' ? logDealId.value : undefined,
+      ticket_id: logTicketId.value && logTicketId.value !== 'none' ? logTicketId.value : undefined,
     },
     {
       onFinish: () => {
@@ -79,7 +79,7 @@ const submitLog = async () => {
           <DialogTrigger as-child><Button><Plus class="h-4 w-4 mr-2" />Log Call</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Log Call</DialogTitle></DialogHeader>
-            <form @submit.prevent="submitLog" class="space-y-4">
+<form @submit.prevent="submitLog" class="space-y-4">
               <div class="space-y-2">
                 <Label>Contact</Label>
                 <Select v-model="logContactId">
@@ -87,7 +87,6 @@ const submitLog = async () => {
                     <SelectValue placeholder="Select contact" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Select contact</SelectItem>
                     <SelectItem v-for="c in contacts" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }}</SelectItem>
                   </SelectContent>
                 </Select>
@@ -128,7 +127,7 @@ const submitLog = async () => {
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem v-for="d in deals" :key="d.id" :value="d.id">{{ d.title }}</SelectItem>
                     </SelectContent>
                   </Select>
@@ -140,7 +139,7 @@ const submitLog = async () => {
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem v-for="t in tickets" :key="t.id" :value="t.id">{{ t.subject }}</SelectItem>
                     </SelectContent>
                   </Select>

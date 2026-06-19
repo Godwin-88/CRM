@@ -13,6 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class ProcessInboundEmail implements ShouldQueue
 {
@@ -20,11 +21,14 @@ class ProcessInboundEmail implements ShouldQueue
 
     public function __construct(
         public array $emailData,
-        public ?SupportEmailAddress $supportEmail = null
+        public ?SupportEmailAddress $supportEmail = null,
+        public ?\DateTimeInterface $enqueuedAt = null
     ) {}
 
     public function handle(TicketService $ticketService): void
     {
+        $this->checkProcessingDelay();
+
         $fromEmail = $this->emailData['from'] ?? null;
         $subject = $this->emailData['subject'] ?? '';
         $body = $this->emailData['body'] ?? '';
@@ -77,6 +81,22 @@ class ProcessInboundEmail implements ShouldQueue
         ]);
 
         $this->createTicketInteraction($ticket, $fromEmail, $subject, $body);
+    }
+
+    protected function checkProcessingDelay(): void
+    {
+        if ($this->enqueuedAt) {
+            $delayMinutes = now()->diffInMinutes($this->enqueuedAt);
+            if ($delayMinutes > 5) {
+                Log::warning('Inbound email processing delayed', [
+                    'delay_minutes' => $delayMinutes,
+                    'email_data' => $this->emailData,
+                ]);
+
+                Notification::route('mail', config('mail.from.address'))
+                    ->notify(new \App\Notifications\InboundEmailDelay($delayMinutes, $this->emailData));
+            }
+        }
     }
 
     protected function isAutoReply(array $headers): bool

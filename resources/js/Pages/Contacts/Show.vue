@@ -32,7 +32,7 @@ interface Contact {
   tickets: { id: string; subject: string; status: string; priority: string }[];
   contracts: { id: string; title: string; status: string }[];
   customFieldValues: { id: string; field_key: string; value: string }[];
-  interactions: { id: string; type: string; direction: string; created_at: string; outcome?: string }[];
+  interactions: { id: string; type: string; direction: string; created_at: string; outcome?: string; subject?: string }[];
 }
 
 interface Account {

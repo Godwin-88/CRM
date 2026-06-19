@@ -37,4 +37,14 @@ class UnmatchedItem extends Model
     {
         return $this->belongsTo(User::class, 'resolved_by');
     }
+
+    public function getChannelAttribute(): ?\App\Models\InteractionChannel
+    {
+        return \App\Models\InteractionChannel::where('name', $this->source_type)->first();
+    }
+
+    public function getSubjectAttribute(): string
+    {
+        return ucfirst($this->source_type).' from '.$this->external_id;
+    }
 }

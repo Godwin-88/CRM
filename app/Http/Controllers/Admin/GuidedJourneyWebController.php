@@ -19,8 +19,16 @@ class GuidedJourneyWebController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $stats = [
+            'queued' => ReactivationContact::where('status', 'enrolled')->count(),
+            'sent' => ReactivationContact::where('status', 're_engaged')->count(),
+            'responded' => ReactivationContact::where('status', 're_engaged')->count(),
+            'reactivated' => ReactivationContact::where('status', 'completed')->count(),
+        ];
+
         return Inertia::render('Admin/Reactivation', [
             'configs' => $configs,
+            'stats' => $stats,
         ]);
     }
 

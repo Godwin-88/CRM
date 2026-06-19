@@ -12,7 +12,7 @@ use Inertia\Response;
 
 class SlaWebController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $slaDefinitions = SlaDefinition::with(['businessHours'])->orderBy('created_at', 'desc')->get();
         $businessHours = BusinessHours::orderBy('name')->get();
@@ -20,6 +20,12 @@ class SlaWebController extends Controller
         return Inertia::render('Admin/Sla', [
             'slaDefinitions' => $slaDefinitions,
             'businessHours' => $businessHours,
+            'prefill' => [
+                'name' => $request->filled('assistant_prefill_name') ? $request->assistant_prefill_name : '',
+                'priority' => $request->filled('assistant_prefill_priority') ? $request->assistant_prefill_priority : '',
+                'first_response_time_business_hours' => $request->filled('assistant_prefill_first_response') ? (int) $request->assistant_prefill_first_response : null,
+                'resolution_time_business_hours' => $request->filled('assistant_prefill_resolution') ? (int) $request->assistant_prefill_resolution : null,
+            ],
         ]);
     }
 
@@ -28,6 +34,7 @@ class SlaWebController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'priority' => 'nullable|string|max:50',
             'support_category' => 'nullable|string|max:100',
             'loyalty_tier_id' => 'nullable|exists:loyalty_tiers,id',
             'account_type' => 'nullable|string|max:100',
@@ -53,6 +60,7 @@ class SlaWebController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
+            'priority' => 'nullable|string|max:50',
             'support_category' => 'nullable|string|max:100',
             'loyalty_tier_id' => 'nullable|exists:loyalty_tiers,id',
             'account_type' => 'nullable|string|max:100',

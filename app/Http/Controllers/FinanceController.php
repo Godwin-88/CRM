@@ -14,7 +14,7 @@ class FinanceController extends Controller
 {
     public function dashboard(Request $request): Response
     {
-        $this->authorize('view', Invoice::class);
+        $this->authorize('viewAny', Invoice::class);
 
         $startDate = $request->get('start_date', now()->subMonths(12)->startOfMonth());
         $endDate = $request->get('end_date', now()->endOfMonth());
@@ -87,16 +87,20 @@ class FinanceController extends Controller
             ->limit(10)
             ->get();
 
-        $vendorCategories = PurchaseOrder::where('status', 'received')
+        $vendorCategories = PurchaseOrder::where('purchase_orders.status', 'received')
+            ->whereBetween('purchase_orders.created_at', [$startDate, $endDate])
+            ->when($currency, fn ($q) => $q->where('purchase_orders.currency', $currency))
             ->join('vendors', 'purchase_orders.vendor_id', '=', 'vendors.id')
             ->selectRaw('vendors.category, sum(purchase_orders.total) as total_spend')
             ->groupBy('vendors.category')
             ->pluck('total_spend', 'category');
 
-        $topVendors = PurchaseOrder::where('status', 'received')
+        $topVendors = PurchaseOrder::where('purchase_orders.status', 'received')
+            ->whereBetween('purchase_orders.created_at', [$startDate, $endDate])
+            ->when($currency, fn ($q) => $q->where('purchase_orders.currency', $currency))
             ->with('vendor')
-            ->selectRaw('vendor_id, sum(total) as total_spend')
-            ->groupBy('vendor_id')
+            ->selectRaw('purchase_orders.vendor_id, sum(purchase_orders.total) as total_spend')
+            ->groupBy('purchase_orders.vendor_id')
             ->orderByDesc('total_spend')
             ->limit(5)
             ->get();

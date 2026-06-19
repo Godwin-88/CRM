@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\KnowledgeBaseArticle;
+use App\Services\AssistantIntentService;
 use App\Services\KnowledgeBaseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -14,6 +16,7 @@ class KnowledgeBaseController extends Controller
 {
     public function __construct(
         protected KnowledgeBaseService $knowledgeBaseService,
+        protected AssistantIntentService $assistantIntentService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -188,5 +191,39 @@ class KnowledgeBaseController extends Controller
         }
 
         return response()->json(['recorded' => true]);
+    }
+
+    public function retrieveForAssistant(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'query' => 'required|string|max:500',
+            'feature_refs' => 'sometimes|array',
+            'feature_refs.*' => 'string',
+            'per_page' => 'nullable|integer|min:1|max:10',
+        ]);
+
+        $perPage = (int) ($validated['per_page'] ?? 5);
+        $context = [
+            'route' => $request->input('route'),
+            'path' => $request->input('path'),
+            'message' => $validated['query'],
+        ];
+        $analysis = $this->assistantIntentService->analyze($validated['query'], $context, $request->user());
+        $articles = $analysis['articles'];
+
+        if (! empty($validated['feature_refs'])) {
+            $articles = $this->assistantIntentService->retrieveDocumentsForAssistant(
+                $validated['query'],
+                $validated['feature_refs'],
+                $perPage,
+                $request->user()
+            );
+        }
+
+        return response()->json([
+            'query' => $validated['query'],
+            'intent_analysis' => Arr::only($analysis, ['help_type', 'intent', 'resolved_intent', 'confidence', 'feature_refs', 'low_confidence']),
+            'results' => $articles,
+        ]);
     }
 }

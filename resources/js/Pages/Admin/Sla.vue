@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3'
+import { onMounted } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,19 +17,26 @@ const props = defineProps<{
     first_response_time_business_hours: number
     resolution_time_business_hours: number
     is_default: boolean
-    business_hours?: any[]
+    businessHours?: any[]
   }[]
   businessHours: any[]
+  prefill?: {
+    name?: string
+    priority?: string
+    first_response_time_business_hours?: number | null
+    resolution_time_business_hours?: number | null
+  }
 }>()
 
 const newSla = useForm({
-  name: '',
+  name: props.prefill?.name || '',
   description: '',
+  priority: props.prefill?.priority || '',
   support_category_id: '',
   loyalty_tier_id: '',
   account_type: '',
-  first_response_time_business_hours: 4,
-  resolution_time_business_hours: 24,
+  first_response_time_business_hours: props.prefill?.first_response_time_business_hours || 4,
+  resolution_time_business_hours: props.prefill?.resolution_time_business_hours || 24,
   is_default: false,
 })
 
@@ -39,6 +47,22 @@ const submitSla = () => {
     }
   })
 }
+
+onMounted(() => {
+  if (!props.prefill?.name && !props.prefill?.first_response_time_business_hours && !props.prefill?.resolution_time_business_hours) {
+    try {
+      const prefill = JSON.parse(localStorage.getItem('assistant_navigation_prefill:/admin/sla') || 'null')
+      if (prefill) {
+        newSla.name = prefill.name || ''
+        newSla.first_response_time_business_hours = prefill.first_response_time_business_hours || 4
+        newSla.resolution_time_business_hours = prefill.resolution_time_business_hours || 24
+        localStorage.removeItem('assistant_navigation_prefill:/admin/sla')
+      }
+    } catch {
+      localStorage.removeItem('assistant_navigation_prefill:/admin/sla')
+    }
+  }
+})
 </script>
 
 <template>
@@ -50,6 +74,10 @@ const submitSla = () => {
         <div>
           <h1 class="text-3xl font-bold text-gray-900">Service Level Agreements</h1>
           <p class="text-gray-500">Define response and resolution targets for support tickets.</p>
+          <p v-if="props.prefill?.name || props.prefill?.priority" class="mt-2 text-sm text-blue-600 dark:text-blue-400">
+            Assistant prefill: {{ props.prefill.name }}
+            <span v-if="props.prefill.priority">Priority: {{ props.prefill.priority }}</span>
+          </p>
         </div>
         <Button @click="submitSla">New SLA</Button>
       </div>

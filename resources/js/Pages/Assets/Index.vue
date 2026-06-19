@@ -34,8 +34,10 @@ const props = defineProps<{
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Identifier</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Assigned To</TableHead>
+                <TableHead v-if="assets.data.some(a => a.type === 'hardware' || a.type === 'furniture')">Stock</TableHead>
                 <TableHead>Book Value</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -43,7 +45,8 @@ const props = defineProps<{
             <TableBody>
               <TableRow v-for="asset in assets.data" :key="asset.id">
                 <TableCell>{{ asset.name }}</TableCell>
-                <TableCell>{{ asset.type }}</TableCell>
+                <TableCell class="capitalize">{{ asset.type }}</TableCell>
+                <TableCell>{{ asset.identifier }}</TableCell>
                 <TableCell>
                   <Badge :variant="asset.status === 'available' ? 'default' : 'secondary'">
                     {{ asset.status }}
@@ -52,6 +55,10 @@ const props = defineProps<{
                 <TableCell>
                   <span v-if="asset.assignee">{{ asset.assignee.name }}</span>
                   <span v-else-if="asset.assigned_account">{{ asset.assigned_account.name }}</span>
+                  <span v-else>—</span>
+                </TableCell>
+                <TableCell v-if="assets.data.some(a => a.type === 'hardware' || a.type === 'furniture')">
+                  <span v-if="asset.total_quantity">{{ asset.available_quantity }} / {{ asset.total_quantity }}</span>
                   <span v-else>—</span>
                 </TableCell>
                 <TableCell>${{ Number(asset.book_value || 0).toLocaleString() }}</TableCell>

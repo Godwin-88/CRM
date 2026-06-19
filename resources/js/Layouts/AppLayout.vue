@@ -6,12 +6,14 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Menu, HelpCircle } from "lucide-vue-next";
+import { ChevronDown, ChevronRight, Menu, HelpCircle, Settings2, Users, Megaphone, Shield, Award, MessageSquare, Briefcase, FileText, DollarSign, BarChart3 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { setI18nLocale, getI18nLocale, supportedLocales } from "@/lib/i18n";
 import HelpPanel from "@/Components/HelpPanel.vue";
+import AssistantIcon from "@/Components/CRM/AssistantIcon.vue";
 import ToastNotification from "@/Components/ToastNotification.vue";
+import AssistantChatPopup from "@/Components/CRM/AssistantChatPopup.vue";
 import {
     Dialog,
     DialogContent,
@@ -26,6 +28,7 @@ interface User {
     name: string;
     email: string;
     roles: string[];
+    permissions: string[];
 }
 
 interface ChecklistItem {
@@ -41,11 +44,13 @@ interface ChecklistItem {
 const page = usePage();
 const user = computed(() => page.props.user as User | null);
 const userRoles = computed(() => user.value?.roles || []);
+const userPermissions = computed(() => user.value?.permissions || []);
 const isPrivileged = computed(() => page.props.is_privileged as boolean);
-const currentRoute = computed(() => page.url || '');
 
 const isExpanded = ref(true);
 const isHovered = ref(false);
+const isMobileMenuOpen = ref(false);
+const openMenuItem = ref<string | null>(null);
 const showHelpPanel = ref(false);
 const showOnboardingDialog = ref(false);
 const checklist = ref<ChecklistItem[]>([]);
@@ -59,11 +64,17 @@ const hasIncompleteItems = computed(() =>
     checklist.value.some(item => !item.completed && !item.dismissed)
 );
 
-const canViewAdmin = computed(
-    () =>
-        userRoles.value.includes("admin") ||
-        userRoles.value.includes("manager"),
-);
+const currentRoute = computed(() => page.url || '');
+
+const hasPermission = (permission: string): boolean => {
+    return userPermissions.value.includes(permission);
+};
+
+const hasAnyRole = (...roles: string[]): boolean => {
+    return roles.some(r => userRoles.value.includes(r));
+};
+
+const canViewAdmin = computed(() => hasAnyRole('admin', 'manager'));
 
 const sidebarWidth = computed(() => {
     if (!isExpanded.value && !isHovered.value) return "w-20";
@@ -72,8 +83,16 @@ const sidebarWidth = computed(() => {
 
 const menuItems = computed(() => [
     {
+        title: "Overview",
+        icon: BarChart3,
+        show: true,
+        children: [
+            { href: "/admin/analytics/dashboard", label: "Dashboard" },
+        ],
+    },
+    {
         title: "Account Management",
-        icon: Menu,
+        icon: Users,
         show: true,
         children: [
             { href: "/accounts", label: "Accounts" },
@@ -82,8 +101,8 @@ const menuItems = computed(() => [
     },
     {
         title: "Campaigns",
-        icon: Menu,
-        show: canViewAdmin.value,
+        icon: Megaphone,
+        show: hasAnyRole('admin', 'manager'),
         children: [
             { href: "/admin/campaigns", label: "Campaigns" },
             { href: "/admin/campaign-templates", label: "Campaign Templates" },
@@ -95,64 +114,49 @@ const menuItems = computed(() => [
     },
     {
         title: "Admin",
-        icon: Menu,
-        show: canViewAdmin.value,
+        icon: Shield,
+        show: hasAnyRole('admin', 'manager'),
         children: [
-            { href: "/admin/pipelines", label: "Pipelines" },
-            { href: "/admin/win-loss-reasons", label: "Win/Loss Reasons" },
-            { href: "/admin/quote-templates", label: "Quote Templates" },
-            { href: "/admin/quotes", label: "Quotes" },
-            { href: "/admin/scoring-rules", label: "Scoring Rules" },
-            { href: "/admin/custom-fields", label: "Custom Fields" },
+            { href: "/admin/pipelines", label: "Pipelines", requiredPermission: "pipelines.manage" },
+            { href: "/admin/win-loss-reasons", label: "Win/Loss Reasons", requiredPermission: "win_loss_reasons.manage" },
+            { href: "/admin/quote-templates", label: "Quote Templates", requiredPermission: "quote_templates.manage" },
+            { href: "/admin/quotes", label: "Quotes", requiredPermission: "quotes.view" },
+            { href: "/admin/scoring-rules", label: "Scoring Rules", requiredPermission: "scoring_rules.manage" },
+            { href: "/admin/custom-fields", label: "Custom Fields", requiredPermission: "custom_fields.manage" },
             { href: "/admin/duplicates", label: "Duplicate Merge" },
+            { href: "/admin/rbac", label: "Role Management" },
         ],
     },
     {
         title: "Loyalty & CX",
-        icon: Menu,
-        show: canViewAdmin.value,
+        icon: Award,
+        show: hasAnyRole('admin', 'manager'),
         children: [
-            { href: "/admin/loyalty", label: "Loyalty Program" },
-            { href: "/admin/loyalty/ledger", label: "Points Ledger" },
-            { href: "/admin/surveys", label: "Surveys" },
-            { href: "/admin/surveys/responses", label: "Survey Responses" },
-            { href: "/admin/sla", label: "SLA Center" },
-            { href: "/admin/onboarding", label: "Onboarding" },
-            { href: "/admin/journeys", label: "Guided Journeys" },
-            { href: "/admin/reactivation", label: "Reactivation" },
-            { href: "/admin/reactivation/analytics", label: "Reactivation Analytics" },
-            { href: "/admin/clv-analytics", label: "CLV Analytics" },
-            { href: "/admin/welcome-email-templates", label: "Welcome Emails" },
+            { href: "/admin/loyalty-programs", label: "Programs", requiredPermission: "loyalty.adjust" },
+            { href: "/admin/loyalty/ledger", label: "Points Ledger", requiredPermission: "loyalty.adjust" },
+            { href: "/admin/cx-insights", label: "Insights" },
+            { href: "/admin/service-delivery", label: "Service" },
+            { href: "/admin/customer-journeys", label: "Journeys" },
         ],
     },
-        {
-            title: "OmniChannel",
-            icon: Menu,
-            show: canViewAdmin.value,
-            children: [
-                { href: "/admin/omni/dashboard", label: "Dashboard" },
-                { href: "/admin/omni/contact-center", label: "Queue Stats" },
-                { href: "/admin/interactions", label: "Interactions" },
-                { href: "/admin/interactions/inbox", label: "Inbox" },
-                { href: "/admin/interactions/channels", label: "Channels" },
-                { href: "/admin/interactions/unmatched", label: "Unmatched" },
-                { href: "/admin/omni/tickets", label: "Tickets" },
-                { href: "/admin/chat/inbox", label: "Chat Inbox" },
-                { href: "/admin/omni/kiosk", label: "Kiosk" },
-                { href: "/admin/email/compose", label: "Email Compose" },
-                { href: "/admin/sms/compose", label: "SMS Composer" },
-                { href: "/admin/call/log", label: "Call Log" },
-                { href: "/admin/ivr/transcriptions", label: "IVR Transcriptions" },
-                { href: "/admin/field-channel", label: "Field Channel" },
-            ],
-        },
+    {
+        title: "OmniChannel",
+        icon: MessageSquare,
+        show: hasAnyRole('admin', 'manager', 'agent'),
+        children: [
+            { href: "/admin/omni/workspace", label: "Workspace" },
+            { href: "/admin/omni/tools", label: "Agent Tools", requiredPermission: "contacts.edit" },
+            { href: "/admin/omni/supervisor", label: "Supervisor", requiredPermission: "security.events" },
+            { href: "/admin/omni/settings", label: "Settings", requiredPermission: "integrations.manage" },
+        ],
+    },
     {
         title: "Deal Management",
-        icon: Menu,
-        show: true,
+        icon: Briefcase,
+        show: hasAnyRole('admin', 'manager', 'agent'),
         children: [
-            { href: "/deals", label: "Deals" },
-            { href: "/deals/board", label: "Kanban Board" },
+            { href: "/deals", label: "Deals", requiredPermission: "deals.view" },
+            { href: "/deals/board", label: "Kanban Board", requiredPermission: "deals.view" },
             { href: "/admin/deal-automations", label: "Automations" },
             { href: "/quotes", label: "Quotes" },
             { href: "/analytics/forecast", label: "Forecast" },
@@ -160,39 +164,35 @@ const menuItems = computed(() => [
     },
     {
         title: "Contracts & Legal",
-        icon: Menu,
-        show: true,
+        icon: FileText,
+        show: hasAnyRole('admin', 'manager', 'agent'),
         children: [
-            { href: "/contracts", label: "Contracts" },
-            { href: "/legal", label: "Legal Matters" },
+            { href: "/contracts", label: "Contracts", requiredPermission: "contracts.view" },
+            { href: "/legal", label: "Legal Matters", requiredPermission: "legal_matters.view" },
         ],
     },
     {
         title: "Finance & Procurement",
-        icon: Menu,
-        show: true,
+        icon: DollarSign,
+        show: hasAnyRole('admin', 'manager', 'finance-manager', 'operations-manager'),
         children: [
-            { href: "/invoices", label: "Invoices" },
-            { href: "/vendors", label: "Vendors" },
-            { href: "/purchase-orders", label: "Purchase Orders" },
-            { href: "/assets", label: "Assets" },
-            { href: "/banking", label: "Banking" },
+            { href: "/invoices", label: "Invoices", requiredPermission: "invoices.view" },
+            { href: "/vendors", label: "Vendors", requiredPermission: "vendors.view" },
+            { href: "/purchase-orders", label: "Purchase Orders", requiredPermission: "procurement.create" },
+            { href: "/assets", label: "Assets", requiredPermission: "assets.view" },
+            { href: "/banking", label: "Banking", requiredPermission: "banking.view" },
             { href: "/employees", label: "Employees" },
             { href: "/finance", label: "Finance Dashboard" },
         ],
     },
     {
         title: "Analytics & Intelligence",
-        icon: Menu,
-        show: true,
+        icon: BarChart3,
+        show: hasAnyRole('admin', 'manager'),
         children: [
-            {
-                href: "/admin/analytics/dashboard",
-                label: "Analytics Dashboard",
-            },
             { href: "/admin/analytics/customer", label: "Customer Analytics" },
             { href: "/admin/analytics/growth", label: "Growth Analytics" },
-            { href: "/admin/analytics/finance", label: "Finance Analytics" },
+            { href: "/admin/analytics/finance", label: "Finance Analytics", requiredPermission: "analytics.finance" },
             {
                 href: "/admin/analytics/predictive-scoring",
                 label: "Predictive Scoring",
@@ -204,6 +204,19 @@ const menuItems = computed(() => [
             { href: "/admin/clv-analytics", label: "CLV Analytics" },
         ],
     },
+    {
+        title: "Integrations & API",
+        icon: Settings2,
+        show: hasAnyRole('admin', 'manager'),
+        children: [
+            { href: "/admin/integrations", label: "Service Registry" },
+            { href: "/admin/integrations/marketplace", label: "Marketplace" },
+            { href: "/admin/api-tokens", label: "API Tokens" },
+            { href: "/admin/oauth-clients", label: "OAuth2 Apps" },
+            { href: "/admin/integrations/webhooks", label: "Webhooks" },
+            { href: "/docs", label: "Developer Portal" },
+        ],
+    },
 ]);
 
 onMounted(() => {
@@ -213,7 +226,7 @@ onMounted(() => {
     }
 
     // Check if onboarding checklist should be shown (only once per user)
-    if (currentRoute.value === '/' && !onboardingChecklistSeen.value) {
+    if (currentRoute.value.includes('dashboard') && !onboardingChecklistSeen.value) {
         fetch('/onboarding/checklist', {
             headers: {
                 'Accept': 'application/json',
@@ -256,6 +269,10 @@ watch(checklist, () => {
     }
 });
 
+watch(currentRoute, () => {
+    isMobileMenuOpen.value = false;
+});
+
 watch(isExpanded, (value) => {
     localStorage.setItem("sidebarExpanded", JSON.stringify(value));
 });
@@ -263,15 +280,31 @@ watch(isExpanded, (value) => {
 const toggleSidebar = () => {
     isExpanded.value = !isExpanded.value;
 };
+
+const toggleMenuItem = (title: string) => {
+    if (openMenuItem.value === title) {
+        openMenuItem.value = null;
+    } else {
+        openMenuItem.value = title;
+    }
+};
 </script>
 
 <template>
-    <div class="min-h-screen flex bg-gray-50">
+    <div class="min-h-screen flex bg-gray-50 overflow-x-hidden">
+        <!-- Mobile Sidebar Overlay -->
+        <div 
+            v-if="isMobileMenuOpen" 
+            class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            @click="isMobileMenuOpen = false"
+        ></div>
+
         <!-- Sidebar -->
         <aside
             :class="
                 cn(
-                    'bg-gray-900 text-white transition-all duration-300 ease-in-out relative h-screen',
+                    'bg-gray-900 text-white transition-all duration-300 ease-in-out fixed lg:sticky top-0 h-screen z-50 flex flex-col',
+                    isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
                     sidebarWidth,
                 )
             "
@@ -280,18 +313,23 @@ const toggleSidebar = () => {
         >
             <!-- Header with toggle -->
             <div
-                class="flex items-center justify-between p-4 border-b border-gray-800"
+                class="flex items-center justify-between p-4 border-b border-gray-800 shrink-0"
             >
-                <h2
-                    v-show="isExpanded || isHovered"
-                    class="text-xl font-bold text-white truncate"
-                >
-                    CRM
-                </h2>
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center shrink-0">
+                        <span class="text-white font-bold text-xs">CRM</span>
+                    </div>
+                    <h2
+                        v-show="isExpanded || isHovered"
+                        class="text-xl font-bold text-white truncate transition-opacity duration-200"
+                    >
+                        Enterprise
+                    </h2>
+                </div>
                 <Button
                     variant="ghost"
                     size="icon"
-                    class="text-gray-400 hover:text-white hover:bg-gray-800"
+                    class="text-gray-400 hover:text-white hover:bg-gray-800 hidden lg:flex"
                     @click="toggleSidebar"
                 >
                     <component
@@ -299,38 +337,61 @@ const toggleSidebar = () => {
                         class="h-5 w-5"
                     />
                 </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    class="text-gray-400 hover:text-white hover:bg-gray-800 lg:hidden"
+                    @click="isMobileMenuOpen = false"
+                >
+                    <X class="h-5 w-5" />
+                </Button>
             </div>
 
             <!-- Navigation -->
-            <nav class="p-4 space-y-2 overflow-y-auto h-[calc(100vh-8rem)]">
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
                 <div
                     v-for="item in menuItems"
                     :key="item.title"
                     v-show="item.show"
                     class="space-y-1"
                 >
-                    <Collapsible :default-open="true">
+                    <Collapsible 
+                        :open="openMenuItem === item.title" 
+                        @update:open="toggleMenuItem(item.title)"
+                    >
                         <CollapsibleTrigger
-                            class="flex items-center w-full gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-800 hover:text-blue-400 transition-colors"
+                            class="flex items-center w-full gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-800 hover:text-blue-400 transition-all group"
                         >
-                            <ChevronDown class="h-4 w-4" />
+                            <component :is="item.icon" class="h-5 w-5 shrink-0 group-hover:scale-110 transition-transform" />
                             <span
                                 v-show="isExpanded || isHovered"
-                                class="truncate flex-1 text-left"
+                                class="truncate flex-1 text-left transition-opacity duration-200"
                                 >{{ item.title }}</span
                             >
+                            <ChevronDown 
+                                v-show="isExpanded || isHovered"
+                                :class="cn('h-4 w-4 transition-transform duration-200', openMenuItem === item.title && 'rotate-180')" 
+                            />
                         </CollapsibleTrigger>
-                        <CollapsibleContent>
-                            <div class="mt-1 space-y-1">
-                                <Link
-                                    v-for="child in item.children"
-                                    :key="child.href"
-                                    :href="child.href"
-                                    class="block px-6 py-1.5 text-sm text-gray-300 rounded-md hover:bg-gray-800 hover:text-blue-400 transition-colors truncate"
-                                >
-                                    {{ child.label }}
-                                </Link>
-                            </div>
+<CollapsibleContent>
+                             <div class="mt-1 space-y-1 pl-8 pr-2">
+                                 <template v-for="child in item.children" :key="child.isHeader ? 'header-' + child.label : child.href">
+                                     <div 
+                                         v-if="child.isHeader || (child.requiredPermission && !hasPermission(child.requiredPermission))"
+                                         class="text-[9px] uppercase font-bold text-gray-500 tracking-wider pt-2.5 pb-1 px-3 border-t border-gray-800/40 mt-2 first:mt-0 first:border-0"
+                                     >
+                                         {{ child.label }}
+                                     </div>
+                                     <Link
+                                         v-else-if="!child.requiredPermission || hasPermission(child.requiredPermission)"
+                                         :href="child.href"
+                                         class="block px-3 py-1.5 text-xs text-gray-450 rounded-md hover:bg-gray-800 hover:text-blue-300 transition-colors truncate"
+                                         @click="isMobileMenuOpen = false"
+                                     >
+                                         {{ child.label }}
+                                     </Link>
+                                 </template>
+                             </div>
                         </CollapsibleContent>
                     </Collapsible>
                 </div>
@@ -338,46 +399,77 @@ const toggleSidebar = () => {
 
             <!-- User info at bottom -->
             <div
-                class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 bg-gray-900"
+                class="p-4 border-t border-gray-800 bg-gray-900 shrink-0"
             >
-                <div
-                    v-show="isExpanded || isHovered"
-                    class="text-xs text-gray-400 truncate mb-2"
-                >
-                    {{ user?.email }}
+                <div class="flex items-center gap-3 mb-4 overflow-hidden" v-show="isExpanded || isHovered">
+                    <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center shrink-0">
+                        <span class="text-xs font-bold text-gray-300">{{ user?.name?.charAt(0) }}</span>
+                    </div>
+                    <div class="truncate">
+                        <p class="text-sm font-medium text-white truncate">{{ user?.name }}</p>
+                        <p class="text-xs text-gray-500 truncate">{{ user?.email }}</p>
+                    </div>
                 </div>
+                
                 <div
                     v-show="isPrivileged && (isExpanded || isHovered)"
-                    class="mb-2"
+                    class="mb-3"
                 >
                     <span
-                        class="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-600 text-white rounded"
+                        class="inline-flex items-center px-2 py-1 text-[10px] font-bold bg-yellow-600/20 text-yellow-500 border border-yellow-600/30 rounded w-full justify-center uppercase tracking-wider"
                     >
-                        PRIVILEGED MODE
+                        Privileged Mode
                     </span>
                 </div>
+                
                 <Button
                     variant="ghost"
                     size="sm"
-                    class="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
+                    class="w-full justify-start text-gray-400 hover:text-white hover:bg-gray-800 transition-colors group"
                     as-child
                 >
-                    <Link href="/logout" method="post">Logout</Link>
+                    <Link href="/logout" method="post" class="flex items-center gap-3">
+                        <X class="h-4 w-4 group-hover:rotate-90 transition-transform" />
+                        <span v-show="isExpanded || isHovered">Logout</span>
+                    </Link>
                 </Button>
             </div>
         </aside>
 
         <!-- Main content -->
-        <main class="flex-1 flex flex-col">
-            <header class="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center">
-                <div class="text-sm text-gray-500" v-if="isExpanded || isHovered">
-                    {{ currentRoute }}
+        <main class="flex-1 flex flex-col min-w-0">
+            <header class="bg-white border-b border-gray-200 px-4 h-16 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        class="lg:hidden text-gray-500"
+                        @click="isMobileMenuOpen = true"
+                    >
+                        <Menu class="h-6 w-6" />
+                    </Button>
+                    <div class="text-sm font-medium text-gray-600 truncate hidden sm:block">
+                        {{ currentRoute }}
+                    </div>
                 </div>
-                <div class="flex-1"></div>
-                <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
+                
+<div class="flex items-center gap-3">
+                     <div v-if="!isExpanded && !isHovered" class="lg:hidden">
+                          <span class="text-xl font-bold text-gray-900">CRM</span>
+                     </div>
+                     <div class="flex-1"></div>
+                     <div class="flex items-center gap-2">
+                         <AssistantIcon />
+                         <span class="hidden sm:inline text-xs font-medium text-purple-700">Ask AI</span>
+                         <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
+                         <span class="hidden sm:inline text-xs font-medium text-blue-600">See Docs</span>
+                     </div>
+                 </div>
             </header>
-            <div class="flex-1 p-6">
-                <slot />
+            <div class="flex-1 p-4 lg:p-8">
+                <div class="max-w-screen-2xl mx-auto">
+                    <slot />
+                </div>
             </div>
         </main>
 
@@ -425,5 +517,6 @@ const toggleSidebar = () => {
         </Dialog>
 
         <ToastNotification />
+        <AssistantChatPopup />
     </div>
 </template>

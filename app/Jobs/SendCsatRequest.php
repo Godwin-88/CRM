@@ -32,6 +32,10 @@ class SendCsatRequest implements ShouldQueue
 
         $contact = $this->ticket->contact;
 
+        if ($contact->support_opt_out) {
+            return;
+        }
+
         if ($contact->preferred_channel === 'email') {
             Notification::route('mail', $contact->email)
                 ->notify(new CsatRequest($this->ticket));

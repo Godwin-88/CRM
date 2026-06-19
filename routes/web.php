@@ -12,12 +12,14 @@ use App\Http\Controllers\Admin\DuplicateContactsWebController;
 use App\Http\Controllers\Admin\GuidedJourneyWebController;
 use App\Http\Controllers\Admin\InteractionWebController;
 use App\Http\Controllers\Admin\LoyaltyProgramWebController;
+use App\Http\Controllers\Admin\LoyaltyCxHubController;
 use App\Http\Controllers\Admin\OmniChannelWebController;
 use App\Http\Controllers\Admin\OnboardingWebController;
 use App\Http\Controllers\Admin\PipelineWebController;
 use App\Http\Controllers\Admin\QuoteTemplateWebController;
 use App\Http\Controllers\Admin\QuoteWebController;
 use App\Http\Controllers\Admin\ReactivationWebController;
+use App\Http\Controllers\Admin\DealAutomationWebController;
 use App\Http\Controllers\Admin\ScoringRuleWebController;
 use App\Http\Controllers\Admin\SlaBreachController;
 use App\Http\Controllers\Admin\SlaWebController;
@@ -75,18 +77,35 @@ Route::post('/admin/users/{user}/mfa/reset', [MfaController::class, 'adminReset'
 Route::get('/t/{token}', [TrackingController::class, 'redirect'])->name('tracking.redirect');
 Route::get('/open/{token}', [TrackingController::class, 'openPixel'])->name('tracking.open');
 
-// Home page - public access
+// Home page - redirect to dashboard for authenticated users
 Route::get('/', function () {
-    return Inertia::render('Welcome');
+    return redirect()->route('admin.analytics.dashboard');
 });
 
 // ─── Auth required routes ─────────────────────────────────────────────────────
 Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
+    // Dashboard - accessible to all authenticated roles
+    Route::get('/admin/analytics/dashboard', [AnalyticsWebController::class, 'dashboard'])->name('admin.analytics.dashboard');
+
     // ─── Security Events ───────────────────────────────────────────────────────────
     Route::middleware(['permission:security.events'])->group(function () {
         Route::get('/admin/security/events', [\App\Http\Controllers\SecurityEventController::class, 'index'])
             ->name('admin.security.events');
+    });
+
+    // ─── RBAC Management ─────────────────────────────────────────────────────────
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/rbac', [\App\Http\Controllers\Admin\RbacWebController::class, 'index'])
+            ->name('admin.rbac.index');
+        Route::put('/admin/rbac/roles/{role}/permissions', [\App\Http\Controllers\Admin\RbacWebController::class, 'updateRolePermissions'])
+            ->name('admin.rbac.roles.permissions');
+        Route::put('/admin/rbac/users/{user}/roles', [\App\Http\Controllers\Admin\RbacWebController::class, 'updateUserRoles'])
+            ->name('admin.rbac.users.roles');
+        Route::post('/admin/rbac/roles', [\App\Http\Controllers\Admin\RbacWebController::class, 'storeRole'])
+            ->name('admin.rbac.roles.store');
+        Route::delete('/admin/rbac/roles/{role}', [\App\Http\Controllers\Admin\RbacWebController::class, 'deleteRole'])
+            ->name('admin.rbac.roles.delete');
     });
 
     // ─── Privileged Session ───────────────────────────────────────────────────────
@@ -98,14 +117,14 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         ->name('admin.privileged.exit');
 
     // ─── Integrations (Admin) ───────────────────────────────────────────────────
-    Route::middleware(['role:admin'])->group(function () {
+    Route::middleware(['role:manager|admin'])->group(function () {
         Route::get('/admin/integrations', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'index'])
             ->name('admin.integrations.index');
         Route::get('/admin/integrations/marketplace', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'marketplace'])
             ->name('admin.integrations.marketplace');
-        Route::post('/admin/integrations/{integration}/connect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'connect'])
+        Route::post('/admin/integrations/{provider}/connect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'connect'])
             ->name('admin.integrations.connect');
-        Route::post('/admin/integrations/{integration}/disconnect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'disconnect'])
+        Route::post('/admin/integrations/{identifier}/disconnect', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'disconnect'])
             ->name('admin.integrations.disconnect');
         Route::get('/admin/integrations/webhooks', [\App\Http\Controllers\Admin\WebhookWebController::class, 'index'])
             ->name('admin.integrations.webhooks');
@@ -192,17 +211,17 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::get('/quotes', [DealController::class, 'quotes'])->name('quotes.index');
 
     // Analytics
-    Route::get('/analytics/forecast', [DealController::class, 'forecast'])->name('analytics.forecast');
+    Route::get('/analytics/forecast', [AnalyticsWebController::class, 'forecast'])->name('analytics.forecast');
 
     // Admin Analytics (manager+ access)
     Route::middleware(['role:manager|admin'])->group(function () {
-        Route::get('/admin/analytics/dashboard', [AnalyticsWebController::class, 'dashboard'])->name('admin.analytics.dashboard');
         Route::get('/admin/analytics/customer', [AnalyticsWebController::class, 'customerAnalytics'])->name('admin.analytics.customer');
         Route::get('/admin/analytics/growth', [AnalyticsWebController::class, 'growthAnalytics'])->name('admin.analytics.growth');
         Route::get('/admin/analytics/finance', [AnalyticsWebController::class, 'financeAnalytics'])->name('admin.analytics.finance');
         Route::get('/admin/analytics/compliance', [AnalyticsWebController::class, 'complianceAnalytics'])->name('admin.analytics.compliance');
         Route::get('/admin/analytics/predictive-scoring', [AnalyticsWebController::class, 'predictiveScoring'])->name('admin.analytics.predictive-scoring');
         Route::get('/admin/analytics/report-builder', [AnalyticsWebController::class, 'reportBuilder'])->name('admin.analytics.report-builder');
+        Route::post('/admin/analytics/report-builder', [AnalyticsWebController::class, 'storeReport'])->name('admin.analytics.report-builder.store');
     });
 
     // Pipelines
@@ -220,6 +239,9 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::post('/support/tickets/{ticket}/escalate', [TicketController::class, 'escalate'])->name('support.tickets.escalate');
     Route::post('/support/tickets/{ticket}/resolve', [TicketController::class, 'resolve'])->name('support.tickets.resolve');
     Route::post('/support/tickets/{ticket}/close', [TicketController::class, 'close'])->name('support.tickets.close');
+    Route::post('/support/tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('support.tickets.reply');
+    Route::post('/support/tickets/suggest-articles', [TicketController::class, 'suggestArticles'])->name('support.tickets.suggest-articles');
+    Route::get('/support/categories/{ticketCategory}/form', [TicketController::class, 'getCategoryForm'])->name('support.categories.form');
 
     Route::get('/support/knowledge-base', [KnowledgeBaseController::class, 'index'])->name('support.knowledge-base.index');
     Route::get('/support/knowledge-base/{article}', [KnowledgeBaseController::class, 'show'])->name('support.knowledge-base.show');
@@ -227,6 +249,29 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::post('/support/knowledge-base/{article}/link', [KnowledgeBaseController::class, 'linkToTicket'])->name('support.knowledge-base.link');
 
     Route::get('/support/performance', [PerformanceController::class, 'index'])->name('support.performance.index');
+    Route::get('/support/performance/export', [PerformanceController::class, 'export'])->name('support.performance.export');
+
+    // Self-Service Portal (Customer-facing)
+    Route::prefix('portal')->name('self-service.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\SelfService\PortalController::class, 'dashboard'])
+            ->name('dashboard');
+        Route::get('/tickets/create', [\App\Http\Controllers\SelfService\PortalController::class, 'createTicket'])
+            ->name('tickets.create');
+        Route::post('/tickets', [\App\Http\Controllers\SelfService\PortalController::class, 'storeTicket'])
+            ->name('tickets.store');
+        Route::get('/tickets/{ticket}', [\App\Http\Controllers\SelfService\PortalController::class, 'showTicket'])
+            ->name('tickets.show');
+        Route::post('/tickets/{ticket}/rate/{score}', [\App\Http\Controllers\SelfService\PortalController::class, 'rateTicket'])
+            ->name('tickets.rate');
+
+        // Knowledge Base in portal
+        Route::get('/knowledge-base', [\App\Http\Controllers\SelfService\PortalController::class, 'knowledgeBase'])
+            ->name('knowledge-base.index');
+        Route::get('/knowledge-base/{article}', [\App\Http\Controllers\SelfService\PortalController::class, 'showArticle'])
+            ->name('knowledge-base.show');
+        Route::get('/knowledge-base/search/suggest', [\App\Http\Controllers\SelfService\PortalController::class, 'searchArticles'])
+            ->name('knowledge-base.search');
+    });
 
     Route::middleware('role:manager|admin')->group(function () {
         Route::get('/admin/support/categories', [SupportCategoryController::class, 'index'])->name('admin.support.categories.index');
@@ -252,6 +297,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::put('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy'])->name('contracts.destroy');
     Route::post('/contracts/{contract}/duplicate', [ContractController::class, 'duplicate'])->name('contracts.duplicate');
+    Route::post('/contracts/{contract}/send-signature', [ContractController::class, 'sendForSignature'])->name('contracts.send-signature');
     Route::post('/contracts/{contract}/regenerate', [ContractController::class, 'regenerate'])->name('contracts.regenerate');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'downloadSignedUrl'])->name('contracts.download');
     Route::post('/contracts/bulk-export', [ContractController::class, 'bulkExport'])->name('contracts.bulk-export');
@@ -267,6 +313,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::post('/legal/{legalMatter}/restore', [LegalMatterController::class, 'restore'])->name('legal.restore');
     Route::post('/legal/{legalMatter}/notes', [LegalMatterController::class, 'addNote'])->name('legal.notes.add');
     Route::post('/legal/{legalMatter}/attachments', [LegalMatterController::class, 'uploadAttachment'])->name('legal.attachments.upload');
+    Route::post('/legal/{legalMatter}/attachments/signed-url', [LegalMatterController::class, 'attachmentSignedUrl'])->name('legal.attachments.signed-url');
 
     // Admin Contract Templates (manager+)
     Route::middleware(['role:manager|admin'])->group(function () {
@@ -311,16 +358,29 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
         Route::get('/admin/analytics/campaigns-dashboard', [CampaignWebController::class, 'analyticsDashboard'])->name('admin.campaign-analytics.dashboard');
 
-        // Loyalty
-        Route::get('/admin/loyalty', [LoyaltyProgramWebController::class, 'index'])->name('admin.loyalty.index');
+        // Loyalty & CX hubs (GET page loads only; actions POST to legacy controllers)
+        Route::get('/admin/loyalty-programs', [LoyaltyCxHubController::class, 'programs'])->name('admin.loyalty-programs.index');
+        Route::get('/admin/customer-journeys', [LoyaltyCxHubController::class, 'journeys'])->name('admin.customer-journeys.index');
+        Route::get('/admin/cx-insights', [LoyaltyCxHubController::class, 'insights'])->name('admin.cx-insights.index');
+        Route::get('/admin/service-delivery', [LoyaltyCxHubController::class, 'service'])->name('admin.service-delivery.index');
+
+        // Legacy redirects into hubs (preserve existing URLs / bookmarks)
+        Route::get('/admin/loyalty', fn () => redirect('/admin/loyalty-programs'))->name('admin.loyalty.index');
+        Route::get('/admin/surveys', fn () => redirect('/admin/cx-insights'))->name('admin.surveys.index');
+        Route::get('/admin/surveys/responses', fn () => redirect('/admin/cx-insights'))->name('admin.surveys.responses');
+        Route::get('/admin/clv-analytics', fn () => redirect('/admin/cx-insights'))->name('admin.clv-analytics.index');
+        Route::get('/admin/sla', fn () => redirect('/admin/service-delivery'))->name('admin.sla.index');
+        Route::get('/admin/onboarding', fn () => redirect('/admin/customer-journeys'))->name('admin.onboarding.index');
+        Route::get('/admin/journeys', fn () => redirect('/admin/customer-journeys'))->name('admin.journeys.index');
+        Route::get('/admin/reactivation', fn () => redirect('/admin/customer-journeys'))->name('admin.reactivation.index');
+        Route::get('/admin/welcome-email-templates', fn () => redirect('/admin/loyalty-programs'))->name('admin.welcome-email-templates.index');
+
+        // Legacy loyalty routes (kept for POST/PUT/DELETE actions)
         Route::post('/admin/loyalty', [LoyaltyProgramWebController::class, 'store'])->name('admin.loyalty.store');
         Route::put('/admin/loyalty/{loyaltyProgram}', [LoyaltyProgramWebController::class, 'update'])->name('admin.loyalty.update');
-        Route::get('/admin/loyalty/tiers', [LoyaltyProgramWebController::class, 'tiers'])->name('admin.loyalty.tiers');
         Route::post('/admin/loyalty/tiers', [LoyaltyProgramWebController::class, 'storeTier'])->name('admin.loyalty.tiers.store');
         Route::put('/admin/loyalty/tiers/{loyaltyTier}', [LoyaltyProgramWebController::class, 'updateTier'])->name('admin.loyalty.tiers.update');
-        Route::get('/admin/loyalty/rules', [LoyaltyProgramWebController::class, 'rules'])->name('admin.loyalty.rules');
         Route::post('/admin/loyalty/rules', [LoyaltyProgramWebController::class, 'storeRule'])->name('admin.loyalty.rules.store');
-        Route::get('/admin/loyalty/redemption-rules', [LoyaltyProgramWebController::class, 'redemptionRules'])->name('admin.loyalty.redemption-rules');
         Route::post('/admin/loyalty/redemption-rules', [LoyaltyProgramWebController::class, 'storeRedemptionRule'])->name('admin.loyalty.redemption-rules.store');
         Route::get('/admin/loyalty/ledger', [LoyaltyProgramWebController::class, 'ledger'])->name('admin.loyalty.ledger');
         Route::get('/admin/loyalty/enrollments', [LoyaltyProgramWebController::class, 'enrollments'])->name('admin.loyalty.enrollments');
@@ -385,14 +445,50 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             Route::post('/unmatched/{unmatchedItem}/resolve', [InteractionWebController::class, 'resolveUnmatched'])->name('unmatched.resolve');
         });
 
-        // OmniChannel
+        // OmniChannel - main tabbed pages
         Route::prefix('admin/omni')->name('admin.omni.')->group(function () {
+            Route::get('/workspace', [OmniChannelWebController::class, 'workspace'])->name('workspace');
+            Route::get('/tools', [OmniChannelWebController::class, 'tools'])->name('tools');
+            Route::get('/supervisor', [OmniChannelWebController::class, 'supervisor'])->name('supervisor');
+            Route::get('/settings', [OmniChannelWebController::class, 'settings'])->name('settings');
+            
             Route::get('/dashboard', [OmniChannelWebController::class, 'dashboard'])->name('dashboard');
             Route::get('/tickets', [OmniChannelWebController::class, 'tickets'])->name('tickets');
             Route::get('/contact-center', [OmniChannelWebController::class, 'contactCenter'])->name('contact-center');
             Route::get('/kiosk', [OmniChannelWebController::class, 'kiosk'])->name('kiosk');
             Route::post('/kiosk', [OmniChannelWebController::class, 'storeKiosk'])->name('kiosk.store');
         });
+
+        // Email
+        Route::prefix('admin/email')->name('admin.email.')->group(function () {
+            Route::get('/compose', [OmniChannelWebController::class, 'emailCompose'])->name('compose');
+        });
+
+        // SMS
+        Route::prefix('admin/sms')->name('admin.sms.')->group(function () {
+            Route::get('/compose', [OmniChannelWebController::class, 'smsCompose'])->name('compose');
+        });
+
+        // Call
+        Route::prefix('admin/call')->name('admin.call.')->group(function () {
+            Route::get('/log', [OmniChannelWebController::class, 'callLog'])->name('log');
+        });
+
+        // Chat
+        Route::prefix('admin/chat')->name('admin.chat.')->group(function () {
+            Route::get('/inbox', [OmniChannelWebController::class, 'chatInbox'])->name('inbox');
+        });
+
+        // IVR
+        Route::prefix('admin/ivr')->name('admin.ivr.')->group(function () {
+            Route::get('/transcriptions', [OmniChannelWebController::class, 'ivrTranscriptions'])->name('transcriptions');
+        });
+
+        // Field Channel
+        Route::get('/admin/field-channel', [OmniChannelWebController::class, 'fieldChannel'])->name('admin.field-channel');
+
+        // Queue Stats
+        Route::get('/admin/queue-stats', [OmniChannelWebController::class, 'dashboard'])->name('admin.queue-stats');
 
         // Assets
         Route::middleware(['permission:assets.manage'])->group(function () {
@@ -471,6 +567,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             Route::get('/banking/{bankingRelationship}/edit', [BankingRelationshipController::class, 'edit'])->name('banking.edit');
             Route::put('/banking/{bankingRelationship}', [BankingRelationshipController::class, 'update'])->name('banking.update');
             Route::delete('/banking/{bankingRelationship}', [BankingRelationshipController::class, 'destroy'])->name('banking.destroy');
+            Route::post('/banking/{bankingRelationship}/notes', [BankingRelationshipController::class, 'addNote'])->name('banking.notes.store');
         });
 
         Route::middleware(['permission:banking.view'])->group(function () {

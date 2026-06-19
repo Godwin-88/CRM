@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,7 @@ interface Pipeline {
 
 const props = defineProps<{
   pipelines: Pipeline[];
+  prefill?: { name?: string; stages?: string[] };
 }>();
 
 const pipelines = ref(props.pipelines);
@@ -34,6 +35,29 @@ const newPipeline = ref({
 });
 
 const editPipeline = ref<Pipeline | null>(null);
+
+onMounted(() => {
+  let prefill = props.prefill?.name || props.prefill?.stages?.length ? props.prefill : null;
+
+  if (!prefill) {
+    try {
+      prefill = JSON.parse(localStorage.getItem('assistant_navigation_prefill:/admin/pipelines') || 'null');
+    } catch {
+      localStorage.removeItem('assistant_navigation_prefill:/admin/pipelines');
+    }
+  }
+
+  if (prefill?.name || prefill?.stages?.length) {
+    newPipeline.value = {
+      name: prefill.name || '',
+      description: '',
+      is_default: false,
+      stages: prefill.stages?.length ? prefill.stages.map((stage: string) => ({ name: stage, probability: 0 })) : [{ name: '', probability: 0 }],
+    };
+    isCreateOpen.value = true;
+    localStorage.removeItem('assistant_navigation_prefill:/admin/pipelines');
+  }
+});
 
 const addStage = () => {
   newPipeline.value.stages.push({ name: '', probability: 0 });

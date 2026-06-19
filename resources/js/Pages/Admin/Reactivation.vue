@@ -53,27 +53,27 @@ const newCampaign = ref({
 })
 
 const createCampaign = async () => {
-  router.post('/api/v1/reactivation', newCampaign.value, {
-    onSuccess: () => {
-      showCreateOpen.value = false
-      newCampaign.value = {
-        name: '',
-        description: '',
-        segment_id: '',
-        template_id: '',
-        channels: [],
-        max_retries: 3,
-        delay_hours: 24,
-      }
-    },
-  })
-}
-
-const runCampaign = async (id: number) => {
-  isRunning.value = true
-  await router.post(`/api/v1/reactivation/${id}/run`)
-  isRunning.value = false
-}
+   router.post('/admin/reactivation', newCampaign.value, {
+     onSuccess: () => {
+       showCreateOpen.value = false
+       newCampaign.value = {
+         name: '',
+         description: '',
+         segment_id: '',
+         template_id: '',
+         channels: [],
+         max_retries: 3,
+         delay_hours: 24,
+       }
+     },
+   })
+ }
+ 
+ const runCampaign = async (id: number) => {
+   isRunning.value = true
+   await router.post(`/admin/reactivation/${id}/run`)
+   isRunning.value = false
+ }
 
 const channelColor = (channel: string) => {
   const colors: Record<string, string> = {
@@ -142,10 +142,10 @@ const channelColor = (channel: string) => {
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card><CardContent class="pt-6 flex items-center gap-4"><Clock class="h-8 w-8 text-amber-500" /><div><p class="text-sm text-gray-500">Queued</p><p class="text-2xl font-bold">{{ stats.queued ?? 0 }}</p></div></CardContent></Card>
-        <Card><CardContent class="pt-6 flex items-center gap-4"><Mail class="h-8 w-8 text-blue-500" /><div><p class="text-sm text-gray-500">Sent</p><p class="text-2xl font-bold">{{ stats.sent ?? 0 }}</p></div></CardContent></Card>
-        <Card><CardContent class="pt-6 flex items-center gap-4"><UserPlus class="h-8 w-8 text-emerald-500" /><div><p class="text-sm text-gray-500">Responded</p><p class="text-2xl font-bold">{{ stats.responded ?? 0 }}</p></div></CardContent></Card>
-        <Card><CardContent class="pt-6 flex items-center gap-4"><TrendingUp class="h-8 w-8 text-purple-500" /><div><p class="text-sm text-gray-500">Reactivated</p><p class="text-2xl font-bold">{{ stats.reactivated ?? 0 }}</p></div></CardContent></Card>
+        <Card><CardContent class="pt-6 flex items-center gap-4"><Clock class="h-8 w-8 text-amber-500" /><div><p class="text-sm text-gray-500">Queued</p><p class="text-2xl font-bold">{{ stats?.queued ?? 0 }}</p></div></CardContent></Card>
+        <Card><CardContent class="pt-6 flex items-center gap-4"><Mail class="h-8 w-8 text-blue-500" /><div><p class="text-sm text-gray-500">Sent</p><p class="text-2xl font-bold">{{ stats?.sent ?? 0 }}</p></div></CardContent></Card>
+        <Card><CardContent class="pt-6 flex items-center gap-4"><UserPlus class="h-8 w-8 text-emerald-500" /><div><p class="text-sm text-gray-500">Responded</p><p class="text-2xl font-bold">{{ stats?.responded ?? 0 }}</p></div></CardContent></Card>
+        <Card><CardContent class="pt-6 flex items-center gap-4"><TrendingUp class="h-8 w-8 text-purple-500" /><div><p class="text-sm text-gray-500">Reactivated</p><p class="text-2xl font-bold">{{ stats?.reactivated ?? 0 }}</p></div></CardContent></Card>
       </div>
 
       <Card>

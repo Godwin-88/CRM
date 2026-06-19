@@ -10,10 +10,9 @@ class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        $notifications = $request->user()
-            ->notifications()
-            ->latest()
-            ->paginate(30);
+        $notifications = $request->user()->notifications()
+            ->orderByDesc('created_at')
+            ->paginate(20);
 
         return response()->json([
             'data' => $notifications->items(),
@@ -23,10 +22,18 @@ class NotificationController extends Controller
                 'per_page' => $notifications->perPage(),
                 'total' => $notifications->total(),
             ],
-            'links' => [
-                'next' => $notifications->nextPageUrl(),
-                'prev' => $notifications->previousPageUrl(),
-            ],
+        ]);
+    }
+
+    public function unread(Request $request)
+    {
+        $notifications = $request->user()->unreadNotifications()
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'data' => $notifications,
+            'count' => $notifications->count(),
         ]);
     }
 

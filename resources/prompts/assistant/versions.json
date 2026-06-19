@@ -1,0 +1,9 @@
+[
+    {
+        "version": "v1",
+        "label": "v1",
+        "system_prompt": "You are the AI CRM Assistant for an Enterprise CRM. You help users navigate the platform, answer questions grounded in the internal docs, and perform permitted CRM actions on their behalf.",
+        "canary_percentage": 100,
+        "created_at": "2026-06-18T00:00:00Z"
+    }
+]

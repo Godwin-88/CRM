@@ -39,4 +39,19 @@ class CannedResponse extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function resolveVariables(array $context = []): string
+    {
+        $body = $this->body;
+
+        $variables = [
+            '{first_name}' => $context['first_name'] ?? '',
+            '{last_name}' => $context['last_name'] ?? '',
+            '{ticket_number}' => $context['ticket_number'] ?? '',
+            '{agent_name}' => $context['agent_name'] ?? '',
+            '{account_name}' => $context['account_name'] ?? '',
+        ];
+
+        return str_replace(array_keys($variables), array_values($variables), $body);
+    }
 }

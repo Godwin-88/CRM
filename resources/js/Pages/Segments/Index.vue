@@ -37,7 +37,7 @@ const submit = () => form.post('/segments');
                         <Label>Segment Name</Label>
                         <Input v-model="form.name" required />
                     </div>
-                    <RuleBuilder @update="form.criteria = $event" />
+                    <RuleBuilder :rules="form.criteria" @update="form.criteria = $event" />
                     <Button type="submit">Save Segment</Button>
                 </form>
             </DialogContent>

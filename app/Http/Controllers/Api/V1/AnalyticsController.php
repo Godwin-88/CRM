@@ -13,9 +13,11 @@ class AnalyticsController extends Controller
 
     public function forecast(Request $request): JsonResponse
     {
-        $filters = $request->only(['owner_id', 'team_id', 'pipeline_id', 'close_from', 'close_to']);
+        $filters = $request->only(['owner_id', 'team_id', 'pipeline_id', 'close_from', 'close_to', 'period', 'custom_start', 'custom_end']);
+        $teamId = $request->user()->primaryTeam?->team_id;
+        $canSeeTargets = ! $request->user()->hasRole('agent');
 
-        $data = $this->forecastService->getRevenueForecast($filters);
+        $data = $this->forecastService->getForecastWithTargets($filters, $teamId, $canSeeTargets);
 
         return response()->json([
             'forecast' => $data,

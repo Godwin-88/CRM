@@ -73,11 +73,12 @@ class PurchaseOrderController extends Controller
         $this->authorize('create', PurchaseOrder::class);
 
         $vendors = Vendor::select(['id', 'name'])->orderBy('name')->get();
+        $categories = config('procurement.categories', ['goods', 'services', 'both']);
 
         return Inertia::render('PurchaseOrders/Create', [
-            'vendors' => $vendors,
+            'vendors' => Vendor::select(['id', 'name'])->orderBy('name')->get(),
             'nextPoNumber' => PurchaseOrder::generatePoNumber(),
-            'paymentMethods' => ['goods', 'services', 'both'],
+            'categories' => $categories,
         ]);
     }
 

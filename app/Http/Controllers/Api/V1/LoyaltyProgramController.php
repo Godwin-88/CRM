@@ -17,6 +17,30 @@ class LoyaltyProgramController extends Controller
         $this->authorizeResource(LoyaltyProgram::class, 'program');
     }
 
+    public function getBalance(Request $request): JsonResponse
+    {
+        $request->validate([
+            'contact_id' => 'required|string',
+        ]);
+
+        $contact = \App\Models\Contact::findOrFail($request->input('contact_id'));
+        $this->authorize('view', $contact);
+
+        $points = \App\Models\PointsLedger::where('contact_id', $contact->id)->sum('points');
+
+        $tier = \App\Models\LoyaltyTier::where('program_id', $contact->loyalty_program_id)
+            ->where('min_points_threshold', '<=', $points)
+            ->orderByDesc('min_points_threshold')
+            ->first();
+
+        return response()->json([
+            'contact_id' => $contact->id,
+            'points' => $points,
+            'tier' => $tier?->name,
+            'program_id' => $contact->loyalty_program_id,
+        ]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $query = LoyaltyProgram::query()->with(['tiers', 'rules', 'redemptionRules']);

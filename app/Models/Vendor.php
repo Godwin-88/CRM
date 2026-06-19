@@ -44,6 +44,7 @@ class Vendor extends Model
 
     protected $casts = [
         'status' => 'string',
+        'account_number' => 'encrypted',
     ];
 
     protected $hidden = [

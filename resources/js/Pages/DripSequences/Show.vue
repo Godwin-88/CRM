@@ -153,8 +153,8 @@ const triggerLabel = (trigger: string) => {
   return labels[trigger] || trigger;
 };
 
-const statusColor = (status: string) => {
-  const colors: Record<string, string> = {
+const statusColor = (status: string): "default" | "outline" | "secondary" | "destructive" | "success" | null | undefined => {
+  const colors: Record<string, "default" | "outline" | "secondary" | "destructive" | "success"> = {
     draft: 'secondary',
     active: 'default',
     inactive: 'outline',
@@ -191,7 +191,7 @@ const sortedSteps = computed(() => [...(sequence.value.steps || [])].sort((a, b)
                 <div class="space-y-2"><Label>Contacts</Label>
                   <div class="max-h-60 overflow-auto border rounded p-2">
                     <label v-for="c in contacts" :key="c.id" class="flex items-center gap-2 py-1">
-                      <Checkbox :model-value="enrollingContactIds.includes(c.id)" @update:model-value="(v: boolean) => {
+                      <Checkbox :model-value="enrollingContactIds.includes(c.id)" @update:model-value="(v: any) => {
                         if (v) enrollingContactIds.push(c.id);
                         else enrollingContactIds = enrollingContactIds.filter(id => id !== c.id);
                       }" />

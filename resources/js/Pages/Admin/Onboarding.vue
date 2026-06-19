@@ -11,8 +11,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Plus, Rocket, Users, CheckCircle2, Circle, BarChart3 } from 'lucide-vue-next'
 
 interface Template { id: string; name: string; description: string; is_active: boolean }
-interface Record { id: string; contact: { first_name: string; last_name: string }; status: string }
-const props = defineProps<{ templates: Template[]; records: Record[] }>()
+interface OnboardingRecord { id: string; contact: { first_name: string; last_name: string }; status: string }
+const props = defineProps<{ templates: Template[]; records: OnboardingRecord[] }>()
 const templates = ref(props.templates)
 const records = ref(props.records)
 const showCreateDialog = ref(false)
