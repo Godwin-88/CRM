@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Inbox, CheckCircle2, AlertTriangle } from 'lucide-vue-next'
 
-const props = defineProps<{ interactions: any[] }>()
+const props = defineProps<{ interactions: any[]; isTab?: boolean }>()
 const items = ref(props.interactions)
 
 const assign = (id: string) => {
@@ -18,10 +18,10 @@ const assign = (id: string) => {
 </script>
 
 <template>
-  <AppLayout>
-    <Head title="Interaction Inbox" />
+  <component :is="isTab ? 'div' : AppLayout">
+    <Head v-if="!isTab" title="Interaction Inbox" />
     <div class="max-w-5xl mx-auto space-y-6">
-      <div>
+      <div v-if="!isTab">
         <h1 class="text-3xl font-bold text-gray-900">Unmatched Inbox</h1>
         <p class="text-gray-500">Resolve interactions that have no linked contact.</p>
       </div>
@@ -46,5 +46,5 @@ const assign = (id: string) => {
         </CardContent>
       </Card>
     </div>
-  </AppLayout>
+  </component>
 </template>

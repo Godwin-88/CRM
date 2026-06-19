@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { MessageSquare, User } from 'lucide-vue-next'
 
-defineProps<{ sessions: { id: string; status: string; contact?: { first_name: string; last_name: string }; assignedAgent?: { name: string } }[] }>()
+const props = defineProps<{ sessions: { id: string; status: string; contact?: { first_name: string; last_name: string }; assignedAgent?: { name: string } }[]; isTab?: boolean }>()
 
 const sessions = ref<any[]>([])
 
@@ -41,10 +41,10 @@ const statusBadge = (status: string) => {
 </script>
 
 <template>
-  <AppLayout>
-    <Head title="Chat Inbox" />
+  <component :is="isTab ? 'div' : AppLayout">
+    <Head v-if="!isTab" title="Chat Inbox" />
     <div class="max-w-5xl mx-auto space-y-6">
-      <div>
+      <div v-if="!isTab">
         <h1 class="text-3xl font-bold text-gray-900">Chat Inbox</h1>
         <p class="text-gray-500">Live chat sessions awaiting agent response.</p>
       </div>
@@ -73,5 +73,5 @@ const statusBadge = (status: string) => {
         <div v-if="!sessions.length" class="text-sm text-gray-500 text-center py-8">No waiting chat sessions.</div>
       </div>
     </div>
-  </AppLayout>
+  </component>
 </template>

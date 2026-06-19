@@ -430,8 +430,13 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             Route::post('/unmatched/{unmatchedItem}/resolve', [InteractionWebController::class, 'resolveUnmatched'])->name('unmatched.resolve');
         });
 
-        // OmniChannel
+        // OmniChannel - main tabbed pages
         Route::prefix('admin/omni')->name('admin.omni.')->group(function () {
+            Route::get('/workspace', [OmniChannelWebController::class, 'workspace'])->name('workspace');
+            Route::get('/tools', [OmniChannelWebController::class, 'tools'])->name('tools');
+            Route::get('/supervisor', [OmniChannelWebController::class, 'supervisor'])->name('supervisor');
+            Route::get('/settings', [OmniChannelWebController::class, 'settings'])->name('settings');
+            
             Route::get('/dashboard', [OmniChannelWebController::class, 'dashboard'])->name('dashboard');
             Route::get('/tickets', [OmniChannelWebController::class, 'tickets'])->name('tickets');
             Route::get('/contact-center', [OmniChannelWebController::class, 'contactCenter'])->name('contact-center');

@@ -6,7 +6,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Menu, HelpCircle, Settings2 } from "lucide-vue-next";
+import { ChevronDown, ChevronRight, Menu, HelpCircle, Settings2, Users, Megaphone, Shield, Award, MessageSquare, Briefcase, FileText, DollarSign, BarChart3 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { setI18nLocale, getI18nLocale, supportedLocales } from "@/lib/i18n";
@@ -77,7 +77,7 @@ const sidebarWidth = computed(() => {
 const menuItems = computed(() => [
     {
         title: "Account Management",
-        icon: Menu,
+        icon: Users,
         show: true,
         children: [
             { href: "/accounts", label: "Accounts" },
@@ -86,7 +86,7 @@ const menuItems = computed(() => [
     },
     {
         title: "Campaigns",
-        icon: Menu,
+        icon: Megaphone,
         show: canViewAdmin.value,
         children: [
             { href: "/admin/campaigns", label: "Campaigns" },
@@ -99,7 +99,7 @@ const menuItems = computed(() => [
     },
     {
         title: "Admin",
-        icon: Menu,
+        icon: Shield,
         show: canViewAdmin.value,
         children: [
             { href: "/admin/pipelines", label: "Pipelines" },
@@ -113,7 +113,7 @@ const menuItems = computed(() => [
     },
     {
         title: "Loyalty & CX",
-        icon: Menu,
+        icon: Award,
         show: canViewAdmin.value,
         children: [
             { href: "/admin/loyalty-programs", label: "Programs" },
@@ -123,30 +123,20 @@ const menuItems = computed(() => [
             { href: "/admin/customer-journeys", label: "Journeys" },
         ],
     },
-        {
-            title: "OmniChannel",
-            icon: Menu,
-            show: canViewAdmin.value,
-            children: [
-                { href: "/admin/omni/dashboard", label: "Dashboard" },
-                { href: "/admin/omni/contact-center", label: "Queue Stats" },
-                { href: "/admin/interactions", label: "Interactions" },
-                { href: "/admin/interactions/inbox", label: "Inbox" },
-                { href: "/admin/interactions/channels", label: "Channels" },
-                { href: "/admin/interactions/unmatched", label: "Unmatched" },
-                { href: "/admin/omni/tickets", label: "Tickets" },
-                { href: "/admin/chat/inbox", label: "Chat Inbox" },
-                { href: "/admin/omni/kiosk", label: "Kiosk" },
-                { href: "/admin/email/compose", label: "Email Compose" },
-                { href: "/admin/sms/compose", label: "SMS Composer" },
-                { href: "/admin/call/log", label: "Call Log" },
-                { href: "/admin/ivr/transcriptions", label: "IVR Transcriptions" },
-                { href: "/admin/field-channel", label: "Field Channel" },
-            ],
-        },
+    {
+        title: "OmniChannel",
+        icon: MessageSquare,
+        show: canViewAdmin.value,
+        children: [
+            { href: "/admin/omni/workspace", label: "Workspace" },
+            { href: "/admin/omni/tools", label: "Agent Tools" },
+            { href: "/admin/omni/supervisor", label: "Supervisor" },
+            { href: "/admin/omni/settings", label: "Settings" },
+        ],
+    },
     {
         title: "Deal Management",
-        icon: Menu,
+        icon: Briefcase,
         show: true,
         children: [
             { href: "/deals", label: "Deals" },
@@ -158,7 +148,7 @@ const menuItems = computed(() => [
     },
     {
         title: "Contracts & Legal",
-        icon: Menu,
+        icon: FileText,
         show: true,
         children: [
             { href: "/contracts", label: "Contracts" },
@@ -167,7 +157,7 @@ const menuItems = computed(() => [
     },
     {
         title: "Finance & Procurement",
-        icon: Menu,
+        icon: DollarSign,
         show: true,
         children: [
             { href: "/invoices", label: "Invoices" },
@@ -181,7 +171,7 @@ const menuItems = computed(() => [
     },
     {
         title: "Analytics & Intelligence",
-        icon: Menu,
+        icon: BarChart3,
         show: true,
         children: [
             {
@@ -373,15 +363,22 @@ const toggleMenuItem = (title: string) => {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                             <div class="mt-1 space-y-1 pl-8 pr-2">
-                                <Link
-                                    v-for="child in item.children"
-                                    :key="child.href"
-                                    :href="child.href"
-                                    class="block px-3 py-1.5 text-xs text-gray-400 rounded-md hover:bg-gray-800 hover:text-blue-300 transition-colors truncate"
-                                    @click="isMobileMenuOpen = false"
-                                >
-                                    {{ child.label }}
-                                </Link>
+                                <template v-for="child in item.children" :key="child.isHeader ? 'header-' + child.label : child.href">
+                                    <div 
+                                        v-if="child.isHeader" 
+                                        class="text-[9px] uppercase font-bold text-gray-500 tracking-wider pt-2.5 pb-1 px-3 border-t border-gray-800/40 mt-2 first:mt-0 first:border-0"
+                                    >
+                                        {{ child.label }}
+                                    </div>
+                                    <Link
+                                        v-else
+                                        :href="child.href"
+                                        class="block px-3 py-1.5 text-xs text-gray-450 rounded-md hover:bg-gray-800 hover:text-blue-300 transition-colors truncate"
+                                        @click="isMobileMenuOpen = false"
+                                    >
+                                        {{ child.label }}
+                                    </Link>
+                                </template>
                             </div>
                         </CollapsibleContent>
                     </Collapsible>

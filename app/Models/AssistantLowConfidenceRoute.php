@@ -30,12 +30,16 @@ class AssistantLowConfidenceRoute extends Model
     ];
 
     protected $table = 'assistant_low_confidence_routes';
+    public $timestamps = false;
 
     public static function booted(): void
     {
         static::creating(function (self $model) {
             if (! $model->id) {
                 $model->id = (string) Str::ulid();
+            }
+            if (! $model->created_at) {
+                $model->created_at = now();
             }
         });
     }
