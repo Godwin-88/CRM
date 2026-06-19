@@ -9,7 +9,7 @@ class InvoicePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'manager', 'agent']) || $user->hasPermissionTo('invoices.view');
+        return $user->hasRole(['admin', 'manager', 'agent', 'finance-manager']) || $user->hasPermissionTo('invoices.view');
     }
 
     public function view(User $user, Invoice $invoice): bool

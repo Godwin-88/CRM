@@ -77,18 +77,35 @@ Route::post('/admin/users/{user}/mfa/reset', [MfaController::class, 'adminReset'
 Route::get('/t/{token}', [TrackingController::class, 'redirect'])->name('tracking.redirect');
 Route::get('/open/{token}', [TrackingController::class, 'openPixel'])->name('tracking.open');
 
-// Home page - public access
+// Home page - redirect to dashboard for authenticated users
 Route::get('/', function () {
-    return Inertia::render('Welcome');
+    return redirect()->route('admin.analytics.dashboard');
 });
 
 // ─── Auth required routes ─────────────────────────────────────────────────────
 Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
+    // Dashboard - accessible to all authenticated roles
+    Route::get('/admin/analytics/dashboard', [AnalyticsWebController::class, 'dashboard'])->name('admin.analytics.dashboard');
+
     // ─── Security Events ───────────────────────────────────────────────────────────
     Route::middleware(['permission:security.events'])->group(function () {
         Route::get('/admin/security/events', [\App\Http\Controllers\SecurityEventController::class, 'index'])
             ->name('admin.security.events');
+    });
+
+    // ─── RBAC Management ─────────────────────────────────────────────────────────
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/rbac', [\App\Http\Controllers\Admin\RbacWebController::class, 'index'])
+            ->name('admin.rbac.index');
+        Route::put('/admin/rbac/roles/{role}/permissions', [\App\Http\Controllers\Admin\RbacWebController::class, 'updateRolePermissions'])
+            ->name('admin.rbac.roles.permissions');
+        Route::put('/admin/rbac/users/{user}/roles', [\App\Http\Controllers\Admin\RbacWebController::class, 'updateUserRoles'])
+            ->name('admin.rbac.users.roles');
+        Route::post('/admin/rbac/roles', [\App\Http\Controllers\Admin\RbacWebController::class, 'storeRole'])
+            ->name('admin.rbac.roles.store');
+        Route::delete('/admin/rbac/roles/{role}', [\App\Http\Controllers\Admin\RbacWebController::class, 'deleteRole'])
+            ->name('admin.rbac.roles.delete');
     });
 
     // ─── Privileged Session ───────────────────────────────────────────────────────
@@ -195,8 +212,6 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
     // Analytics
     Route::get('/analytics/forecast', [AnalyticsWebController::class, 'forecast'])->name('analytics.forecast');
-
-    Route::get('/admin/analytics/dashboard', [AnalyticsWebController::class, 'dashboard'])->name('admin.analytics.dashboard');
 
     // Admin Analytics (manager+ access)
     Route::middleware(['role:manager|admin'])->group(function () {

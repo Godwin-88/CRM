@@ -42,6 +42,7 @@ class HandleInertiaRequests extends Middleware
                 'name' => $request->user()->name,
                 'email' => $request->user()->email,
                 'roles' => $request->user()->roles()->pluck('name')->toArray(),
+                'permissions' => $request->user()->getAllPermissions()->pluck('name')->toArray(),
                 'mfa_enabled' => $request->user()->mfa_enabled,
             ] : null,
             'is_privileged' => $request->session()->get('is_privileged', false),

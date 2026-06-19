@@ -128,6 +128,14 @@ class DocsWebController extends Controller
             return 'manager';
         }
 
+        if (in_array('finance-manager', $roles)) {
+            return 'finance-manager';
+        }
+
+        if (in_array('operations-manager', $roles)) {
+            return 'operations-manager';
+        }
+
         return 'agent';
     }
 }

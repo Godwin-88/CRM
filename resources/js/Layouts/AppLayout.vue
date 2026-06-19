@@ -28,6 +28,7 @@ interface User {
     name: string;
     email: string;
     roles: string[];
+    permissions: string[];
 }
 
 interface ChecklistItem {
@@ -43,8 +44,8 @@ interface ChecklistItem {
 const page = usePage();
 const user = computed(() => page.props.user as User | null);
 const userRoles = computed(() => user.value?.roles || []);
+const userPermissions = computed(() => user.value?.permissions || []);
 const isPrivileged = computed(() => page.props.is_privileged as boolean);
-const currentRoute = computed(() => page.url || '');
 
 const isExpanded = ref(true);
 const isHovered = ref(false);
@@ -63,11 +64,17 @@ const hasIncompleteItems = computed(() =>
     checklist.value.some(item => !item.completed && !item.dismissed)
 );
 
-const canViewAdmin = computed(
-    () =>
-        userRoles.value.includes("admin") ||
-        userRoles.value.includes("manager"),
-);
+const currentRoute = computed(() => page.url || '');
+
+const hasPermission = (permission: string): boolean => {
+    return userPermissions.value.includes(permission);
+};
+
+const hasAnyRole = (...roles: string[]): boolean => {
+    return roles.some(r => userRoles.value.includes(r));
+};
+
+const canViewAdmin = computed(() => hasAnyRole('admin', 'manager'));
 
 const sidebarWidth = computed(() => {
     if (!isExpanded.value && !isHovered.value) return "w-20";
@@ -75,6 +82,14 @@ const sidebarWidth = computed(() => {
 });
 
 const menuItems = computed(() => [
+    {
+        title: "Overview",
+        icon: BarChart3,
+        show: true,
+        children: [
+            { href: "/admin/analytics/dashboard", label: "Dashboard" },
+        ],
+    },
     {
         title: "Account Management",
         icon: Users,
@@ -87,7 +102,7 @@ const menuItems = computed(() => [
     {
         title: "Campaigns",
         icon: Megaphone,
-        show: canViewAdmin.value,
+        show: hasAnyRole('admin', 'manager'),
         children: [
             { href: "/admin/campaigns", label: "Campaigns" },
             { href: "/admin/campaign-templates", label: "Campaign Templates" },
@@ -100,24 +115,25 @@ const menuItems = computed(() => [
     {
         title: "Admin",
         icon: Shield,
-        show: canViewAdmin.value,
+        show: hasAnyRole('admin', 'manager'),
         children: [
-            { href: "/admin/pipelines", label: "Pipelines" },
-            { href: "/admin/win-loss-reasons", label: "Win/Loss Reasons" },
-            { href: "/admin/quote-templates", label: "Quote Templates" },
-            { href: "/admin/quotes", label: "Quotes" },
-            { href: "/admin/scoring-rules", label: "Scoring Rules" },
-            { href: "/admin/custom-fields", label: "Custom Fields" },
+            { href: "/admin/pipelines", label: "Pipelines", requiredPermission: "pipelines.manage" },
+            { href: "/admin/win-loss-reasons", label: "Win/Loss Reasons", requiredPermission: "win_loss_reasons.manage" },
+            { href: "/admin/quote-templates", label: "Quote Templates", requiredPermission: "quote_templates.manage" },
+            { href: "/admin/quotes", label: "Quotes", requiredPermission: "quotes.view" },
+            { href: "/admin/scoring-rules", label: "Scoring Rules", requiredPermission: "scoring_rules.manage" },
+            { href: "/admin/custom-fields", label: "Custom Fields", requiredPermission: "custom_fields.manage" },
             { href: "/admin/duplicates", label: "Duplicate Merge" },
+            { href: "/admin/rbac", label: "Role Management" },
         ],
     },
     {
         title: "Loyalty & CX",
         icon: Award,
-        show: canViewAdmin.value,
+        show: hasAnyRole('admin', 'manager'),
         children: [
-            { href: "/admin/loyalty-programs", label: "Programs" },
-            { href: "/admin/loyalty/ledger", label: "Points Ledger" },
+            { href: "/admin/loyalty-programs", label: "Programs", requiredPermission: "loyalty.adjust" },
+            { href: "/admin/loyalty/ledger", label: "Points Ledger", requiredPermission: "loyalty.adjust" },
             { href: "/admin/cx-insights", label: "Insights" },
             { href: "/admin/service-delivery", label: "Service" },
             { href: "/admin/customer-journeys", label: "Journeys" },
@@ -126,21 +142,21 @@ const menuItems = computed(() => [
     {
         title: "OmniChannel",
         icon: MessageSquare,
-        show: canViewAdmin.value,
+        show: hasAnyRole('admin', 'manager', 'agent'),
         children: [
             { href: "/admin/omni/workspace", label: "Workspace" },
-            { href: "/admin/omni/tools", label: "Agent Tools" },
-            { href: "/admin/omni/supervisor", label: "Supervisor" },
-            { href: "/admin/omni/settings", label: "Settings" },
+            { href: "/admin/omni/tools", label: "Agent Tools", requiredPermission: "contacts.edit" },
+            { href: "/admin/omni/supervisor", label: "Supervisor", requiredPermission: "security.events" },
+            { href: "/admin/omni/settings", label: "Settings", requiredPermission: "integrations.manage" },
         ],
     },
     {
         title: "Deal Management",
         icon: Briefcase,
-        show: true,
+        show: hasAnyRole('admin', 'manager', 'agent'),
         children: [
-            { href: "/deals", label: "Deals" },
-            { href: "/deals/board", label: "Kanban Board" },
+            { href: "/deals", label: "Deals", requiredPermission: "deals.view" },
+            { href: "/deals/board", label: "Kanban Board", requiredPermission: "deals.view" },
             { href: "/admin/deal-automations", label: "Automations" },
             { href: "/quotes", label: "Quotes" },
             { href: "/analytics/forecast", label: "Forecast" },
@@ -149,22 +165,22 @@ const menuItems = computed(() => [
     {
         title: "Contracts & Legal",
         icon: FileText,
-        show: true,
+        show: hasAnyRole('admin', 'manager', 'agent'),
         children: [
-            { href: "/contracts", label: "Contracts" },
-            { href: "/legal", label: "Legal Matters" },
+            { href: "/contracts", label: "Contracts", requiredPermission: "contracts.view" },
+            { href: "/legal", label: "Legal Matters", requiredPermission: "legal_matters.view" },
         ],
     },
     {
         title: "Finance & Procurement",
         icon: DollarSign,
-        show: true,
+        show: hasAnyRole('admin', 'manager', 'finance-manager', 'operations-manager'),
         children: [
-            { href: "/invoices", label: "Invoices" },
-            { href: "/vendors", label: "Vendors" },
-            { href: "/purchase-orders", label: "Purchase Orders" },
-            { href: "/assets", label: "Assets" },
-            { href: "/banking", label: "Banking" },
+            { href: "/invoices", label: "Invoices", requiredPermission: "invoices.view" },
+            { href: "/vendors", label: "Vendors", requiredPermission: "vendors.view" },
+            { href: "/purchase-orders", label: "Purchase Orders", requiredPermission: "procurement.create" },
+            { href: "/assets", label: "Assets", requiredPermission: "assets.view" },
+            { href: "/banking", label: "Banking", requiredPermission: "banking.view" },
             { href: "/employees", label: "Employees" },
             { href: "/finance", label: "Finance Dashboard" },
         ],
@@ -172,15 +188,11 @@ const menuItems = computed(() => [
     {
         title: "Analytics & Intelligence",
         icon: BarChart3,
-        show: true,
+        show: hasAnyRole('admin', 'manager'),
         children: [
-            {
-                href: "/admin/analytics/dashboard",
-                label: "Analytics Dashboard",
-            },
             { href: "/admin/analytics/customer", label: "Customer Analytics" },
             { href: "/admin/analytics/growth", label: "Growth Analytics" },
-            { href: "/admin/analytics/finance", label: "Finance Analytics" },
+            { href: "/admin/analytics/finance", label: "Finance Analytics", requiredPermission: "analytics.finance" },
             {
                 href: "/admin/analytics/predictive-scoring",
                 label: "Predictive Scoring",
@@ -195,7 +207,7 @@ const menuItems = computed(() => [
     {
         title: "Integrations & API",
         icon: Settings2,
-        show: canViewAdmin.value,
+        show: hasAnyRole('admin', 'manager'),
         children: [
             { href: "/admin/integrations", label: "Service Registry" },
             { href: "/admin/integrations/marketplace", label: "Marketplace" },
@@ -214,7 +226,7 @@ onMounted(() => {
     }
 
     // Check if onboarding checklist should be shown (only once per user)
-    if (currentRoute.value === '/' && !onboardingChecklistSeen.value) {
+    if (currentRoute.value.includes('dashboard') && !onboardingChecklistSeen.value) {
         fetch('/onboarding/checklist', {
             headers: {
                 'Accept': 'application/json',
@@ -361,25 +373,25 @@ const toggleMenuItem = (title: string) => {
                                 :class="cn('h-4 w-4 transition-transform duration-200', openMenuItem === item.title && 'rotate-180')" 
                             />
                         </CollapsibleTrigger>
-                        <CollapsibleContent>
-                            <div class="mt-1 space-y-1 pl-8 pr-2">
-                                <template v-for="child in item.children" :key="child.isHeader ? 'header-' + child.label : child.href">
-                                    <div 
-                                        v-if="child.isHeader" 
-                                        class="text-[9px] uppercase font-bold text-gray-500 tracking-wider pt-2.5 pb-1 px-3 border-t border-gray-800/40 mt-2 first:mt-0 first:border-0"
-                                    >
-                                        {{ child.label }}
-                                    </div>
-                                    <Link
-                                        v-else
-                                        :href="child.href"
-                                        class="block px-3 py-1.5 text-xs text-gray-450 rounded-md hover:bg-gray-800 hover:text-blue-300 transition-colors truncate"
-                                        @click="isMobileMenuOpen = false"
-                                    >
-                                        {{ child.label }}
-                                    </Link>
-                                </template>
-                            </div>
+<CollapsibleContent>
+                             <div class="mt-1 space-y-1 pl-8 pr-2">
+                                 <template v-for="child in item.children" :key="child.isHeader ? 'header-' + child.label : child.href">
+                                     <div 
+                                         v-if="child.isHeader || (child.requiredPermission && !hasPermission(child.requiredPermission))"
+                                         class="text-[9px] uppercase font-bold text-gray-500 tracking-wider pt-2.5 pb-1 px-3 border-t border-gray-800/40 mt-2 first:mt-0 first:border-0"
+                                     >
+                                         {{ child.label }}
+                                     </div>
+                                     <Link
+                                         v-else-if="!child.requiredPermission || hasPermission(child.requiredPermission)"
+                                         :href="child.href"
+                                         class="block px-3 py-1.5 text-xs text-gray-450 rounded-md hover:bg-gray-800 hover:text-blue-300 transition-colors truncate"
+                                         @click="isMobileMenuOpen = false"
+                                     >
+                                         {{ child.label }}
+                                     </Link>
+                                 </template>
+                             </div>
                         </CollapsibleContent>
                     </Collapsible>
                 </div>
@@ -441,14 +453,18 @@ const toggleMenuItem = (title: string) => {
                     </div>
                 </div>
                 
-                <div class="flex items-center gap-3">
-                    <div v-if="!isExpanded && !isHovered" class="lg:hidden">
-                         <span class="text-xl font-bold text-gray-900">CRM</span>
-                    </div>
-                    <div class="flex-1"></div>
-                    <AssistantIcon />
-                    <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
-                </div>
+<div class="flex items-center gap-3">
+                     <div v-if="!isExpanded && !isHovered" class="lg:hidden">
+                          <span class="text-xl font-bold text-gray-900">CRM</span>
+                     </div>
+                     <div class="flex-1"></div>
+                     <div class="flex items-center gap-2">
+                         <AssistantIcon />
+                         <span class="hidden sm:inline text-xs font-medium text-purple-700">Ask AI</span>
+                         <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
+                         <span class="hidden sm:inline text-xs font-medium text-blue-600">See Docs</span>
+                     </div>
+                 </div>
             </header>
             <div class="flex-1 p-4 lg:p-8">
                 <div class="max-w-screen-2xl mx-auto">

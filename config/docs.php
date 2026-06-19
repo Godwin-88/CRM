@@ -183,6 +183,52 @@ return [
                 'article_slug' => 'analytics-dashboard',
             ],
         ],
+        'finance-manager' => [
+            'invoices_manage' => [
+                'title' => 'Manage Invoices',
+                'description' => 'Create and manage customer invoices',
+                'route' => '/invoices',
+                'article_slug' => 'invoice-management',
+            ],
+            'banking_view' => [
+                'title' => 'View Banking Relationships',
+                'description' => 'Access and manage bank account details',
+                'route' => '/banking',
+                'article_slug' => 'banking',
+            ],
+            'vendors_manage' => [
+                'title' => 'Manage Vendors',
+                'description' => 'Oversee vendor relationships and procurement',
+                'route' => '/vendors',
+                'article_slug' => 'vendor-management',
+            ],
+            'purchase_orders_create' => [
+                'title' => 'Create Purchase Orders',
+                'description' => 'Set up procurement workflows',
+                'route' => '/purchase-orders/create',
+                'article_slug' => 'procurement-purchase-orders',
+            ],
+            'finance_dashboard' => [
+                'title' => 'View Finance Dashboard',
+                'description' => 'Access financial analytics and reporting',
+                'route' => '/finance',
+                'article_slug' => 'finance-analytics',
+            ],
+        ],
+        'operations-manager' => [
+            'assets_view' => [
+                'title' => 'View Assets',
+                'description' => 'Manage company assets and equipment',
+                'route' => '/assets',
+                'article_slug' => 'asset-management',
+            ],
+            'employees_view' => [
+                'title' => 'View Employees',
+                'description' => 'Access employee directory and records',
+                'route' => '/employees',
+                'article_slug' => 'employee-management',
+            ],
+        ],
         'admin' => [
             'users_manage' => [
                 'title' => 'Manage Users',
