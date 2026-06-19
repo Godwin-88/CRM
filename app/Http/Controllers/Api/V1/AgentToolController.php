@@ -652,6 +652,16 @@ class AgentToolController extends Controller
     {
         $user = $request->attributes->get('assistant_user');
 
+        if (in_array($tool, $this->destructiveActions, true)) {
+            return response()->json([
+                'error' => [
+                    'code' => 'action_not_permitted',
+                    'message' => "Tool '{$tool}' is not permitted via assistant. Navigate to the relevant screen to perform this action.",
+                    'navigation' => $this->guessNavigationForDestructiveAction($tool),
+                ],
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $toolDefinition = $this->tools[$tool] ?? null;
 
         if (! $toolDefinition) {
@@ -661,16 +671,6 @@ class AgentToolController extends Controller
                     'message' => "Tool '{$tool}' is not registered in the agent tool API.",
                 ],
             ], Response::HTTP_NOT_FOUND);
-        }
-
-        if (in_array($tool, $this->destructiveActions, true)) {
-            return response()->json([
-                'error' => [
-                    'code' => 'action_not_permitted',
-                    'message' => "Tool '{$tool}' is not permitted via assistant. Navigate to the relevant screen to perform this action.",
-                    'navigation' => $this->guessNavigationForDestructiveAction($tool),
-                ],
-            ], Response::HTTP_FORBIDDEN);
         }
 
         $tier = $toolDefinition['tier'];

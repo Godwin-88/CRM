@@ -85,11 +85,13 @@ it('stores tool call audit logs', function () {
     $token = $this->tokenService->mintToken($this->user, ['assistant:chat']);
     $raw = cache("assistant_token:{$token->id}");
 
+    \Illuminate\Support\Facades\Log::partialMock();
+
     $this->withHeader('X-Assistant-Token', $raw)
         ->withHeader('X-Assistant-Session', 'test-session')
         ->postJson('/api/v1/assistant/tool/users/my_permissions', []);
 
-    \Log::shouldHaveReceived('info')->with('Agent tool call');
+    \Illuminate\Support\Facades\Log::shouldHaveReceived('info')->with('Agent tool call');
 });
 
 it('returns available tools filtered by user permissions', function () {
@@ -112,16 +114,18 @@ it('proactive endpoint returns empty when no items exist', function () {
 });
 
 it('feedback endpoint stores rating', function () {
+    $sessionId = (string) \Illuminate\Support\Str::ulid();
     $conversation = \App\Models\AssistantConversation::create([
         'user_id' => $this->user->id,
-        'session_id' => '01HXYZ1234567890',
+        'session_id' => $sessionId,
         'model_provider' => 'openai',
         'model_name' => 'gpt-4o',
+        'started_at' => now(),
     ]);
 
     $response = $this->actingAs($this->user, 'sanctum')
         ->postJson('/api/v1/assistant/feedback', [
-            'session_id' => '01HXYZ1234567890',
+            'session_id' => $sessionId,
             'rating' => 5,
             'comment' => 'Great assistant!',
         ]);
