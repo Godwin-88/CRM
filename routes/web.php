@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\DuplicateContactsWebController;
 use App\Http\Controllers\Admin\GuidedJourneyWebController;
 use App\Http\Controllers\Admin\InteractionWebController;
 use App\Http\Controllers\Admin\LoyaltyProgramWebController;
+use App\Http\Controllers\Admin\LoyaltyCxHubController;
 use App\Http\Controllers\Admin\OmniChannelWebController;
 use App\Http\Controllers\Admin\OnboardingWebController;
 use App\Http\Controllers\Admin\PipelineWebController;
@@ -99,7 +100,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         ->name('admin.privileged.exit');
 
     // ─── Integrations (Admin) ───────────────────────────────────────────────────
-    Route::middleware(['role:admin'])->group(function () {
+    Route::middleware(['role:manager|admin'])->group(function () {
         Route::get('/admin/integrations', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'index'])
             ->name('admin.integrations.index');
         Route::get('/admin/integrations/marketplace', [\App\Http\Controllers\Admin\IntegrationWebController::class, 'marketplace'])
@@ -342,16 +343,29 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
         Route::get('/admin/analytics/campaigns-dashboard', [CampaignWebController::class, 'analyticsDashboard'])->name('admin.campaign-analytics.dashboard');
 
-        // Loyalty
-        Route::get('/admin/loyalty', [LoyaltyProgramWebController::class, 'index'])->name('admin.loyalty.index');
+        // Loyalty & CX hubs (GET page loads only; actions POST to legacy controllers)
+        Route::get('/admin/loyalty-programs', [LoyaltyCxHubController::class, 'programs'])->name('admin.loyalty-programs.index');
+        Route::get('/admin/customer-journeys', [LoyaltyCxHubController::class, 'journeys'])->name('admin.customer-journeys.index');
+        Route::get('/admin/cx-insights', [LoyaltyCxHubController::class, 'insights'])->name('admin.cx-insights.index');
+        Route::get('/admin/service-delivery', [LoyaltyCxHubController::class, 'service'])->name('admin.service-delivery.index');
+
+        // Legacy redirects into hubs (preserve existing URLs / bookmarks)
+        Route::get('/admin/loyalty', fn () => redirect('/admin/loyalty-programs'))->name('admin.loyalty.index');
+        Route::get('/admin/surveys', fn () => redirect('/admin/cx-insights'))->name('admin.surveys.index');
+        Route::get('/admin/surveys/responses', fn () => redirect('/admin/cx-insights'))->name('admin.surveys.responses');
+        Route::get('/admin/clv-analytics', fn () => redirect('/admin/cx-insights'))->name('admin.clv-analytics.index');
+        Route::get('/admin/sla', fn () => redirect('/admin/service-delivery'))->name('admin.sla.index');
+        Route::get('/admin/onboarding', fn () => redirect('/admin/customer-journeys'))->name('admin.onboarding.index');
+        Route::get('/admin/journeys', fn () => redirect('/admin/customer-journeys'))->name('admin.journeys.index');
+        Route::get('/admin/reactivation', fn () => redirect('/admin/customer-journeys'))->name('admin.reactivation.index');
+        Route::get('/admin/welcome-email-templates', fn () => redirect('/admin/loyalty-programs'))->name('admin.welcome-email-templates.index');
+
+        // Legacy loyalty routes (kept for POST/PUT/DELETE actions)
         Route::post('/admin/loyalty', [LoyaltyProgramWebController::class, 'store'])->name('admin.loyalty.store');
         Route::put('/admin/loyalty/{loyaltyProgram}', [LoyaltyProgramWebController::class, 'update'])->name('admin.loyalty.update');
-        Route::get('/admin/loyalty/tiers', [LoyaltyProgramWebController::class, 'tiers'])->name('admin.loyalty.tiers');
         Route::post('/admin/loyalty/tiers', [LoyaltyProgramWebController::class, 'storeTier'])->name('admin.loyalty.tiers.store');
         Route::put('/admin/loyalty/tiers/{loyaltyTier}', [LoyaltyProgramWebController::class, 'updateTier'])->name('admin.loyalty.tiers.update');
-        Route::get('/admin/loyalty/rules', [LoyaltyProgramWebController::class, 'rules'])->name('admin.loyalty.rules');
         Route::post('/admin/loyalty/rules', [LoyaltyProgramWebController::class, 'storeRule'])->name('admin.loyalty.rules.store');
-        Route::get('/admin/loyalty/redemption-rules', [LoyaltyProgramWebController::class, 'redemptionRules'])->name('admin.loyalty.redemption-rules');
         Route::post('/admin/loyalty/redemption-rules', [LoyaltyProgramWebController::class, 'storeRedemptionRule'])->name('admin.loyalty.redemption-rules.store');
         Route::get('/admin/loyalty/ledger', [LoyaltyProgramWebController::class, 'ledger'])->name('admin.loyalty.ledger');
         Route::get('/admin/loyalty/enrollments', [LoyaltyProgramWebController::class, 'enrollments'])->name('admin.loyalty.enrollments');

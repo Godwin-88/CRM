@@ -27,7 +27,7 @@ class JourneyCompletion extends Model
 
     public function journey(): BelongsTo
     {
-        return $this->belongsTo(GuidedJourney::class);
+        return $this->belongsTo(GuidedJourney::class, 'journey_id');
     }
 
     public function contact(): BelongsTo

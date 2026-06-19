@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { Head, router } from "@inertiajs/vue3";
+import { Head, Link, router } from "@inertiajs/vue3";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,6 +84,9 @@ function handleConnect() {
                     <h1 class="text-3xl font-bold text-gray-900">Integration Marketplace</h1>
                     <p class="text-gray-500">Discover and connect third-party services to your CRM.</p>
                 </div>
+                <Link href="/admin/integrations">
+                    <Button variant="outline" size="sm">Back to Service Registry</Button>
+                </Link>
             </div>
 
             <Card>

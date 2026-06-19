@@ -35,6 +35,6 @@ class GuidedJourney extends Model
 
     public function completions(): HasMany
     {
-        return $this->hasMany(JourneyCompletion::class);
+        return $this->hasMany(JourneyCompletion::class, 'journey_id');
     }
 }
