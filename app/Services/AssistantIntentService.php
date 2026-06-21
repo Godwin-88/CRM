@@ -116,6 +116,9 @@ class AssistantIntentService
         '4.12.4' => ['discussion', 'discussions', 'discussion board'],
         '4.12.5' => ['team calendar'],
         '4.12.6' => ['mention', 'mentions', '@mention'],
+        '4.15.1' => ['service catalog', 'catalog item', 'catalog items', 'service offering'],
+        '4.15.2' => ['service request', 'service requests', 'support request', 'support requests', 'document request'],
+        '4.15.3' => ['case record', 'case records', 'service case', 'service cases', 'complaint case', 'investigation case'],
     ];
 
     private const NAVIGATION_MAP = [
@@ -158,6 +161,9 @@ class AssistantIntentService
         '4.12.1' => '/calendar',
         '4.12.2' => '/notifications',
         '4.12.4' => '/discussions',
+        '4.15.1' => '/service-catalog',
+        '4.15.2' => '/service-requests',
+        '4.15.3' => '/cases',
     ];
 
     private const TOOL_HINTS = [
@@ -173,6 +179,7 @@ class AssistantIntentService
         '4.10' => ['users.my_permissions'],
         '4.11' => ['integrations.get_status', 'webhooks.get_delivery_log'],
         '4.12' => ['notifications.get_unread', 'calendar.upcoming', 'comments.post'],
+        '4.15' => ['services.search', 'services.get', 'service_requests.search', 'service_requests.create', 'service_requests.get_status', 'service_requests.update_status', 'service_requests.add_document_request', 'cases.search', 'cases.create', 'cases.get', 'cases.update_status', 'cases.add_note', 'cases.request_signoff'],
     ];
 
     public function systemPrompt(): string

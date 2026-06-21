@@ -151,6 +151,28 @@ class RoleAndPermissionSeeder extends Seeder
             'tickets.view',
             'tickets.manage',
             'sla.manage',
+
+            // Service Management
+            'services.view',
+            'services.create',
+            'services.update',
+            'services.delete',
+            'services.manage',
+            'service_requests.view',
+            'service_requests.create',
+            'service_requests.update',
+            'service_requests.delete',
+            'service_requests.export',
+            'service_requests.close',
+            'service_requests.reopen',
+            'cases.view',
+            'cases.create',
+            'cases.update',
+            'cases.delete',
+            'cases.export',
+            'cases.close',
+            'cases.reopen',
+            'cases.signoff',
             ];
 
         foreach ($permissions as $permission) {
@@ -178,6 +200,10 @@ class RoleAndPermissionSeeder extends Seeder
             'contracts.view', 'contracts.create', 'contracts.edit',
             'contract_templates.manage',
             'legal_matters.view', 'legal_matters.create', 'legal_matters.edit',
+            'services.view', 'services.create', 'services.update', 'services.manage',
+            'service_requests.view', 'service_requests.create', 'service_requests.update',
+            'service_requests.close', 'service_requests.reopen', 'service_requests.export',
+            'cases.view', 'cases.create', 'cases.update', 'cases.close', 'cases.reopen', 'cases.signoff', 'cases.export',
             // Finance
             'invoices.view', 'invoices.manage', 'invoices.payments',
             'procurement.create', 'procurement.approve',
@@ -215,6 +241,9 @@ class RoleAndPermissionSeeder extends Seeder
             'segments.view',
             'contacts.export',
             'pipelines.manage',
+            'services.view',
+            'service_requests.view', 'service_requests.create', 'service_requests.update',
+            'cases.view', 'cases.create', 'cases.update',
         ]);
 
         // Read-only — can only view
@@ -223,6 +252,9 @@ class RoleAndPermissionSeeder extends Seeder
             'contacts.view',
             'accounts.view',
             'segments.view',
+            'services.view',
+            'service_requests.view',
+            'cases.view',
         ]);
 
         // Documentation

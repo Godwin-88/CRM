@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Models\Account;
 use App\Models\Campaign;
+use App\Models\CaseRecord;
 use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\Deal;
 use App\Models\Interaction;
 use App\Models\ReportDefinition;
+use App\Models\ServiceRequest;
 use App\Models\Ticket;
 use Illuminate\Support\Facades\DB;
 
@@ -20,6 +22,8 @@ class ExploratoryAnalyticsService
         'deals' => Deal::class,
         'interactions' => Interaction::class,
         'tickets' => Ticket::class,
+        'service_requests' => ServiceRequest::class,
+        'cases' => CaseRecord::class,
         'campaigns' => Campaign::class,
         'contracts' => Contract::class,
     ];
