@@ -99,14 +99,20 @@ class CampaignController extends Controller
     public function addStep(Request $request, Campaign $campaign): JsonResponse
     {
         $validated = $request->validate([
-            'channel' => 'required|in:email,sms,push,in_app',
+                'channel' => 'required|in:email,sms,push,in_app,whatsapp,facebook,instagram,tiktok,linkedin',
             'email_template_id' => 'nullable|exists:campaign_templates,id',
             'sms_content' => 'nullable|string',
             'push_title' => 'nullable|string',
             'push_content' => 'nullable|string',
             'in_app_title' => 'nullable|string',
-            'in_app_content' => 'nullable|string',
-            'delay_type' => 'required|in:immediately,n_hours,n_days',
+                'in_app_content' => 'nullable|string',
+                'whatsapp_content' => 'nullable|string',
+                'facebook_content' => 'nullable|string',
+                'instagram_content' => 'nullable|string',
+                'tiktok_content' => 'nullable|string',
+                'linkedin_content' => 'nullable|string',
+                'social_image_url' => 'nullable|url',
+                'delay_type' => 'required|in:immediately,n_hours,n_days',
             'delay_value' => 'integer|min:0',
         ]);
 
@@ -128,13 +134,19 @@ class CampaignController extends Controller
         }
 
         $validated = $request->validate([
-            'channel' => 'sometimes|in:email,sms,push,in_app',
+            'channel' => 'sometimes|in:email,sms,push,in_app,whatsapp,facebook,instagram,tiktok,linkedin',
             'email_template_id' => 'nullable|exists:campaign_templates,id',
             'sms_content' => 'nullable|string',
             'push_title' => 'nullable|string',
             'push_content' => 'nullable|string',
             'in_app_title' => 'nullable|string',
             'in_app_content' => 'nullable|string',
+            'whatsapp_content' => 'nullable|string',
+            'facebook_content' => 'nullable|string',
+            'instagram_content' => 'nullable|string',
+            'tiktok_content' => 'nullable|string',
+            'linkedin_content' => 'nullable|string',
+            'social_image_url' => 'nullable|url',
             'delay_type' => 'sometimes|in:immediately,n_hours,n_days',
             'delay_value' => 'sometimes|integer|min:0',
         ]);

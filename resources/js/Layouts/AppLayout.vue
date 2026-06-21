@@ -66,6 +66,18 @@ const hasIncompleteItems = computed(() =>
 
 const currentRoute = computed(() => page.url || '');
 
+const breadcrumbText = computed(() => {
+    const url = page.url || '';
+    const campaign = (page.props as any).campaign;
+    if (campaign && campaign.name && url.startsWith('/admin/campaigns/')) {
+        return campaign.name;
+    }
+    if (url === '/admin/campaigns') return 'Campaigns';
+    return url;
+});
+
+const selfServiceUrl = typeof route === 'function' ? route('self-service.dashboard') : '/portal';
+
 const hasPermission = (permission: string): boolean => {
     return userPermissions.value.includes(permission);
 };
@@ -466,7 +478,7 @@ const toggleMenuItem = (title: string) => {
                         <Menu class="h-6 w-6" />
                     </Button>
                     <div class="text-sm font-medium text-gray-600 truncate hidden sm:block">
-                        {{ currentRoute }}
+                        {{ breadcrumbText }}
                     </div>
                 </div>
                 
@@ -475,12 +487,13 @@ const toggleMenuItem = (title: string) => {
                           <span class="text-xl font-bold text-gray-900">CRM</span>
                      </div>
                      <div class="flex-1"></div>
-                     <div class="flex items-center gap-2">
-                         <AssistantIcon />
-                         <span class="hidden sm:inline text-xs font-medium text-purple-700">Ask AI</span>
-                         <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
-                         <span class="hidden sm:inline text-xs font-medium text-blue-600">See Docs</span>
-                     </div>
+                      <div class="flex items-center gap-2">
+                          <AssistantIcon />
+                          <span class="hidden sm:inline text-xs font-medium text-purple-700">Ask AI</span>
+                          <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
+                          <span class="hidden sm:inline text-xs font-medium text-blue-600">See Docs</span>
+                          <Link :href="selfServiceUrl" class="hidden sm:inline text-xs font-medium text-green-600 hover:text-green-700">Self Service Portal</Link>
+                      </div>
                  </div>
             </header>
             <div class="flex-1 p-4 lg:p-8">

@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
+const routeFn = route
+
 const props = defineProps<{
     requests: {
         data: Array<{
@@ -43,7 +45,7 @@ const props = defineProps<{
         <div class="max-w-7xl mx-auto py-6">
             <div class="flex justify-between items-center mb-4">
                 <h1 class="text-2xl font-bold">Data Subject Requests</h1>
-                <Link :href="$route('admin.dsr.create')">
+                <Link :href="routeFn('admin.dsr.create')">
                     <Button>Create Request</Button>
                 </Link>
             </div>
@@ -73,7 +75,7 @@ const props = defineProps<{
                                 <TableCell>
                                     <Link
                                         :href="
-                                            $route(
+                                            routeFn(
                                                 'contacts.show',
                                                 request.contact.id,
                                             )
@@ -114,7 +116,7 @@ const props = defineProps<{
                                 <TableCell>
                                     <Link
                                         :href="
-                                            $route('admin.dsr.show', request.id)
+                                            routeFn('admin.dsr.show', request.id)
                                         "
                                     >
                                         <Button variant="outline" size="sm"
