@@ -4,8 +4,15 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Table, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
-import { ref } from 'vue'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table'
+import { ref, computed } from 'vue'
 
 const props = defineProps<{
   categories: {
@@ -29,6 +36,27 @@ const props = defineProps<{
 
 const showCreateModal = ref(false)
 const showEditModal = ref<string | null>(null)
+const searchQuery = ref('')
+const statusFilter = ref('all')
+
+const filteredCategories = computed(() => {
+  let data = props.categories.data
+
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    data = data.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.description && c.description.toLowerCase().includes(q))
+    )
+  }
+
+  if (statusFilter.value !== 'all') {
+    data = data.filter((c) => c.is_active === (statusFilter.value === 'active'))
+  }
+
+  return data
+})
 
 const createForm = useForm({
   name: '',
@@ -98,7 +126,24 @@ const openEditModal = (category: typeof props.categories.data[0]) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Categories</CardTitle>
+          <div class="flex items-center justify-between">
+            <CardTitle>Categories</CardTitle>
+            <div class="flex items-center gap-3">
+              <Input
+                v-model="searchQuery"
+                placeholder="Search categories..."
+                class="w-64"
+              />
+              <select
+                v-model="statusFilter"
+                class="p-2 border rounded text-sm"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent class="p-0">
           <Table>
@@ -107,6 +152,7 @@ const openEditModal = (category: typeof props.categories.data[0]) => {
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Default Priority</TableHead>
+                <TableHead>Agent Only</TableHead>
                 <TableHead>SLA Policy</TableHead>
                 <TableHead>Default Team</TableHead>
                 <TableHead>Status</TableHead>
@@ -114,7 +160,7 @@ const openEditModal = (category: typeof props.categories.data[0]) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow v-for="category in categories.data" :key="category.id">
+              <TableRow v-for="category in filteredCategories" :key="category.id">
                 <TableCell>
                   <div>
                     <p class="font-medium">{{ category.name }}</p>
@@ -126,6 +172,11 @@ const openEditModal = (category: typeof props.categories.data[0]) => {
                 <TableCell>{{ category.description || '-' }}</TableCell>
                 <TableCell>
                   <Badge variant="secondary">{{ category.default_priority }}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge :variant="category.is_agent_only ? 'default' : 'outline'">
+                    {{ category.is_agent_only ? 'Yes' : 'No' }}
+                  </Badge>
                 </TableCell>
                 <TableCell>{{ category.slaPolicy?.name || '-' }}</TableCell>
                 <TableCell>{{ category.defaultTeam?.name || '-' }}</TableCell>
@@ -140,8 +191,8 @@ const openEditModal = (category: typeof props.categories.data[0]) => {
                   </Button>
                 </TableCell>
               </TableRow>
-              <tr v-if="categories.data.length === 0">
-                <td colspan="7" class="p-4 text-center text-gray-500">No categories found.</td>
+              <tr v-if="filteredCategories.length === 0">
+                <td colspan="8" class="p-4 text-center text-gray-500">No categories found.</td>
               </tr>
             </TableBody>
           </Table>

@@ -138,6 +138,27 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             ->name('admin.integrations.webhooks.destroy');
         Route::post('/admin/integrations/webhooks/{webhook}/retry', [\App\Http\Controllers\Admin\WebhookWebController::class, 'retry'])
             ->name('admin.integrations.webhooks.retry');
+
+        Route::post('/admin/omni/settings/social-channels/{provider}', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveSocialChannel'])
+            ->name('admin.omni.settings.social-channels.save');
+        Route::post('/admin/omni/settings/social-channels/{provider}/disconnect', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'disconnectSocialChannel'])
+            ->name('admin.omni.settings.social-channels.disconnect');
+        Route::post('/admin/omni/settings/email/{provider}', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveEmailChannel'])
+            ->name('admin.omni.settings.email.save');
+        Route::post('/admin/omni/settings/email/{provider}/disconnect', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'disconnectEmailChannel'])
+            ->name('admin.omni.settings.email.disconnect');
+        Route::post('/admin/omni/settings/sms/{provider}', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveSmsChannel'])
+            ->name('admin.omni.settings.sms.save');
+        Route::post('/admin/omni/settings/sms/{provider}/disconnect', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'disconnectSmsChannel'])
+            ->name('admin.omni.settings.sms.disconnect');
+        Route::post('/admin/omni/settings/chat', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveChatChannel'])
+            ->name('admin.omni.settings.chat.save');
+        Route::post('/admin/omni/settings/ivr', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveIvrChannel'])
+            ->name('admin.omni.settings.ivr.save');
+        Route::post('/admin/omni/settings/field', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveFieldChannel'])
+            ->name('admin.omni.settings.field.save');
+        Route::post('/admin/omni/settings/channels/{provider}/disconnect', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'disconnectChannel'])
+            ->name('admin.omni.settings.channels.disconnect');
     });
 
     Route::middleware(['role:manager|admin'])->group(function () {

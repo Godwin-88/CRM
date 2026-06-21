@@ -72,6 +72,27 @@ class ContactCentreController extends Controller
         return response()->json(['message' => 'Interaction reassigned.']);
     }
 
+    public function interactions(Request $request): JsonResponse
+    {
+        $this->authorize('view', Interaction::class);
+
+        $query = Interaction::query()
+            ->with(['contact', 'agent', 'channel'])
+            ->whereIn('status', ['waiting', 'active'])
+            ->orderByDesc('created_at');
+
+        $user = $request->user();
+        if ($user->team_id) {
+            $agentIds = User::where('team_id', $user->team_id)->pluck('id');
+            $query->whereIn('agent_id', $agentIds);
+        }
+
+        $perPage = (int) $request->get('per_page', 50);
+        $interactions = $query->paginate($perPage);
+
+        return response()->json($interactions);
+    }
+
     private function computeStats(?string $teamId): array
     {
         $query = Interaction::query();

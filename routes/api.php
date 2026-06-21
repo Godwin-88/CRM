@@ -387,6 +387,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('contact-centre/stats', [ContactCentreController::class, 'index']);
         Route::get('contact-centre/history', [ContactCentreController::class, 'history']);
         Route::patch('contact-centre/interactions/{interaction}/reassign', [ContactCentreController::class, 'reassign']);
+        Route::get('contact-centre/interactions', [ContactCentreController::class, 'interactions']);
 
         // Translations / Language
         Route::get('translations/available', [TranslationController::class, 'available']);
