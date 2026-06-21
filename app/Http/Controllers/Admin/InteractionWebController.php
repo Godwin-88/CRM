@@ -14,10 +14,59 @@ class InteractionWebController extends Controller
 {
     public function index(): Response
     {
-        $interactions = Interaction::with(['contact', 'channel'])->orderBy('created_at', 'desc')->limit(200)->get();
+        $agentId = auth()->id();
+        $teamView = request()->boolean('team_view', false);
+
+        $query = Interaction::with(['contact', 'channel', 'deal', 'ticket', 'agent', 'attachments', 'contact.interactions' => function ($q) {
+                $q->latest()->limit(3);
+            }])
+            ->orderBy('created_at', 'desc');
+
+        if (!$teamView) {
+            $query->where('agent_id', $agentId);
+        }
+
+$filters = request()->only(['type', 'channel', 'direction', 'date_from', 'date_to', 'contact_id', 'is_reviewed', 'agent_id']);
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+        if (!empty($filters['channel'])) {
+            $query->where('channel_id', $filters['channel']);
+        }
+        if (!empty($filters['direction'])) {
+            $query->where('direction', $filters['direction']);
+        }
+        if (!empty($filters['channel'])) {
+            $query->where('channel_id', $filters['channel']);
+        }
+        if (!empty($filters['contact_id'])) {
+            $query->where('contact_id', $filters['contact_id']);
+        }
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+        if (!empty($filters['is_reviewed'])) {
+            $query->where('is_reviewed', $filters['is_reviewed']);
+        }
+        if (!empty($filters['agent_id']) && $teamView) {
+            $query->where('agent_id', $filters['agent_id']);
+        }
+
+        $interactions = $query->paginate(50);
+        $channels = InteractionChannel::orderBy('name')->get();
+        $contacts = \App\Models\Contact::orderBy('first_name')->limit(100)->get(['id', 'first_name', 'last_name']);
+        $agents = \App\Models\User::orderBy('name')->limit(100)->get(['id', 'name']);
 
         return Inertia::render('Admin/Interactions', [
             'interactions' => $interactions,
+            'channels' => $channels,
+            'contacts' => $contacts,
+            'agents' => $agents,
+            'filters' => $filters,
+            'teamView' => $teamView,
         ]);
     }
 
@@ -32,19 +81,33 @@ class InteractionWebController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'channel' => 'required|exists:interaction_channels,id',
             'direction' => 'required|in:inbound,outbound',
             'subject' => 'required|string|max:255',
-            'content' => 'required|string',
+            'body' => 'required|string',
             'contact_id' => 'nullable|exists:contacts,id',
             'occurred_at' => 'required|date',
+            'agent_id' => 'nullable|exists:users,id',
         ]);
 
-        $data = $request->all();
-        $data['user_id'] = auth()->id();
+        $channel = InteractionChannel::find($validated['channel']);
 
-        $interaction = Interaction::create($data);
+        $data = [
+            'channel_id' => $validated['channel'],
+            'direction' => $validated['direction'],
+            'subject' => $validated['subject'],
+            'body' => $validated['body'],
+            'agent_id' => $validated['agent_id'] ?? auth()->id(),
+        ];
+
+        if (!empty($validated['contact_id'])) {
+            $contact = \App\Models\Contact::find($validated['contact_id']);
+            $data['contact_id'] = $validated['contact_id'];
+            $data['account_id'] = $contact?->account_id;
+        }
+
+        Interaction::create($data);
 
         return redirect()->route('admin.interactions.index')->with('success', 'Interaction logged successfully.');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\NewInteractionNotification;
 use App\Models\Interaction;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -10,7 +11,7 @@ class InteractionService
     public function getInbox(string $agentId, bool $teamView = false, array $filters = [], int $perPage = 50): LengthAwarePaginator
     {
         $query = Interaction::query()
-            ->with(['contact', 'agent', 'channel']);
+            ->with(['contact', 'agent', 'channel', 'deal', 'ticket', 'attachments']);
 
         if (! $teamView && $agentId !== 'all') {
             $query->where('agent_id', $agentId);
@@ -19,6 +20,9 @@ class InteractionService
         // Filters
         if (! empty($filters['channel'])) {
             $query->where('type', $filters['channel']);
+        }
+        if (! empty($filters['channel_id'])) {
+            $query->where('channel_id', $filters['channel_id']);
         }
         if (! empty($filters['direction'])) {
             $query->where('direction', $filters['direction']);
@@ -34,6 +38,9 @@ class InteractionService
         }
         if (! empty($filters['is_reviewed'])) {
             $query->where('is_reviewed', $filters['is_reviewed']);
+        }
+        if (! empty($filters['agent_id'])) {
+            $query->where('agent_id', $filters['agent_id']);
         }
 
         return $query->orderByDesc('created_at')->paginate($perPage);
@@ -55,7 +62,13 @@ class InteractionService
 
     public function createInteraction(array $data): Interaction
     {
-        return Interaction::create($data);
+        $interaction = Interaction::create($data);
+
+        if ($interaction->agent_id) {
+            broadcast(new \App\Events\NewInteractionNotification($interaction))->toOthers();
+        }
+
+        return $interaction;
     }
 
     public function getDetail(string $interactionId): Interaction

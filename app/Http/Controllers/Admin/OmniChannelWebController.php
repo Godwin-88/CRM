@@ -16,7 +16,23 @@ class OmniChannelWebController extends Controller
 {
     public function workspace(): Response
     {
-        return Inertia::render('Admin/OmniWorkspace');
+        $agentId = auth()->id();
+        $teamView = request()->boolean('team_view', false);
+
+        $query = Interaction::with(['contact', 'channel', 'agent'])
+            ->orderBy('created_at', 'desc');
+
+        if (!$teamView) {
+            $query->where('agent_id', $agentId);
+        }
+
+        $interactions = $query->limit(50)->get();
+        $channels = InteractionChannel::orderBy('name')->get(['id', 'name', 'display_name']);
+
+        return Inertia::render('Admin/OmniWorkspace', [
+            'interactions' => ['data' => $interactions],
+            'channels' => $channels,
+        ]);
     }
 
     public function tools(): Response

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
-const props = defineProps<{
+const { relationship, canViewFinancials, canViewDocuments } = defineProps<{
   relationship: any;
   canViewFinancials: boolean;
   canViewDocuments: boolean;

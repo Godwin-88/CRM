@@ -10,6 +10,7 @@ use App\Services\AssistantTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -221,8 +222,8 @@ class AssistantChatController extends Controller
         $items = null;
 
         try {
-            $items = redis()->get($proactiveKey);
-            redis()->del($proactiveKey);
+            $items = Redis::get($proactiveKey);
+            Redis::del($proactiveKey);
         } catch (\Throwable $e) {
             Log::warning('Assistant proactive Redis read failed', [
                 'error' => $e->getMessage(),

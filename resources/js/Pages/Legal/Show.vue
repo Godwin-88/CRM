@@ -99,15 +99,14 @@ const submitNote = () => {
   formData.append('body', noteForm.body);
   formData.append('type', noteForm.type);
 
+  const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content;
   fetch(`/legal/${matter.value.id}/notes`, {
     method: 'POST',
-    headers: {
-      'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content,
-    },
+    headers: csrf ? { 'X-CSRF-TOKEN': csrf } : undefined,
     body: formData,
   }).then(() => {
     noteForm.reset();
-    router.reload({ preserveScroll: true });
+    router.reload({ preserveScroll: true } as any);
   });
 };
 
@@ -123,15 +122,14 @@ const uploadAttachment = () => {
   const formData = new FormData();
   formData.append('attachment', attachmentForm.attachment);
 
+  const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content;
   fetch(`/legal/${matter.value.id}/attachments`, {
     method: 'POST',
-    headers: {
-      'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content,
-    },
+    headers: csrf ? { 'X-CSRF-TOKEN': csrf } : undefined,
     body: formData,
   }).then(() => {
     attachmentForm.reset();
-    router.reload({ preserveScroll: true });
+    router.reload({ preserveScroll: true } as any);
   });
 };
 
@@ -140,13 +138,17 @@ const getSignedUrl = async (path: string) => {
   attachmentLoading.value = { ...attachmentLoading.value, [path]: true };
 
   try {
+    const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content;
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
+    if (csrf) {
+      headers['X-CSRF-TOKEN'] = csrf;
+    }
     const response = await fetch(`/legal/${matter.value.id}/attachments/signed-url`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content,
-      },
+      headers,
       body: JSON.stringify({ path }),
     });
 

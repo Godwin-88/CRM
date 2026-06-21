@@ -2,6 +2,8 @@
 import { Head, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
   articles: any[]

@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             DataClassificationSeeder::class,
             RateLimitSeeder::class,
             PipelineAndStageSeeder::class,
+            InteractionChannelSeeder::class,
         ]);
 
         $user = User::factory()->create([

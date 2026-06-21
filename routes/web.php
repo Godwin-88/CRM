@@ -284,6 +284,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
         Route::get('/admin/support/canned-responses', [CannedResponseController::class, 'index'])->name('admin.support.canned-responses.index');
         Route::post('/admin/support/canned-responses', [CannedResponseController::class, 'store'])->name('admin.support.canned-responses.store');
+        Route::put('/admin/support/canned-responses/{cannedResponse}', [CannedResponseController::class, 'update'])->name('admin.support.canned-responses.update');
 
         Route::get('/admin/support/sla-breaches', [SlaBreachController::class, 'index'])->name('admin.support.sla-breaches.index');
     });
@@ -369,7 +370,6 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::get('/admin/surveys', fn () => redirect('/admin/cx-insights'))->name('admin.surveys.index');
         Route::get('/admin/surveys/responses', fn () => redirect('/admin/cx-insights'))->name('admin.surveys.responses');
         Route::get('/admin/clv-analytics', fn () => redirect('/admin/cx-insights'))->name('admin.clv-analytics.index');
-        Route::get('/admin/sla', fn () => redirect('/admin/service-delivery'))->name('admin.sla.index');
         Route::get('/admin/onboarding', fn () => redirect('/admin/customer-journeys'))->name('admin.onboarding.index');
         Route::get('/admin/journeys', fn () => redirect('/admin/customer-journeys'))->name('admin.journeys.index');
         Route::get('/admin/reactivation', fn () => redirect('/admin/customer-journeys'))->name('admin.reactivation.index');

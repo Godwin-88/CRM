@@ -1,50 +1,117 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Inbox, CheckCircle2, AlertTriangle } from 'lucide-vue-next'
+import { Plus, MessageSquare, Phone, Mail, Inbox, Paperclip, Check, Facebook, Linkedin, Instagram, Music2, User, MapPin, PanelBottom } from 'lucide-vue-next'
 
-const props = defineProps<{ interactions: any[]; isTab?: boolean }>()
-const items = ref(props.interactions)
+interface Interaction {
+  id: string
+  channel: { id: string; name: string; display_name: string }
+  contact?: { id: string; first_name: string; last_name: string }
+  agent?: { id: string; name: string }
+  direction: 'inbound' | 'outbound'
+  subject: string
+  body?: string
+  created_at: string
+  is_reviewed: boolean
+  attachments?: Array<{ id: string; filename: string; size_bytes: number }>
+}
 
-const assign = (id: string) => {
-  const contactId = prompt('Enter Contact ID to assign:')
-  if (!contactId) return
-  router.post(`/admin/interactions/unmatched/${id}/resolve`, { contact_id: contactId }, { onSuccess: () => router.reload() })
+interface Channel {
+  id: string
+  name: string
+  display_name: string
+}
+
+const props = defineProps<{
+  interactions: Interaction[] | { data: Interaction[]; links: any; meta: any }
+  channels: Channel[]
+  isTab?: boolean
+}>()
+
+const interactions = ref(Array.isArray(props.interactions) ? props.interactions : (props.interactions?.data || []))
+const channels = ref(props.channels || [])
+
+const iconFor = (name: string) => {
+  const icons: Record<string, any> = {
+    call: Phone,
+    email: Mail,
+    chat: MessageSquare,
+    sms: MessageSquare,
+    whatsapp: MessageSquare,
+    facebook: Facebook,
+    linkedin: Linkedin,
+    instagram: Instagram,
+    tiktok: Music2,
+    in_person: User,
+    field_visit: MapPin,
+    kiosk: PanelBottom,
+  }
+  return icons[name?.toLowerCase()] || Inbox
+}
+
+const markReviewed = (id: string) => {
+  router.patch(`/api/v1/interactions/${id}/mark-reviewed`, {}, {
+    onSuccess: () => {
+      const item = interactions.value.find((i: any) => i.id === id)
+      if (item) item.is_reviewed = true
+    }
+  })
 }
 </script>
 
 <template>
-  <component :is="isTab ? 'div' : AppLayout">
-    <Head v-if="!isTab" title="Interaction Inbox" />
-    <div class="max-w-5xl mx-auto space-y-6">
-      <div v-if="!isTab">
-        <h1 class="text-3xl font-bold text-gray-900">Unmatched Inbox</h1>
-        <p class="text-gray-500">Resolve interactions that have no linked contact.</p>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardContent class="pt-6 flex items-center gap-4"><Inbox class="h-8 w-8 text-blue-500" /><div><p class="text-sm text-gray-500">Unmatched</p><p class="text-2xl font-bold">{{ items.length }}</p></div></CardContent></Card>
-      </div>
-      <Card>
-        <CardHeader><CardTitle>Items</CardTitle></CardHeader>
-        <CardContent class="p-0">
-          <table class="w-full text-sm">
-            <thead class="border-b"><tr class="text-left text-gray-500"><th class="p-4">Channel</th><th class="p-4">Subject</th><th class="p-4">Date</th><th class="p-4"></th></tr></thead>
-            <tbody>
-              <tr v-for="item in items" :key="item.id" class="border-b hover:bg-gray-50">
-                <td class="p-4">{{ item.channel?.name ?? 'Unknown' }}</td>
-                <td class="p-4">{{ item.subject }}</td>
-                <td class="p-4 text-gray-500">{{ item.created_at }}</td>
-                <td class="p-4"><Button size="sm" @click="assign(item.id)">Assign</Button></td>
-              </tr>
-              <tr v-if="!items.length"><td colspan="4" class="p-8 text-center text-gray-500">No unmatched items.</td></tr>
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-    </div>
-  </component>
+  <div>
+    <Head v-if="!isTab" title="Unified Interaction Inbox" />
+    <Card>
+      <CardHeader v-if="!isTab">
+        <CardTitle>Unified Interaction Inbox</CardTitle>
+      </CardHeader>
+      <CardContent class="p-0">
+        <table class="w-full text-sm">
+          <thead class="border-b bg-gray-50">
+            <tr class="text-left text-gray-500">
+              <th class="p-3">Channel</th>
+              <th class="p-3">Contact</th>
+              <th class="p-3">Subject</th>
+              <th class="p-3">Direction</th>
+              <th class="p-3">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in interactions" :key="item.id" class="border-b hover:bg-gray-50">
+              <td class="p-3">
+                <div class="flex items-center gap-2">
+                  <component :is="iconFor(item.channel?.name)" class="h-4 w-4" />
+                  <span class="font-medium">{{ item.channel?.display_name || item.channel?.name || 'Unknown' }}</span>
+                  <Badge v-if="!item.is_reviewed" variant="default" class="ml-2">NEW</Badge>
+                </div>
+              </td>
+              <td class="p-3">
+                <span v-if="item.contact">{{ item.contact.first_name }} {{ item.contact.last_name }}</span>
+                <span v-else class="text-gray-400">Unknown</span>
+              </td>
+              <td class="p-3">
+                <div class="flex items-center gap-2">
+                  <span class="truncate max-w-xs">{{ item.subject }}</span>
+                  <Paperclip v-if="item.attachments?.length" class="h-3 w-3 text-gray-400" />
+                </div>
+              </td>
+              <td class="p-3">
+                <Badge :variant="item.direction === 'inbound' ? 'secondary' : 'default'">
+                  {{ item.direction }}
+                </Badge>
+              </td>
+              <td class="p-3 text-gray-500">{{ item.created_at }}</td>
+            </tr>
+            <tr v-if="!interactions.length">
+              <td colspan="5" class="p-8 text-center text-gray-500">No interactions found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </CardContent>
+    </Card>
+  </div>
 </template>

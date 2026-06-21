@@ -198,11 +198,15 @@ const downloadPdf = async () => {
   previewLoading.value = true;
 
   try {
+    const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content;
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    };
+    if (csrf) {
+      headers['X-CSRF-TOKEN'] = csrf;
+    }
     const response = await fetch(`/contracts/${contract.value.id}/download`, {
-      headers: {
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content,
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -222,12 +226,16 @@ const downloadPdf = async () => {
 const regeneratePdf = async () => {
   if (!confirm('Regenerate contract PDF? This will create a new version.')) return;
 
+  const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content;
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  };
+  if (csrf) {
+    headers['X-CSRF-TOKEN'] = csrf;
+  }
   await fetch(`/contracts/${contract.value.id}/regenerate`, {
     method: 'POST',
-    headers: {
-      'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content,
-      'Accept': 'application/json',
-    },
+    headers,
   });
 
   router.reload();
@@ -236,12 +244,16 @@ const regeneratePdf = async () => {
 const duplicateContract = async () => {
   if (!confirm('Duplicate this contract? A new draft will be created.')) return;
 
+  const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content;
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  };
+  if (csrf) {
+    headers['X-CSRF-TOKEN'] = csrf;
+  }
   await fetch(`/contracts/${contract.value.id}/duplicate`, {
     method: 'POST',
-    headers: {
-      'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content,
-      'Accept': 'application/json',
-    },
+    headers,
   });
 
   router.visit('/contracts');

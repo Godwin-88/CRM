@@ -676,17 +676,19 @@ class AgentToolController extends Controller
         $tier = $toolDefinition['tier'];
         $input = $request->all();
 
-        if ($tier === 'write-significant') {
-            $confirmed = $request->input('confirmed', false);
+        $needsConfirmation = in_array($tier, ['write-reversible', 'write-significant'], true);
+        $confirmed = $request->input('confirmed', false);
 
-            if (! $confirmed) {
-                return response()->json([
-                    'requires_confirmation' => true,
-                    'tool' => $tool,
-                    'tier' => $tier,
-                    'message' => 'This action requires your explicit confirmation before I can execute it.',
-                ], Response::HTTP_PRECONDITION_REQUIRED);
-            }
+        if ($needsConfirmation && ! $confirmed) {
+            $cascadingActions = $this->inferCascadingActions($tool, $user);
+
+            return response()->json([
+                'requires_confirmation' => true,
+                'tool' => $tool,
+                'tier' => $tier,
+                'message' => 'This action requires your confirmation before I can execute it.',
+                'cascading_actions' => $cascadingActions,
+            ], Response::HTTP_PRECONDITION_REQUIRED);
         }
 
         $validationError = $this->validateToolInput($toolDefinition['input_schema'] ?? ['type' => 'object'], $input);
@@ -821,7 +823,7 @@ class AgentToolController extends Controller
                     'input_schema' => $definition['input_schema'] ?? ['type' => 'object'],
                     'output_schema' => $definition['output_schema'] ?? ['type' => 'object'],
                     'roles' => $definition['roles'] ?? [],
-                    'requires_confirmation' => $definition['tier'] === 'write-significant',
+                    'requires_confirmation' => in_array($definition['tier'], ['write-reversible', 'write-significant'], true),
                 ];
             } catch (UnauthorizedException) {
             }

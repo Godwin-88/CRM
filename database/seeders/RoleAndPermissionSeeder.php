@@ -141,12 +141,17 @@ class RoleAndPermissionSeeder extends Seeder
             // Teams
             'teams.manage',
 
-// Comments
-             'comments.view',
-             'attachments.sign',
-             'docs.manage',
-             'roles.view',
-             ];
+            // Comments
+            'comments.view',
+            'attachments.sign',
+            'docs.manage',
+            'roles.view',
+
+            // Support
+            'tickets.view',
+            'tickets.manage',
+            'sla.manage',
+            ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);

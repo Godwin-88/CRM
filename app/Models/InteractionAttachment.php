@@ -7,24 +7,30 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CallRecording extends Model
+class InteractionAttachment extends Model
 {
     use HasFactory, HasUlids;
 
     protected $fillable = [
         'interaction_id',
-        'provider_call_sid',
-        'recording_url',
+        'filename',
+        'mime_type',
+        'size_bytes',
         'storage_path',
-        'duration_seconds',
+        'disk',
     ];
 
     protected $casts = [
-        'duration_seconds' => 'integer',
+        'size_bytes' => 'integer',
     ];
 
     public function interaction(): BelongsTo
     {
         return $this->belongsTo(Interaction::class);
+    }
+
+    public function getUrlAttribute(): string
+    {
+        return \Storage::disk($this->disk)->url($this->storage_path);
     }
 }
