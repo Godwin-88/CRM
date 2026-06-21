@@ -145,25 +145,28 @@ const openEditModal = (category: typeof props.categories.data[0]) => {
             </div>
           </div>
         </CardHeader>
-        <CardContent class="p-0">
+        <CardContent>
           <Table>
-            <TableHead>
+            <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead class="w-[200px]">Name</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Default Priority</TableHead>
-                <TableHead>Agent Only</TableHead>
+                <TableHead class="w-[120px]">Priority</TableHead>
+                <TableHead class="w-[100px]">Agent Only</TableHead>
                 <TableHead>SLA Policy</TableHead>
                 <TableHead>Default Team</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead class="w-[100px]">Status</TableHead>
+                <TableHead class="w-[100px]">Actions</TableHead>
               </TableRow>
-            </TableHead>
+            </TableHeader>
             <TableBody>
+              <TableRow v-if="filteredCategories.length === 0">
+                <TableCell colspan="8" class="p-8 text-center text-gray-500">No categories found.</TableCell>
+              </TableRow>
               <TableRow v-for="category in filteredCategories" :key="category.id">
-                <TableCell>
+                <TableCell class="font-medium">
                   <div>
-                    <p class="font-medium">{{ category.name }}</p>
+                    <p>{{ category.name }}</p>
                     <p v-if="category.children?.length" class="text-xs text-gray-500">
                       {{ category.children.length }} subcategories
                     </p>
@@ -171,7 +174,7 @@ const openEditModal = (category: typeof props.categories.data[0]) => {
                 </TableCell>
                 <TableCell>{{ category.description || '-' }}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{{ category.default_priority }}</Badge>
+                  <Badge variant="secondary">{{ category.default_priority || '-' }}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge :variant="category.is_agent_only ? 'default' : 'outline'">
@@ -186,14 +189,9 @@ const openEditModal = (category: typeof props.categories.data[0]) => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Button @click="openEditModal(category)" variant="outline" size="sm">
-                    Edit
-                  </Button>
+                  <Button @click="openEditModal(category)" variant="outline" size="sm">Edit</Button>
                 </TableCell>
               </TableRow>
-              <tr v-if="filteredCategories.length === 0">
-                <td colspan="8" class="p-4 text-center text-gray-500">No categories found.</td>
-              </tr>
             </TableBody>
           </Table>
         </CardContent>

@@ -108,6 +108,18 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             ->name('admin.rbac.roles.delete');
     });
 
+    // ─── User Management ──────────────────────────────────────────────────────────
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])
+            ->name('admin.users.index');
+        Route::post('/admin/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])
+            ->name('admin.users.store');
+        Route::put('/admin/users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'update'])
+            ->name('admin.users.update');
+        Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])
+            ->name('admin.users.destroy');
+    });
+
     // ─── Privileged Session ───────────────────────────────────────────────────────
     Route::get('/admin/privileged/challenge', [PrivilegedSessionController::class, 'showChallenge'])
         ->name('admin.privileged.challenge');
