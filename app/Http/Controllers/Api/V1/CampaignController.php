@@ -54,9 +54,12 @@ class CampaignController extends Controller
             'tags' => 'nullable|array',
         ]);
 
+        $segment = $validated['segment_id'] ? Segment::find($validated['segment_id']) : null;
+
         $campaign = Campaign::create([
             ...$validated,
             'created_by' => $request->user()->id,
+            'segment_count_draft' => $segment ? $this->segmentService->getPreview($segment->criteria ?? ['rules' => []])['total_count'] ?? 0 : null,
         ]);
 
         return response()->json($campaign->load(['segment', 'creator']), 201);
@@ -80,7 +83,15 @@ class CampaignController extends Controller
             'tags' => 'sometimes|array',
         ]);
 
-        $campaign->update($validated);
+        if (array_key_exists('segment_id', $validated)) {
+            $segment = $validated['segment_id'] ? Segment::find($validated['segment_id']) : null;
+            $campaign->update([
+                ...$validated,
+                'segment_count_draft' => $segment ? $this->segmentService->getPreview($segment->criteria ?? ['rules' => []])['total_count'] ?? 0 : null,
+            ]);
+        } else {
+            $campaign->update($validated);
+        }
 
         return response()->json($campaign->load(['segment', 'creator']));
     }
@@ -207,15 +218,44 @@ class CampaignController extends Controller
         return response()->json($campaign->load(['segment', 'creator']));
     }
 
-    public function dispatch(Campaign $campaign): JsonResponse
+    public function dispatch(Request $request, Campaign $campaign): JsonResponse
     {
+        $validated = $request->validate([
+            'scheduled_at' => 'nullable|date',
+            'throttle_emails_per_hour' => 'nullable|integer|min:0',
+            'throttle_sms_per_hour' => 'nullable|integer|min:0',
+            'optimize_send_time' => 'nullable|boolean',
+            'confirmed_variance' => 'nullable|boolean',
+        ]);
+
         if (!$campaign->canBeScheduled()) {
             return response()->json(['message' => 'Campaign must have a segment and at least one step with a template to dispatch.'], 422);
         }
 
+        if ($campaign->segment_id && $campaign->segment_count_draft) {
+            $currentPreview = $this->segmentService->getPreview($campaign->segment->criteria ?? ['rules' => []]);
+            $currentCount = $currentPreview['total_count'] ?? 0;
+            $draftCount = (int) $campaign->segment_count_draft;
+
+            if ($draftCount > 0 && !$request->boolean('confirmed_variance')) {
+                $variance = abs($currentCount - $draftCount) / $draftCount;
+                if ($variance > 0.20) {
+                    return response()->json([
+                        'message' => 'Segment count variance exceeds 20%. Please review.',
+                        'variance_warning' => true,
+                        'draft_count' => $draftCount,
+                        'current_count' => $currentCount,
+                    ], 422);
+                }
+            }
+        }
+
         $campaign->update([
             'status' => 'scheduled',
-            'scheduled_at' => $campaign->scheduled_at ?? now(),
+            'scheduled_at' => $validated['scheduled_at'] ?? $campaign->scheduled_at ?? now(),
+            'throttle_emails_per_hour' => $validated['throttle_emails_per_hour'] ?? $campaign->throttle_emails_per_hour,
+            'throttle_sms_per_hour' => $validated['throttle_sms_per_hour'] ?? $campaign->throttle_sms_per_hour,
+            'optimize_send_time' => $validated['optimize_send_time'] ?? $campaign->optimize_send_time,
         ]);
 
         return response()->json($campaign->load(['segment', 'creator']));
@@ -279,6 +319,12 @@ class CampaignController extends Controller
             'email_eligible' => $preview['email_eligible'] ?? 0,
             'sms_eligible' => $preview['sms_eligible'] ?? 0,
             'push_eligible' => $preview['push_eligible'] ?? 0,
+            'in_app_eligible' => $preview['in_app_eligible'] ?? 0,
+            'whatsapp_eligible' => $preview['whatsapp_eligible'] ?? 0,
+            'facebook_eligible' => $preview['facebook_eligible'] ?? 0,
+            'instagram_eligible' => $preview['instagram_eligible'] ?? 0,
+            'tiktok_eligible' => $preview['tiktok_eligible'] ?? 0,
+            'linkedin_eligible' => $preview['linkedin_eligible'] ?? 0,
             'sample_contacts' => $preview['sample_contacts'] ?? [],
         ]);
     }

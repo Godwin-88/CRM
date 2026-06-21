@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Trash2, Users, Tag, BarChart3 } from 'lucide-vue-next';
+import SegmentBuilder from '@/Components/Segments/SegmentBuilder.vue';
 
 interface Campaign {
   id: string;
@@ -28,6 +29,18 @@ interface Segment {
   id: string;
   name: string;
   contact_count: number;
+}
+
+interface ChannelBreakdown {
+  email: number;
+  sms: number;
+  push: number;
+  in_app: number;
+  whatsapp: number;
+  facebook: number;
+  instagram: number;
+  tiktok: number;
+  linkedin: number;
 }
 
 interface Template {
@@ -54,6 +67,7 @@ const campaigns = ref(props.campaigns);
 const segments = ref(props.segments);
 const templates = ref(props.templates);
 const isCreateOpen = ref(false);
+const isSegmentCreateOpen = ref(false);
 
 const newCampaign = ref({
   name: '',
@@ -64,7 +78,7 @@ const newCampaign = ref({
 
 const selectedSegmentId = ref<string | null>(null);
 const segmentCountPreview = ref<number | null>(null);
-const segmentChannelBreakdown = ref<Record<string, number> | null>(null);
+const segmentChannelBreakdown = ref<ChannelBreakdown | null>(null);
 const segmentSample = ref<any[] | null>(null);
 const isCalculatingCount = ref(false);
 const tagInput = ref('');
@@ -123,10 +137,17 @@ const previewSegmentCount = async (segmentId: string) => {
       email: data.email_eligible ?? 0,
       sms: data.sms_eligible ?? 0,
       push: data.push_eligible ?? 0,
+      in_app: data.in_app_eligible ?? 0,
+      whatsapp: data.whatsapp_eligible ?? 0,
+      facebook: data.facebook_eligible ?? 0,
+      instagram: data.instagram_eligible ?? 0,
+      tiktok: data.tiktok_eligible ?? 0,
+      linkedin: data.linkedin_eligible ?? 0,
     };
     segmentSample.value = data.sample_contacts ?? [];
   } catch {
     segmentCountPreview.value = null;
+    segmentChannelBreakdown.value = null;
   } finally {
     isCalculatingCount.value = false;
   }
@@ -173,7 +194,10 @@ const createCampaign = async () => {
 };
 
 const canSubmit = computed(() => {
-  return newCampaign.value.name.trim().length > 0;
+  if (!newCampaign.value.name.trim().length) return false;
+  if (steps.value.length > 0 && !selectedSegmentId.value) return false;
+  if (steps.value.length > 0 && segmentCountPreview.value === 0) return false;
+  return true;
 });
 
 const statusColor = (status: string): "default" | "outline" | "secondary" | "destructive" | "success" | null | undefined => {
@@ -187,6 +211,28 @@ const statusColor = (status: string): "default" | "outline" | "secondary" | "des
     failed: 'destructive',
   };
   return colors[status] || 'outline';
+};
+
+const handleSegmentCreated = async (segmentData: any) => {
+  try {
+    const response = await fetch('/api/v1/segments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
+      },
+      body: JSON.stringify(segmentData),
+    });
+    if (response.ok) {
+      const newSegment = await response.json();
+      segments.value.push(newSegment);
+      selectedSegmentId.value = newSegment.id;
+      isSegmentCreateOpen.value = false;
+      previewSegmentCount(newSegment.id);
+    }
+  } catch {
+    // ignore
+  }
 };
 </script>
 
@@ -240,7 +286,14 @@ const statusColor = (status: string): "default" | "outline" | "secondary" | "des
                   <label class="text-sm font-medium flex items-center gap-2">
                     <Users class="h-4 w-4" /> Target Segment
                   </label>
-                  <Select v-model="selectedSegmentId" @update:model-value="previewSegmentCount($event as string)">
+                  <Select v-model="selectedSegmentId" @update:model-value="(val: any) => {
+                    if (val === '__create_new__') {
+                      selectedSegmentId = null;
+                      isSegmentCreateOpen = true;
+                    } else if (val) {
+                      previewSegmentCount(val);
+                    }
+                  }">
                     <SelectTrigger>
                       <SelectValue placeholder="Select a segment" />
                     </SelectTrigger>
@@ -248,6 +301,7 @@ const statusColor = (status: string): "default" | "outline" | "secondary" | "des
                       <SelectItem v-for="seg in segments" :key="seg.id" :value="seg.id">
                         {{ seg.name }} ({{ seg.contact_count }} contacts)
                       </SelectItem>
+                      <SelectItem value="__create_new__">+ Create new segment</SelectItem>
                     </SelectContent>
                   </Select>
                   <div v-if="isCalculatingCount" class="text-xs text-gray-500 mt-1">Calculating reach...</div>
@@ -256,13 +310,22 @@ const statusColor = (status: string): "default" | "outline" | "secondary" | "des
                       <BarChart3 class="h-4 w-4" />
                       {{ segmentCountPreview.toLocaleString() }} contacts reachable
                     </div>
-                    <div v-if="segmentChannelBreakdown" class="mt-1 text-xs text-blue-700">
-                      {{ segmentChannelBreakdown.email.toLocaleString() }} email-eligible,
-                      {{ segmentChannelBreakdown.sms.toLocaleString() }} SMS-eligible,
-                      {{ segmentChannelBreakdown.push.toLocaleString() }} push-eligible
+                    <div v-if="segmentChannelBreakdown" class="mt-1 text-xs text-blue-700 space-y-0.5">
+                      <div>{{ segmentChannelBreakdown.email.toLocaleString() }} email-eligible</div>
+                      <div>{{ segmentChannelBreakdown.sms.toLocaleString() }} SMS-eligible</div>
+                      <div>{{ segmentChannelBreakdown.push.toLocaleString() }} push-eligible</div>
+                      <div>{{ segmentChannelBreakdown.in_app.toLocaleString() }} in-app-eligible</div>
+                      <div>{{ segmentChannelBreakdown.whatsapp.toLocaleString() }} WhatsApp-eligible</div>
+                      <div>{{ segmentChannelBreakdown.facebook.toLocaleString() }} Facebook-eligible</div>
+                      <div>{{ segmentChannelBreakdown.instagram.toLocaleString() }} Instagram-eligible</div>
+                      <div>{{ segmentChannelBreakdown.tiktok.toLocaleString() }} TikTok-eligible</div>
+                      <div>{{ segmentChannelBreakdown.linkedin.toLocaleString() }} LinkedIn-eligible</div>
                     </div>
                     <div v-if="segmentSample && segmentSample.length" class="mt-2 text-xs text-gray-600">
                       Sample: {{ segmentSample.slice(0, 5).map((c: any) => `${c.first_name} ${c.last_name}`).join(', ') }}
+                    </div>
+                    <div v-if="segmentCountPreview === 0 && steps.length > 0" class="mt-2 text-xs text-red-600 font-medium">
+                      Cannot proceed: segment has zero matching contacts.
                     </div>
                   </div>
                 </div>
@@ -340,6 +403,15 @@ const statusColor = (status: string): "default" | "outline" | "secondary" | "des
                     </div>
                   </div>
                 </div>
+
+                <Dialog v-model:open="isSegmentCreateOpen">
+                  <DialogContent class="max-w-2xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Create Segment</DialogTitle>
+                    </DialogHeader>
+                    <SegmentBuilder @update="handleSegmentCreated" />
+                  </DialogContent>
+                </Dialog>
 
                 <Button @click="createCampaign" :disabled="!canSubmit" class="w-full">
                   Create Campaign

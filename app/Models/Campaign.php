@@ -22,6 +22,7 @@ class Campaign extends Model implements HasMedia
         'type',
         'status',
         'segment_id',
+        'segment_count_draft',
         'created_by',
         'scheduled_at',
         'started_at',

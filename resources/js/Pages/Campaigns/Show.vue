@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Users } from 'lucide-vue-next';
 
 interface Campaign {
   id: string;
@@ -27,6 +28,7 @@ interface Campaign {
   utm_content: string;
   tags: string[];
   segment?: { id: string; name: string; contact_count: number };
+  segment_count_draft?: number | null;
   created_by?: { name: string };
   steps?: CampaignStep[];
   abTest?: ABTest;
@@ -113,6 +115,17 @@ const utmData = ref({
   content: '',
 });
 
+const refreshSegmentPreview = async () => {
+  if (!campaign.value.segment) return;
+  try {
+    const response = await fetch(`/api/v1/segments/${campaign.value.segment.id}/count`);
+    const data = await response.json();
+    campaign.value.segment.contact_count = data.total_count;
+  } catch {
+    // silently fail
+  }
+};
+
 const addStep = async () => {
   const position = campaign.value.steps?.length || 0;
   const payload: any = {
@@ -174,17 +187,33 @@ const addStep = async () => {
 };
 
 const scheduleCampaign = async () => {
-  const response = await fetch(`/api/v1/campaigns/${campaign.value.id}`, {
-    method: 'PUT',
+  const response = await fetch(`/api/v1/campaigns/${campaign.value.id}/dispatch`, {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
     },
-    body: JSON.stringify({ ...scheduleData.value, status: 'scheduled' }),
+    body: JSON.stringify({ ...scheduleData.value }),
   });
+  const data = await response.json();
   if (response.ok) {
     isScheduleOpen.value = false;
     router.reload();
+  } else if (data.variance_warning) {
+    if (confirm(`Segment count variance exceeds 20%. Draft count: ${data.draft_count}, current count: ${data.current_count}. Do you want to proceed?`)) {
+      const retry = await fetch(`/api/v1/campaigns/${campaign.value.id}/dispatch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
+        },
+        body: JSON.stringify({ ...scheduleData.value, confirmed_variance: true }),
+      });
+      if (retry.ok) {
+        isScheduleOpen.value = false;
+        router.reload();
+      }
+    }
   }
 };
 
@@ -260,6 +289,31 @@ const countdown = computed(() => {
       <!-- Countdown Display -->
       <div v-if="campaign.status === 'scheduled'" class="bg-blue-50 p-4 rounded-lg">
         <p class="text-sm font-medium">Scheduled to send in: <span class="text-blue-600">{{ countdown }}</span></p>
+      </div>
+
+      <!-- Segment Targeting Preview -->
+      <Card v-if="campaign.segment">
+        <CardHeader>
+          <CardTitle class="flex items-center gap-2">
+            <Users class="h-5 w-5" />
+            Target Segment: {{ campaign.segment.name }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="flex items-center gap-4">
+            <div class="text-2xl font-bold">{{ (campaign.segment as any).contact_count?.toLocaleString() ?? '—' }}</div>
+            <div class="text-sm text-gray-500">contacts in segment</div>
+          </div>
+          <div v-if="campaign.segment_count_draft !== null && campaign.segment_count_draft !== undefined" class="mt-2 text-xs text-gray-500">
+            Draft count recorded: {{ campaign.segment_count_draft?.toLocaleString() }}
+          </div>
+          <div v-if="campaign.status === 'draft'" class="mt-3">
+            <Button variant="outline" size="sm" @click="refreshSegmentPreview">Refresh Count</Button>
+          </div>
+        </CardContent>
+      </Card>
+      <div v-else-if="campaign.status === 'draft'" class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+        <p class="text-sm text-yellow-800">No target segment selected. Schedule requires a valid segment with matching contacts.</p>
       </div>
 
       <!-- A/B Test Status -->
