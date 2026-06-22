@@ -4,8 +4,10 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Select } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ref, onMounted } from 'vue'
 
 const props = defineProps<{
   tickets: {
@@ -17,14 +19,16 @@ const props = defineProps<{
   filters: Record<string, string>
 }>()
 
+const contacts = ref<Array<{ id: string; first_name?: string; last_name?: string }>>([])
+const loadingOptions = ref(false)
+
 const form = useForm({
   search: props.filters.search || '',
   status: props.filters.status || '',
   priority: props.filters.priority || '',
   category_id: props.filters.category_id || '',
-  account_id: props.filters.account_id || '',
+  assigned_to: props.filters.assigned_to || '',
   contact_id: props.filters.contact_id || '',
-  sla: props.filters.sla || '',
 })
 
 const statusColors: Record<string, "default" | "outline" | "success" | "destructive" | "secondary"> = {
@@ -48,9 +52,8 @@ const submitFilter = () => {
     status: form.status || undefined,
     priority: form.priority || undefined,
     category_id: form.category_id || undefined,
-    account_id: form.account_id || undefined,
+    assigned_to: form.assigned_to || undefined,
     contact_id: form.contact_id || undefined,
-    sla: form.sla || undefined,
   }, { preserveState: true })
 }
 
@@ -58,6 +61,21 @@ const clearFilters = () => {
   form.reset()
   form.get('/support/tickets')
 }
+
+onMounted(async () => {
+  loadingOptions.value = true
+  try {
+    const res = await fetch('/api/v1/contacts?per_page=200')
+    if (res.ok) {
+      const payload = await res.json()
+      contacts.value = (payload.data ?? []).filter((c: any) => c.first_name || c.last_name)
+    }
+  } catch {
+    // ignore
+  } finally {
+    loadingOptions.value = false
+  }
+})
 </script>
 
 <template>
@@ -69,12 +87,6 @@ const clearFilters = () => {
         <div>
           <h1 class="text-3xl font-bold text-gray-900">Support Tickets</h1>
           <p class="text-gray-500">Manage and track customer support tickets.</p>
-          <p v-if="props.filters.account_name || props.filters.contact_name || props.filters.sla" class="mt-2 text-sm text-blue-600 dark:text-blue-400">
-            Assistant prefill:
-            <span v-if="props.filters.account_name">Account: {{ props.filters.account_name }}</span>
-            <span v-if="props.filters.contact_name">Contact: {{ props.filters.contact_name }}</span>
-            <span v-if="props.filters.sla">SLA: {{ props.filters.sla }}</span>
-          </p>
         </div>
         <Button @click="$inertia.visit('/support/tickets/create')">
           Create Ticket
@@ -86,44 +98,89 @@ const clearFilters = () => {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-        <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
-          <Input v-model="form.search" placeholder="Search tickets..." @change="submitFilter" />
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <Label>Search (Ticket)</Label>
+              <Input v-model="form.search" placeholder="Search tickets..." class="mt-1" @keyup.enter="submitFilter" />
+            </div>
 
-          <Select v-model="form.status" @change="submitFilter">
-              <option value="">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="waiting_on_customer">Waiting on Customer</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
-            </Select>
+            <div>
+              <Label>Status</Label>
+              <Select v-model="form.status" class="mt-1" @update:modelValue="submitFilter">
+                <SelectTrigger>
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="open">Open</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="waiting_on_customer">Waiting on Customer</SelectItem>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select v-model="form.priority" @change="submitFilter">
-              <option value="">All Priorities</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </Select>
+            <div>
+              <Label>Priority</Label>
+              <Select v-model="form.priority" class="mt-1" @update:modelValue="submitFilter">
+                <SelectTrigger>
+                  <SelectValue placeholder="All priorities" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All priorities</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select v-model="form.category_id" @change="submitFilter">
-              <option value="">All Categories</option>
-              <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                {{ cat.name }}
-              </option>
-            </Select>
+            <div>
+              <Label>Category</Label>
+              <Select v-model="form.category_id" class="mt-1" @update:modelValue="submitFilter">
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem v-for="cat in categories" :key="cat.id" :value="cat.id">
+                    {{ cat.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select v-model="form.sla" @change="submitFilter">
-              <option value="">All SLA States</option>
-              <option value="breached">Breached</option>
-            </Select>
+            <div>
+              <Label>Assigned To</Label>
+              <Select v-model="form.assigned_to" class="mt-1" @update:modelValue="submitFilter">
+                <SelectTrigger>
+                  <SelectValue placeholder="All assignees" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All assignees</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Input v-model="form.account_id" placeholder="Account ID" @change="submitFilter" />
+            <div>
+              <Label>Contact</Label>
+              <Select v-model="form.contact_id" class="mt-1" :disabled="loadingOptions" @update:modelValue="submitFilter">
+                <SelectTrigger>
+                  <SelectValue placeholder="All contacts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All contacts</SelectItem>
+                  <SelectItem v-for="contact in contacts" :key="contact.id" :value="contact.id">
+                    {{ contact.first_name }} {{ contact.last_name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Input v-model="form.contact_id" placeholder="Contact ID" @change="submitFilter" />
-
-            <div class="flex gap-2">
-              <Button @click="clearFilters" variant="outline">Clear</Button>
+            <div class="flex items-end">
+              <Button variant="outline" @click="clearFilters" class="w-full">Clear Filters</Button>
             </div>
           </div>
         </CardContent>

@@ -71,13 +71,9 @@ const removeRule = (index: number) => {
   emit('update', localRules.value);
 };
 
-watch(localRules, (newRules) => {
-  emit('update', newRules);
-}, { deep: true });
-
 watch(() => props.rules, (newRules) => {
   localRules.value = [...newRules];
-}, { deep: true });
+});
 </script>
 
 <template>

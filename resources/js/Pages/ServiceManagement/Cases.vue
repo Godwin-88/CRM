@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 interface User {
@@ -30,12 +31,26 @@ interface CaseRecord {
   created_at: string;
 }
 
+interface ContactOption {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+}
+
+interface AccountOption {
+  id: string;
+  name?: string;
+}
+
 interface Paginated<T> {
   data: T[];
   links: { prev?: string | null; next?: string | null };
 }
 
 const cases = ref<CaseRecord[]>([]);
+const contacts = ref<ContactOption[]>([]);
+const accounts = ref<AccountOption[]>([]);
 const isCreateOpen = ref(false);
 const isLoading = ref(false);
 const error = ref('');
@@ -46,12 +61,10 @@ const linkType = ref('related');
 const linkableType = ref('App\\Models\\Ticket');
 const linkableId = ref('');
 
-const contactSearch = ref('');
-const accountSearch = ref('');
-const contactResults = ref<{ id: string; first_name?: string; last_name?: string; email?: string }[]>([]);
-const accountResults = ref<{ id: string; name?: string }[]>([]);
-const showContactDropdown = ref(false);
-const showAccountDropdown = ref(false);
+const filterStatus = ref('');
+const filterType = ref('');
+const filterPriority = ref('');
+const filterSearch = ref('');
 
 const newCase = ref({
   title: '',
@@ -64,60 +77,49 @@ const newCase = ref({
   metadata: {},
 });
 
-const searchContacts = async (query: string) => {
-  if (query.length < 1) { contactResults.value = []; return; }
-  try {
-    const res = await fetch(`/api/v1/contacts?per_page=10&search=${encodeURIComponent(query)}`);
-    if (!res.ok) { contactResults.value = []; return; }
-    const payload = await res.json();
-    contactResults.value = payload.data ?? [];
-    showContactDropdown.value = true;
-  } catch { contactResults.value = []; }
-};
-
-const selectContact = (contact: { id: string; first_name?: string; last_name?: string }) => {
-  newCase.value.primary_contact_id = contact.id;
-  contactSearch.value = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || contact.id;
-  showContactDropdown.value = false;
-};
-
-const searchAccounts = async (query: string) => {
-  if (query.length < 1) { accountResults.value = []; return; }
-  try {
-    const res = await fetch(`/api/v1/accounts?per_page=10&search=${encodeURIComponent(query)}`);
-    if (!res.ok) { accountResults.value = []; return; }
-    const payload = await res.json();
-    accountResults.value = payload.data ?? [];
-    showAccountDropdown.value = true;
-  } catch { accountResults.value = []; }
-};
-
-const selectAccount = (account: { id: string; name?: string }) => {
-  newCase.value.primary_account_id = account.id;
-  accountSearch.value = account.name || account.id;
-  showAccountDropdown.value = false;
-};
-
 const statusOptions = ['new', 'triaged', 'in_progress', 'pending_customer', 'pending_internal', 'resolution_proposed', 'closed', 'reopened'];
 const typeOptions = ['service_delivery', 'complaint', 'compliance', 'dispute', 'investigation', 'escalation', 'custom'];
 const priorityOptions = ['low', 'medium', 'high', 'urgent'];
 
 const contactName = (record: CaseRecord) => [record.primary_contact?.first_name, record.primary_contact?.last_name].filter(Boolean).join(' ') || record.primary_contact?.id || 'No contact';
 
+const loadReferenceData = async () => {
+  try {
+    const [contactsRes, accountsRes, usersRes] = await Promise.all([
+      fetch('/api/v1/contacts?per_page=200'),
+      fetch('/api/v1/accounts?per_page=200'),
+      fetch('/api/v1/users?per_page=200'),
+    ]);
+    if (contactsRes.ok) {
+      const payload = await contactsRes.json();
+      contacts.value = payload.data ?? [];
+    }
+    if (accountsRes.ok) {
+      const payload = await accountsRes.json();
+      accounts.value = payload.data ?? [];
+    }
+    if (usersRes.ok) {
+      const payload = await usersRes.json();
+      users.value = payload.data ?? [];
+    }
+  } catch {
+    // ignore reference data load failures
+  }
+};
+
 const loadCases = async () => {
   isLoading.value = true;
+  error.value = '';
   try {
     const response = await fetch('/api/v1/cases?per_page=25');
     if (!response.ok) {
-      error.value = `Failed to load cases: ${response.status} ${response.statusText}`;
-      cases.value = [];
-      return;
+      throw new Error(`HTTP ${response.status}`);
     }
     const payload = await response.json() as Paginated<CaseRecord>;
     cases.value = payload.data ?? [];
   } catch (e) {
-    error.value = 'Failed to load cases.';
     cases.value = [];
+    error.value = 'Failed to load cases.';
   } finally {
     isLoading.value = false;
   }
@@ -137,6 +139,8 @@ const createCase = async () => {
   if (response.ok) {
     isCreateOpen.value = false;
     newCase.value.title = '';
+    newCase.value.primary_contact_id = '';
+    newCase.value.primary_account_id = '';
     await loadCases();
     return;
   }
@@ -213,7 +217,10 @@ const openCase = (caseRecord: CaseRecord) => {
   reason.value = '';
 };
 
-onMounted(loadCases);
+onMounted(() => {
+  loadReferenceData();
+  loadCases();
+});
 </script>
 
 <template>
@@ -229,6 +236,52 @@ onMounted(loadCases);
       </div>
 
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+
+      <!-- Filters -->
+      <Card>
+        <CardHeader><CardTitle class="text-base">Case Queue Filters</CardTitle></CardHeader>
+        <CardContent>
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <Label>Status</Label>
+              <Select v-model="filterStatus">
+                <SelectTrigger><SelectValue placeholder="All statuses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem v-for="item in statusOptions" :key="item" :value="item">{{ item }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Type</Label>
+              <Select v-model="filterType">
+                <SelectTrigger><SelectValue placeholder="All types" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem v-for="item in typeOptions" :key="item" :value="item">{{ item }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Priority</Label>
+              <Select v-model="filterPriority">
+                <SelectTrigger><SelectValue placeholder="All priorities" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All priorities</SelectItem>
+                  <SelectItem v-for="item in priorityOptions" :key="item" :value="item">{{ item }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Search</Label>
+              <Input v-model="filterSearch" placeholder="Search case number, title, contact, account..." />
+            </div>
+          </div>
+          <div class="mt-3 flex justify-end">
+            <Button size="sm" variant="outline" @click="loadCases">Apply Filters</Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -288,23 +341,23 @@ onMounted(loadCases);
               </div>
             </div>
             <div class="grid gap-3 sm:grid-cols-2">
-              <div class="relative">
+              <div>
                 <Label>Contact</Label>
-                <Input v-model="contactSearch" placeholder="Search contacts..." @input="searchContacts(contactSearch)" @focus="searchContacts(contactSearch)" @blur="setTimeout(() => showContactDropdown = false, 200)" />
-                <ul v-if="showContactDropdown && contactResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                  <li v-for="c in contactResults" :key="c.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectContact(c)">
-                    {{ c.first_name }} {{ c.last_name }} ({{ c.email || c.id }})
-                  </li>
-                </ul>
+                <select v-model="newCase.primary_contact_id" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
+                  <option value="">Select contact</option>
+                  <option v-for="contact in contacts" :key="contact.id" :value="contact.id">
+                    {{ contact.first_name }} {{ contact.last_name }} ({{ contact.email || contact.id }})
+                  </option>
+                </select>
               </div>
-              <div class="relative">
+              <div>
                 <Label>Account</Label>
-                <Input v-model="accountSearch" placeholder="Search accounts..." @input="searchAccounts(accountSearch)" @focus="searchAccounts(accountSearch)" @blur="setTimeout(() => showAccountDropdown = false, 200)" />
-                <ul v-if="showAccountDropdown && accountResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                  <li v-for="a in accountResults" :key="a.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectAccount(a)">
-                    {{ a.name || a.id }}
-                  </li>
-                </ul>
+                <select v-model="newCase.primary_account_id" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
+                  <option value="">Select account</option>
+                  <option v-for="account in accounts" :key="account.id" :value="account.id">
+                    {{ account.name || account.id }}
+                  </option>
+                </select>
               </div>
             </div>
             <label class="flex items-center gap-2 text-sm">
@@ -324,7 +377,7 @@ onMounted(loadCases);
           <div v-if="selectedCase" class="space-y-4">
             <div>
               <Label>Status</Label>
-              <div class="flex flex-wrap gap-2 mt-2">
+              <div class="flex gap-2 flex-wrap mt-2">
                 <Button v-for="item in statusOptions" :key="item" size="sm" variant="outline" @click="changeStatus(selectedCase, item)">
                   {{ item }}
                 </Button>
@@ -333,11 +386,6 @@ onMounted(loadCases);
             <div>
               <Label>Reason / Note</Label>
               <Textarea v-model="reason" />
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <Button @click="addNote(selectedCase)">Add Note</Button>
-              <Button variant="secondary" @click="requestSignoff(selectedCase)">Request Sign-off</Button>
-              <Button variant="destructive" @click="closeCase(selectedCase)">Close</Button>
             </div>
             <div class="border-t pt-4">
               <Label>Link Related Record</Label>

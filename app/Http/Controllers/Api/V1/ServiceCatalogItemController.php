@@ -18,9 +18,12 @@ class ServiceCatalogItemController extends Controller
             ->with(['category', 'defaultTeam', 'slaPolicy', 'intakeFormSchema.latestVersion']);
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', "%{$request->search}%")
-                ->orWhere('slug', 'like', "%{$request->search}%")
-                ->orWhere('description', 'like', "%{$request->search}%");
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
         }
 
         $query->when($request->filled('active'), fn ($q) => $q->where('is_active', $request->boolean('active')))
@@ -110,7 +113,16 @@ class ServiceCatalogItemController extends Controller
     private function validateCatalogItem(Request $request, bool $required = false): array
     {
         $nameRule = $required ? 'required|string|max:255' : 'sometimes|string|max:255';
-        $slugRule = $required ? 'required|string|max:255|unique:service_catalog_items,slug,'.$request->route('serviceCatalogItem')?->id : 'sometimes|string|max:255|unique:service_catalog_items,slug,'.$request->route('serviceCatalogItem')?->id;
+        $slugRule = $required
+            ? 'required|string|max:255|unique:service_catalog_items,slug'
+            : 'sometimes|string|max:255|unique:service_catalog_items,slug,'.$request->route('serviceCatalogItem')?->id;
+
+        $request->merge([
+            'category_id' => $request->filled('category_id') ? $request->category_id : null,
+            'default_team_id' => $request->filled('default_team_id') ? $request->default_team_id : null,
+            'sla_policy_id' => $request->filled('sla_policy_id') ? $request->sla_policy_id : null,
+            'intake_form_schema_id' => $request->filled('intake_form_schema_id') ? $request->intake_form_schema_id : null,
+        ]);
 
         return $request->validate([
             'name' => $nameRule,

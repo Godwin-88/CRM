@@ -279,6 +279,8 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::get('/support/categories/{ticketCategory}/form', [TicketController::class, 'getCategoryForm'])->name('support.categories.form');
 
     Route::get('/support/knowledge-base', [KnowledgeBaseController::class, 'index'])->name('support.knowledge-base.index');
+    Route::get('/support/knowledge-base/create', [KnowledgeBaseController::class, 'create'])->name('support.knowledge-base.create');
+    Route::get('/support/knowledge-base/{article}/edit', [KnowledgeBaseController::class, 'edit'])->name('support.knowledge-base.edit');
     Route::get('/support/knowledge-base/{article}', [KnowledgeBaseController::class, 'show'])->name('support.knowledge-base.show');
     Route::post('/support/knowledge-base/{article}/rate', [KnowledgeBaseController::class, 'rate'])->name('support.knowledge-base.rate');
     Route::post('/support/knowledge-base/{article}/link', [KnowledgeBaseController::class, 'linkToTicket'])->name('support.knowledge-base.link');

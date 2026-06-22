@@ -30,7 +30,7 @@ class CaseRecordController extends Controller
         $this->authorize('viewAny', CaseRecord::class);
 
         $query = CaseRecord::query()
-            ->with(['owner', 'primaryContact', 'primaryAccount', 'slaInstance.slaDefinition', 'closureReport', 'links.linkable']);
+            ->with(['owner', 'primaryContact', 'primaryAccount', 'slaInstance.slaDefinition', 'closureReport']);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {

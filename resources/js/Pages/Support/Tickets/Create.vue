@@ -4,12 +4,16 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { ref, watch } from 'vue'
 
 const props = defineProps<{
-  categories: { id: string; name: string; default_priority?: string }[]
+  categories: { id: string; name: string }[]
   agents: { id: string; name: string }[]
+  contacts: { id: string; first_name?: string; last_name?: string; email?: string }[]
+  accounts: { id: string; name?: string }[]
   prefill?: Record<string, string>
 }>()
 
@@ -58,17 +62,23 @@ const submit = () => {
     <Head title="Create Ticket" />
     
     <div class="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Create Support Ticket</h1>
-        <p class="text-gray-500">Create a new support ticket for a customer.</p>
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Create Support Ticket</h1>
+          <p class="text-gray-500">Create a new support ticket for a customer.</p>
+        </div>
+        <Button variant="outline" @click="$inertia.visit('/support/tickets')">Back</Button>
       </div>
 
       <Card>
-        <CardContent class="pt-6">
+        <CardHeader>
+          <CardTitle>Ticket Details</CardTitle>
+        </CardHeader>
+        <CardContent>
           <form @submit.prevent="submit" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium mb-1">Subject *</label>
-              <Input v-model="form.subject" required placeholder="Brief description of the issue" />
+              <Label>Subject <span class="text-red-500">*</span></Label>
+              <Input v-model="form.subject" required placeholder="Brief description of the issue" class="mt-1" />
               <div v-if="showSuggestions" class="mt-2 space-y-2">
                 <p class="text-sm font-medium text-gray-700">Suggested articles:</p>
                 <div v-for="article in suggestedArticles" :key="article.id" class="text-sm">
@@ -81,55 +91,90 @@ const submit = () => {
             </div>
 
             <div>
-              <label class="block text-sm font-medium mb-1">Description</label>
-              <Textarea v-model="form.description" placeholder="Detailed description..." rows="5" />
+              <Label>Description</Label>
+              <Textarea v-model="form.description" placeholder="Detailed description..." rows="5" class="mt-1" />
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid gap-4 sm:grid-cols-2">
               <div>
-                <label class="block text-sm font-medium mb-1">Category *</label>
-                <select v-model="form.category_id" required class="w-full p-2 border rounded">
-                  <option value="">Select category</option>
-                  <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                    {{ cat.name }}
-                  </option>
-                </select>
+                <Label>Category <span class="text-red-500">*</span></Label>
+                <Select v-model="form.category_id" class="mt-1">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Select category</SelectItem>
+                    <SelectItem v-for="cat in categories" :key="cat.id" :value="cat.id">
+                      {{ cat.name }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
-                <label class="block text-sm font-medium mb-1">Priority</label>
-                <select v-model="form.priority" class="w-full p-2 border rounded">
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
+                <Label>Priority</Label>
+                <Select v-model="form.priority" class="mt-1">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium mb-1">Account ID</label>
-              <Input v-model="form.account_id" type="text" placeholder="Account ULID" />
+              <Label>Account</Label>
+              <Select v-model="form.account_id" class="mt-1" >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select account (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No account</SelectItem>
+                  <SelectItem v-for="account in accounts" :key="account.id" :value="account.id">
+                    {{ account.name || account.id }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <label class="block text-sm font-medium mb-1">Contact ID *</label>
-              <Input v-model="form.contact_id" type="text" placeholder="Contact ULID" required />
+              <Label>Contact <span class="text-red-500">*</span></Label>
+              <Select v-model="form.contact_id" class="mt-1" >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select contact" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="" disabled>Select contact</SelectItem>
+                  <SelectItem v-for="contact in contacts" :key="contact.id" :value="contact.id">
+                    {{ contact.first_name }} {{ contact.last_name }}{{ contact.email ? ` (${contact.email})` : '' }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <label class="block text-sm font-medium mb-1">Assign To</label>
-              <select v-model="form.assigned_to" class="w-full p-2 border rounded">
-                <option value="">Unassigned</option>
-                <option v-for="agent in agents" :key="agent.id" :value="agent.id">
-                  {{ agent.name }}
-                </option>
-              </select>
+              <Label>Assign To</Label>
+              <Select v-model="form.assigned_to" class="mt-1">
+                <SelectTrigger>
+                  <SelectValue placeholder="Unassigned" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem v-for="agent in agents" :key="agent.id" :value="agent.id">
+                    {{ agent.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <Button type="submit" :disabled="form.processing">
-              Create Ticket
-            </Button>
+            <div class="flex gap-2 pt-2">
+              <Button type="submit" :disabled="form.processing">Create Ticket</Button>
+            </div>
           </form>
         </CardContent>
       </Card>

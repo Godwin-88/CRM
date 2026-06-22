@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Badge } from '@/components/ui/badge';
@@ -9,9 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 interface User {
+  id: string;
+  name: string;
+}
+
+interface Team {
   id: string;
   name: string;
 }
@@ -49,28 +54,32 @@ interface AccountOption {
 
 interface Paginated<T> {
   data: T[];
-  links: { first?: string; last?: string; prev?: string | null; next?: string | null };
+  links: { prev?: string | null; next?: string | null };
 }
 
-const page = usePage();
 const serviceRequests = ref<ServiceRequest[]>([]);
 const catalogItems = ref<CatalogItem[]>([]);
+const contacts = ref<ContactOption[]>([]);
+const accounts = ref<AccountOption[]>([]);
+const users = ref<User[]>([]);
+const teams = ref<Team[]>([]);
 const isCreateOpen = ref(false);
 const isLoading = ref(false);
 const error = ref('');
 
-const contactSearch = ref('');
-const accountSearch = ref('');
-const contactResults = ref<ContactOption[]>([]);
-const accountResults = ref<AccountOption[]>([]);
-const showContactDropdown = ref(false);
-const showAccountDropdown = ref(false);
-const selectedContactName = ref('');
-const selectedAccountName = ref('');
+const filterStatus = ref('');
+const filterPriority = ref('');
+const filterChannel = ref('');
+const filterCatalogItem = ref('');
+
+const selectedRequest = ref<ServiceRequest | null>(null);
+const statusReason = ref('');
+const assigneeId = ref('');
+const teamId = ref('');
 
 const newRequest = ref({
   catalog_item_id: '',
-  requester_id: page.props.user?.id ?? '',
+  requester_id: '',
   contact_id: '',
   account_id: '',
   channel: 'api',
@@ -79,56 +88,51 @@ const newRequest = ref({
   metadata: {},
 });
 
-const selectedRequest = ref<ServiceRequest | null>(null);
-const statusReason = ref('');
-const assigneeId = ref('');
-const teamId = ref('');
-
 const statusOptions = ['submitted', 'under_review', 'in_progress', 'pending_customer', 'completed', 'closed'];
 const priorityOptions = ['low', 'medium', 'high', 'urgent'];
+const channelOptions = ['api', 'portal', 'self_service_portal', 'email', 'kiosk', 'agent', 'phone', 'chat', 'ivr'];
 
-const contactName = (request: ServiceRequest) => [request.contact?.first_name, request.contact?.last_name].filter(Boolean).join(' ') || request.contact_id || 'Unknown contact';
+const contactName = (request: ServiceRequest) => [request.contact?.first_name, request.contact?.last_name].filter(Boolean).join(' ') || request.contact?.id || 'Unknown contact';
 
-const searchContacts = async (query: string) => {
-  if (query.length < 1) { contactResults.value = []; return; }
+const loadReferenceData = async () => {
   try {
-    const res = await fetch(`/api/v1/contacts?per_page=10&search=${encodeURIComponent(query)}`);
-    if (!res.ok) { contactResults.value = []; return; }
-    const payload = await res.json();
-    contactResults.value = payload.data ?? [];
-    showContactDropdown.value = true;
-  } catch { contactResults.value = []; }
-};
-
-const selectContact = (contact: ContactOption) => {
-  newRequest.value.contact_id = contact.id;
-  selectedContactName.value = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || contact.id;
-  contactSearch.value = selectedContactName.value;
-  showContactDropdown.value = false;
-};
-
-const searchAccounts = async (query: string) => {
-  if (query.length < 1) { accountResults.value = []; return; }
-  try {
-    const res = await fetch(`/api/v1/accounts?per_page=10&search=${encodeURIComponent(query)}`);
-    if (!res.ok) { accountResults.value = []; return; }
-    const payload = await res.json();
-    accountResults.value = payload.data ?? [];
-    showAccountDropdown.value = true;
-  } catch { accountResults.value = []; }
-};
-
-const selectAccount = (account: AccountOption) => {
-  newRequest.value.account_id = account.id;
-  selectedAccountName.value = account.name || account.id;
-  accountSearch.value = selectedAccountName.value;
-  showAccountDropdown.value = false;
+    const [contactsRes, accountsRes, usersRes, teamsRes] = await Promise.all([
+      fetch('/api/v1/contacts?per_page=200'),
+      fetch('/api/v1/accounts?per_page=200'),
+      fetch('/api/v1/users?per_page=200'),
+      fetch('/api/v1/teams?per_page=200'),
+    ]);
+    if (contactsRes.ok) {
+      const payload = await contactsRes.json();
+      contacts.value = payload.data ?? [];
+    }
+    if (accountsRes.ok) {
+      const payload = await accountsRes.json();
+      accounts.value = payload.data ?? [];
+    }
+    if (usersRes.ok) {
+      const payload = await usersRes.json();
+      users.value = payload.data ?? [];
+    }
+    if (teamsRes.ok) {
+      const payload = await teamsRes.json();
+      teams.value = payload.data ?? [];
+    }
+  } catch {
+    // ignore reference data load failures
+  }
 };
 
 const loadServiceRequests = async () => {
   isLoading.value = true;
   try {
-    const response = await fetch('/api/v1/service-requests?per_page=25');
+    const params = new URLSearchParams();
+    if (filterStatus.value) params.set('status', filterStatus.value);
+    if (filterPriority.value) params.set('priority', filterPriority.value);
+    if (filterChannel.value) params.set('channel', filterChannel.value);
+    if (filterCatalogItem.value) params.set('catalog_item_id', filterCatalogItem.value);
+
+    const response = await fetch(`/api/v1/service-requests?${params.toString()}&per_page=25`);
     if (!response.ok) {
       error.value = `Failed to load service requests: ${response.status} ${response.statusText}`;
       serviceRequests.value = [];
@@ -172,7 +176,9 @@ const createRequest = async () => {
   if (response.ok) {
     isCreateOpen.value = false;
     newRequest.value.catalog_item_id = '';
+    newRequest.value.requester_id = '';
     newRequest.value.contact_id = '';
+    newRequest.value.account_id = '';
     await loadServiceRequests();
     return;
   }
@@ -237,6 +243,7 @@ const openRequest = (request: ServiceRequest) => {
 };
 
 onMounted(() => {
+  loadReferenceData();
   loadServiceRequests();
   loadCatalogItems();
 });
@@ -255,6 +262,58 @@ onMounted(() => {
       </div>
 
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+
+      <!-- Filters -->
+      <Card>
+        <CardHeader><CardTitle class="text-base">Service Request Filters</CardTitle></CardHeader>
+        <CardContent>
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <Label>Status</Label>
+              <Select v-model="filterStatus">
+                <SelectTrigger><SelectValue placeholder="All statuses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem v-for="item in statusOptions" :key="item" :value="item">{{ item }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Priority</Label>
+              <Select v-model="filterPriority">
+                <SelectTrigger><SelectValue placeholder="All priorities" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All priorities</SelectItem>
+                  <SelectItem v-for="item in priorityOptions" :key="item" :value="item">{{ item }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Channel</Label>
+              <Select v-model="filterChannel">
+                <SelectTrigger><SelectValue placeholder="All channels" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All channels</SelectItem>
+                  <SelectItem v-for="ch in channelOptions" :key="ch" :value="ch">{{ ch }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Catalog Item</Label>
+              <Select v-model="filterCatalogItem">
+                <SelectTrigger><SelectValue placeholder="All catalog items" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All catalog items</SelectItem>
+                  <SelectItem v-for="item in catalogItems" :key="item.id" :value="item.id">{{ item.name }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div class="mt-3 flex justify-end">
+            <Button size="sm" variant="outline" @click="loadServiceRequests">Apply Filters</Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -298,32 +357,45 @@ onMounted(() => {
               </select>
             </div>
             <div>
-              <Label>Requester User ID</Label>
-              <Input v-model="newRequest.requester_id" />
-            </div>
-            <div class="relative">
-              <Label>Contact</Label>
-              <Input v-model="contactSearch" placeholder="Search contacts..." @input="searchContacts(contactSearch)" @focus="searchContacts(contactSearch)" @blur="setTimeout(() => showContactDropdown = false, 200)" />
-              <ul v-if="showContactDropdown && contactResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                <li v-for="c in contactResults" :key="c.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectContact(c)">
-                  {{ c.first_name }} {{ c.last_name }} ({{ c.email || c.id }})
-                </li>
-              </ul>
-            </div>
-            <div class="relative">
-              <Label>Account</Label>
-              <Input v-model="accountSearch" placeholder="Search accounts..." @input="searchAccounts(accountSearch)" @focus="searchAccounts(accountSearch)" @blur="setTimeout(() => showAccountDropdown = false, 200)" />
-              <ul v-if="showAccountDropdown && accountResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                <li v-for="a in accountResults" :key="a.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectAccount(a)">
-                  {{ a.name || a.id }}
-                </li>
-              </ul>
-            </div>
-            <div>
-              <Label>Priority</Label>
-              <select v-model="newRequest.priority" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
-                <option v-for="priority in priorityOptions" :key="priority" :value="priority">{{ priority }}</option>
+              <Label>Requester</Label>
+              <select v-model="newRequest.requester_id" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
+                <option value="">Select requester</option>
+                <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
               </select>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label>Contact</Label>
+                <select v-model="newRequest.contact_id" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
+                  <option value="">Select contact</option>
+                  <option v-for="contact in contacts" :key="contact.id" :value="contact.id">
+                    {{ contact.first_name }} {{ contact.last_name }} ({{ contact.email || contact.id }})
+                  </option>
+                </select>
+              </div>
+              <div>
+                <Label>Account</Label>
+                <select v-model="newRequest.account_id" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
+                  <option value="">Select account</option>
+                  <option v-for="account in accounts" :key="account.id" :value="account.id">
+                    {{ account.name || account.id }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label>Channel</Label>
+                <select v-model="newRequest.channel" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
+                  <option v-for="ch in channelOptions" :key="ch" :value="ch">{{ ch }}</option>
+                </select>
+              </div>
+              <div>
+                <Label>Priority</Label>
+                <select v-model="newRequest.priority" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
+                  <option v-for="priority in priorityOptions" :key="priority" :value="priority">{{ priority }}</option>
+                </select>
+              </div>
             </div>
             <div>
               <Label>Intake Details</Label>
@@ -354,12 +426,18 @@ onMounted(() => {
             </div>
             <div class="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label>Assignee User ID</Label>
-                <Input v-model="assigneeId" />
+                <Label>Assignee</Label>
+                <select v-model="assigneeId" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
+                  <option value="">Unassigned</option>
+                  <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                </select>
               </div>
               <div>
-                <Label>Team ID</Label>
-                <Input v-model="teamId" />
+                <Label>Team</Label>
+                <select v-model="teamId" class="w-full rounded-md border bg-white px-3 py-2 text-sm">
+                  <option value="">No team</option>
+                  <option v-for="team in teams" :key="team.id" :value="team.id">{{ team.name }}</option>
+                </select>
               </div>
             </div>
             <div class="flex flex-wrap gap-2">

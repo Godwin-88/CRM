@@ -33,6 +33,7 @@ const catalogItems = ref<CatalogItem[]>([]);
 const isCreateOpen = ref(false);
 const isLoading = ref(false);
 const error = ref('');
+const errors = ref<Record<string, string>>({});
 
 const teamSearch = ref('');
 const categorySearch = ref('');
@@ -133,7 +134,13 @@ const loadCatalogItems = async () => {
   }
 };
 
+const firstErrorMessage = (messages: string[] | undefined): string => {
+  if (!messages || messages.length === 0) return '';
+  return messages[0];
+};
+
 const createCatalogItem = async () => {
+  errors.value = {};
   error.value = '';
   const response = await fetch('/api/v1/service-catalog-items', {
     method: 'POST',
@@ -166,6 +173,16 @@ const createCatalogItem = async () => {
     return;
   }
 
+  if (response.status === 422) {
+    const payload = await response.json().catch(() => ({}));
+    const validationErrors = payload.errors ?? {};
+    for (const [field, messages] of Object.entries(validationErrors)) {
+      errors.value[field] = firstErrorMessage(messages as string[]);
+    }
+    error.value = payload.message || 'Please fix the errors below.';
+    return;
+  }
+
   const payload = await response.json().catch(() => ({}));
   error.value = payload.message || 'Unable to create catalog item.';
 };
@@ -195,7 +212,18 @@ onMounted(loadCatalogItems);
         <Button @click="isCreateOpen = true">New Catalog Item</Button>
       </div>
 
-      <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+      <Card v-if="error && !isCreateOpen" class="border-red-200 bg-red-50">
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-3">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <p class="text-sm text-red-700">{{ error }}</p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -234,14 +262,28 @@ onMounted(loadCatalogItems);
           <DialogHeader>
             <DialogTitle>Create Catalog Item</DialogTitle>
           </DialogHeader>
+
+          <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 p-4">
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <p class="text-sm font-medium text-red-700">{{ error }}</p>
+            </div>
+          </div>
+
           <div class="grid gap-4">
             <div>
               <Label>Name</Label>
-              <Input v-model="newItem.name" />
+              <Input v-model="newItem.name" :class="{'border-red-300 focus-visible:ring-red-200': errors.name}" />
+              <p v-if="errors.name" class="mt-1 text-xs text-red-600">{{ errors.name }}</p>
             </div>
             <div>
               <Label>Slug</Label>
-              <Input v-model="newItem.slug" />
+              <Input v-model="newItem.slug" :class="{'border-red-300 focus-visible:ring-red-200': errors.slug}" />
+              <p v-if="errors.slug" class="mt-1 text-xs text-red-600">{{ errors.slug }}</p>
             </div>
             <div>
               <Label>Description</Label>
@@ -260,32 +302,35 @@ onMounted(loadCatalogItems);
               </div>
               <div class="relative">
                 <Label>Category</Label>
-                <Input v-model="categorySearch" placeholder="Search categories..." @input="searchCategories(categorySearch)" @focus="searchCategories(categorySearch)" @blur="setTimeout(() => showCategoryDropdown = false, 200)" />
+                 <Input v-model="categorySearch" placeholder="Search categories..." @input="searchCategories(categorySearch)" @focus="searchCategories(categorySearch)" @blur="window.setTimeout(() => showCategoryDropdown = false, 200)" :class="{'border-red-300 focus-visible:ring-red-200': errors.category_id}" />
                 <ul v-if="showCategoryDropdown && categoryResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
                   <li v-for="cat in categoryResults" :key="cat.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectCategory(cat)">
                     {{ cat.name }}
                   </li>
                 </ul>
+                <p v-if="errors.category_id" class="mt-1 text-xs text-red-600">{{ errors.category_id }}</p>
               </div>
             </div>
             <div class="grid gap-3 sm:grid-cols-3">
               <div class="relative">
                 <Label>Team</Label>
-                <Input v-model="teamSearch" placeholder="Search teams..." @input="searchTeams(teamSearch)" @focus="searchTeams(teamSearch)" @blur="setTimeout(() => showTeamDropdown = false, 200)" />
+                 <Input v-model="teamSearch" placeholder="Search teams..." @input="searchTeams(teamSearch)" @focus="searchTeams(teamSearch)" @blur="window.setTimeout(() => showTeamDropdown = false, 200)" :class="{'border-red-300 focus-visible:ring-red-200': errors.default_team_id}" />
                 <ul v-if="showTeamDropdown && teamResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
                   <li v-for="t in teamResults" :key="t.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectTeam(t)">
                     {{ t.name }}
                   </li>
                 </ul>
+                <p v-if="errors.default_team_id" class="mt-1 text-xs text-red-600">{{ errors.default_team_id }}</p>
               </div>
               <div class="relative">
                 <Label>SLA Policy</Label>
-                <Input v-model="slaSearch" placeholder="Search SLA policies..." @input="searchSlaPolicies(slaSearch)" @focus="searchSlaPolicies(slaSearch)" @blur="setTimeout(() => showSlaDropdown = false, 200)" />
+                 <Input v-model="slaSearch" placeholder="Search SLA policies..." @input="searchSlaPolicies(slaSearch)" @focus="searchSlaPolicies(slaSearch)" @blur="window.setTimeout(() => showSlaDropdown = false, 200)" :class="{'border-red-300 focus-visible:ring-red-200': errors.sla_policy_id}" />
                 <ul v-if="showSlaDropdown && slaResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
                   <li v-for="s in slaResults" :key="s.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectSla(s)">
                     {{ s.name }}
                   </li>
                 </ul>
+                <p v-if="errors.sla_policy_id" class="mt-1 text-xs text-red-600">{{ errors.sla_policy_id }}</p>
               </div>
               <label class="flex items-center gap-2 text-sm">
                 <input v-model="newItem.portal_visible" type="checkbox" />
