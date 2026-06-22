@@ -447,8 +447,8 @@ class AssistantNavigationService
     private function prefillForRoute(string $route, string $message, ?User $user): array
     {
         $reference = $this->recordReference($message);
-        $account = $this->extractReferenceFilter($reference, 'account', $message, $user);
-        $contact = $this->extractReferenceFilter($reference, 'contact', $message, $user);
+        $account = $reference ? $this->extractReferenceFilter($reference, 'account', $message, $user) : null;
+        $contact = $reference ? $this->extractReferenceFilter($reference, 'contact', $message, $user) : null;
 
         if ($route === '/admin/pipelines') {
             return [
@@ -474,16 +474,28 @@ class AssistantNavigationService
         $parts = [];
 
         foreach ($query as $key => $value) {
+            if (str_starts_with($key, 'assistant_prefill_')) {
+                continue;
+            }
             $parts[] = Str::replace('_', ' ', $key).'='.Str::headline((string) $value);
         }
 
+        $prefillLabels = [
+            'name' => 'SLA Name',
+            'priority' => 'Priority',
+            'first_response_time_business_hours' => 'First Response',
+            'resolution_time_business_hours' => 'Resolution',
+        ];
+
         foreach ($prefill as $key => $value) {
             if (is_array($value)) {
-                $parts[] = Str::replace('_', ' ', $key).'='.implode(', ', $value);
+                $parts[] = ($prefillLabels[$key] ?? Str::replace('_', ' ', $key)).'='.implode(', ', array_map('strval', $value));
                 continue;
             }
 
-            $parts[] = Str::replace('_', ' ', $key).'='.Str::headline((string) $value);
+            if ($value !== null && $value !== '') {
+                $parts[] = ($prefillLabels[$key] ?? Str::replace('_', ' ', $key)).'='.Str::headline((string) $value);
+            }
         }
 
         return $parts ? 'Prefill: '.implode('; ', $parts).'.' : null;

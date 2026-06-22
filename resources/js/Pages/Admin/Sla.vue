@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +28,8 @@ const props = defineProps<{
   }
 }>()
 
+const showCreateModal = ref(false)
+
 const newSla = useForm({
   name: props.prefill?.name || '',
   description: '',
@@ -40,16 +42,26 @@ const newSla = useForm({
   is_default: false,
 })
 
+const categories = [
+  { value: 'general', label: 'General' },
+  { value: 'billing', label: 'Billing' },
+  { value: 'technical', label: 'Technical' },
+  { value: 'account', label: 'Account' },
+]
+
 const submitSla = () => {
   newSla.post('/admin/sla', {
     onSuccess: () => {
+      showCreateModal.value = false
       newSla.reset()
     }
   })
 }
 
 onMounted(() => {
-  if (!props.prefill?.name && !props.prefill?.first_response_time_business_hours && !props.prefill?.resolution_time_business_hours) {
+  if (props.prefill?.name || props.prefill?.priority || props.prefill?.first_response_time_business_hours || props.prefill?.resolution_time_business_hours) {
+    showCreateModal.value = true
+  } else {
     try {
       const prefill = JSON.parse(localStorage.getItem('assistant_navigation_prefill:/admin/sla') || 'null')
       if (prefill) {
@@ -57,6 +69,7 @@ onMounted(() => {
         newSla.first_response_time_business_hours = prefill.first_response_time_business_hours || 4
         newSla.resolution_time_business_hours = prefill.resolution_time_business_hours || 24
         localStorage.removeItem('assistant_navigation_prefill:/admin/sla')
+        showCreateModal.value = true
       }
     } catch {
       localStorage.removeItem('assistant_navigation_prefill:/admin/sla')
@@ -74,12 +87,14 @@ onMounted(() => {
         <div>
           <h1 class="text-3xl font-bold text-gray-900">Service Level Agreements</h1>
           <p class="text-gray-500">Define response and resolution targets for support tickets.</p>
-          <p v-if="props.prefill?.name || props.prefill?.priority" class="mt-2 text-sm text-blue-600 dark:text-blue-400">
-            Assistant prefill: {{ props.prefill.name }}
+          <p v-if="props.prefill?.name || props.prefill?.priority || props.prefill?.first_response_time_business_hours || props.prefill?.resolution_time_business_hours" class="mt-2 text-sm text-blue-600 dark:text-blue-400">
+            Assistant prefill: {{ props.prefill.name || 'New SLA' }}
             <span v-if="props.prefill.priority">Priority: {{ props.prefill.priority }}</span>
+            <span v-if="props.prefill.first_response_time_business_hours">First Response: {{ props.prefill.first_response_time_business_hours }}h</span>
+            <span v-if="props.prefill.resolution_time_business_hours">Resolution: {{ props.prefill.resolution_time_business_hours }}h</span>
           </p>
         </div>
-        <Button @click="submitSla">New SLA</Button>
+        <Button @click="showCreateModal = true">New SLA</Button>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -144,6 +159,50 @@ onMounted(() => {
           </Table>
         </CardContent>
       </Card>
+    </div>
+
+    <!-- Create SLA Modal -->
+    <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div class="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+        <h2 class="text-lg font-bold mb-4">Create SLA Definition</h2>
+        <form @submit.prevent="submitSla" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Name *</label>
+            <input v-model="newSla.name" required class="w-full p-2 border rounded" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Description</label>
+            <textarea v-model="newSla.description" class="w-full p-2 border rounded" rows="2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Priority *</label>
+            <select v-model="newSla.priority" class="w-full p-2 border rounded">
+              <option value="">Select priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">First Response Time (business hours) *</label>
+            <input v-model.number="newSla.first_response_time_business_hours" type="number" min="1" required class="w-full p-2 border rounded" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Resolution Time (business hours) *</label>
+            <input v-model.number="newSla.resolution_time_business_hours" type="number" min="1" required class="w-full p-2 border rounded" />
+          </div>
+          <div class="flex items-center gap-2">
+            <input v-model="newSla.is_default" type="checkbox" id="is_default" />
+            <label for="is_default" class="text-sm">Set as default SLA</label>
+          </div>
+          <div class="flex justify-end gap-2">
+            <Button @click="showCreateModal = false" variant="outline">Cancel</Button>
+            <Button type="submit" :disabled="newSla.processing">Create</Button>
+          </div>
+        </form>
+      </div>
     </div>
   </AppLayout>
 </template>

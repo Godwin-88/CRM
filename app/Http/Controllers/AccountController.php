@@ -74,7 +74,7 @@ class AccountController extends Controller
             'total_paid' => (float) Payment::whereHas('invoice', fn ($q) => $q->where('account_id', $account->id))->sum('amount'),
             'outstanding_balance' => (float) $account->invoices()->whereIn('status', ['sent', 'partially_paid', 'overdue'])->sum('total') - (float) Payment::whereHas('invoice', fn ($q) => $q->where('account_id', $account->id))->sum('amount'),
             'overdue_count' => $account->invoices()->where('status', 'overdue')->count(),
-            'avg_payment_delay' => $account->invoices()->where('status', 'paid')->avg('paid_at') ? now()->diffInDays($account->invoices()->where('status', 'paid')->latest('paid_at')->first()?->paid_at) : 0,
+            'avg_payment_delay' => $account->invoices()->where('status', 'paid')->exists() ? now()->diffInDays($account->invoices()->where('status', 'paid')->latest('paid_at')->first()?->paid_at) : 0,
         ];
 
         return Inertia::render('Accounts/Show', [

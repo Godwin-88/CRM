@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const routeFn = route
+
 const form = useForm({
     password: "",
     mfa_code: "",
@@ -29,7 +31,7 @@ const form = useForm({
 
                     <form
                         @submit.prevent="
-                            () => form.post($route('admin.privileged.enter'))
+                            () => form.post(routeFn('admin.privileged.enter'))
                         "
                         class="space-y-4"
                     >

@@ -6,7 +6,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Menu, HelpCircle, Settings2, Users, Megaphone, Shield, Award, MessageSquare, Briefcase, FileText, DollarSign, BarChart3 } from "lucide-vue-next";
+import { ChevronDown, ChevronRight, Menu, HelpCircle, Settings, Users, Megaphone, Award, MessageSquare, Briefcase, FileText, DollarSign, BarChart3, LifeBuoy, CalendarDays } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { setI18nLocale, getI18nLocale, supportedLocales } from "@/lib/i18n";
@@ -66,6 +66,18 @@ const hasIncompleteItems = computed(() =>
 
 const currentRoute = computed(() => page.url || '');
 
+const breadcrumbText = computed(() => {
+    const url = page.url || '';
+    const campaign = (page.props as any).campaign;
+    if (campaign && campaign.name && url.startsWith('/admin/campaigns/')) {
+        return campaign.name;
+    }
+    if (url === '/admin/campaigns') return 'Campaigns';
+    return url;
+});
+
+const selfServiceUrl = typeof route === 'function' ? route('self-service.dashboard') : '/portal';
+
 const hasPermission = (permission: string): boolean => {
     return userPermissions.value.includes(permission);
 };
@@ -91,12 +103,48 @@ const menuItems = computed(() => [
         ],
     },
     {
-        title: "Account Management",
+        title: "Contacts & Accounts",
         icon: Users,
         show: true,
         children: [
             { href: "/accounts", label: "Accounts" },
             { href: "/contacts", label: "Contacts" },
+        ],
+    },
+    {
+        title: "Sales Pipeline",
+        icon: Briefcase,
+        show: hasAnyRole('admin', 'manager', 'agent'),
+        children: [
+            { href: "/deals", label: "Deals", requiredPermission: "deals.view" },
+            { href: "/deals/board", label: "Kanban Board", requiredPermission: "deals.view" },
+            { href: "/admin/deal-automations", label: "Automations" },
+            { href: "/quotes", label: "Quotes" },
+            { href: "/analytics/forecast", label: "Forecast" },
+        ],
+    },
+    {
+        title: "Interactions / Inbox",
+        icon: MessageSquare,
+        show: hasAnyRole('admin', 'manager', 'agent'),
+        children: [
+            { href: "/admin/omni/workspace", label: "Workspace" },
+            { href: "/admin/omni/tools", label: "Agent Tools", requiredPermission: "contacts.edit" },
+            { href: "/admin/omni/supervisor", label: "Supervisor", requiredPermission: "security.events" },
+            { href: "/admin/omni/settings", label: "Settings", requiredPermission: "integrations.manage" },
+        ],
+    },
+    {
+        title: "Service & Support",
+        icon: LifeBuoy,
+        show: hasAnyRole('admin', 'manager', 'agent'),
+        children: [
+            { href: "/support/tickets", label: "Inbox / Tickets", requiredPermission: "tickets.view" },
+            { href: "/admin/service-requests", label: "Service Requests", requiredPermission: "service_requests.view" },
+            { href: "/admin/cases", label: "Cases", requiredPermission: "cases.view" },
+            { href: "/admin/service-catalog", label: "Service Catalog", requiredPermission: "services.view" },
+            { href: "/support/knowledge-base", label: "Knowledge Base" },
+            { href: "/admin/sla", label: "SLA Management", requiredPermission: "sla.manage" },
         ],
     },
     {
@@ -113,21 +161,6 @@ const menuItems = computed(() => [
         ],
     },
     {
-        title: "Admin",
-        icon: Shield,
-        show: hasAnyRole('admin', 'manager'),
-        children: [
-            { href: "/admin/pipelines", label: "Pipelines", requiredPermission: "pipelines.manage" },
-            { href: "/admin/win-loss-reasons", label: "Win/Loss Reasons", requiredPermission: "win_loss_reasons.manage" },
-            { href: "/admin/quote-templates", label: "Quote Templates", requiredPermission: "quote_templates.manage" },
-            { href: "/admin/quotes", label: "Quotes", requiredPermission: "quotes.view" },
-            { href: "/admin/scoring-rules", label: "Scoring Rules", requiredPermission: "scoring_rules.manage" },
-            { href: "/admin/custom-fields", label: "Custom Fields", requiredPermission: "custom_fields.manage" },
-            { href: "/admin/duplicates", label: "Duplicate Merge" },
-            { href: "/admin/rbac", label: "Role Management" },
-        ],
-    },
-    {
         title: "Loyalty & CX",
         icon: Award,
         show: hasAnyRole('admin', 'manager'),
@@ -137,29 +170,6 @@ const menuItems = computed(() => [
             { href: "/admin/cx-insights", label: "Insights" },
             { href: "/admin/service-delivery", label: "Service" },
             { href: "/admin/customer-journeys", label: "Journeys" },
-        ],
-    },
-    {
-        title: "OmniChannel",
-        icon: MessageSquare,
-        show: hasAnyRole('admin', 'manager', 'agent'),
-        children: [
-            { href: "/admin/omni/workspace", label: "Workspace" },
-            { href: "/admin/omni/tools", label: "Agent Tools", requiredPermission: "contacts.edit" },
-            { href: "/admin/omni/supervisor", label: "Supervisor", requiredPermission: "security.events" },
-            { href: "/admin/omni/settings", label: "Settings", requiredPermission: "integrations.manage" },
-        ],
-    },
-    {
-        title: "Deal Management",
-        icon: Briefcase,
-        show: hasAnyRole('admin', 'manager', 'agent'),
-        children: [
-            { href: "/deals", label: "Deals", requiredPermission: "deals.view" },
-            { href: "/deals/board", label: "Kanban Board", requiredPermission: "deals.view" },
-            { href: "/admin/deal-automations", label: "Automations" },
-            { href: "/quotes", label: "Quotes" },
-            { href: "/analytics/forecast", label: "Forecast" },
         ],
     },
     {
@@ -186,7 +196,7 @@ const menuItems = computed(() => [
         ],
     },
     {
-        title: "Analytics & Intelligence",
+        title: "Analytics",
         icon: BarChart3,
         show: hasAnyRole('admin', 'manager'),
         children: [
@@ -205,8 +215,8 @@ const menuItems = computed(() => [
         ],
     },
     {
-        title: "Integrations & API",
-        icon: Settings2,
+        title: "Integrations",
+        icon: Settings,
         show: hasAnyRole('admin', 'manager'),
         children: [
             { href: "/admin/integrations", label: "Service Registry" },
@@ -373,26 +383,26 @@ const toggleMenuItem = (title: string) => {
                                 :class="cn('h-4 w-4 transition-transform duration-200', openMenuItem === item.title && 'rotate-180')" 
                             />
                         </CollapsibleTrigger>
-<CollapsibleContent>
-                             <div class="mt-1 space-y-1 pl-8 pr-2">
-                                 <template v-for="child in item.children" :key="child.isHeader ? 'header-' + child.label : child.href">
-                                     <div 
-                                         v-if="child.isHeader || (child.requiredPermission && !hasPermission(child.requiredPermission))"
-                                         class="text-[9px] uppercase font-bold text-gray-500 tracking-wider pt-2.5 pb-1 px-3 border-t border-gray-800/40 mt-2 first:mt-0 first:border-0"
-                                     >
-                                         {{ child.label }}
-                                     </div>
-                                     <Link
-                                         v-else-if="!child.requiredPermission || hasPermission(child.requiredPermission)"
-                                         :href="child.href"
-                                         class="block px-3 py-1.5 text-xs text-gray-450 rounded-md hover:bg-gray-800 hover:text-blue-300 transition-colors truncate"
-                                         @click="isMobileMenuOpen = false"
-                                     >
-                                         {{ child.label }}
-                                     </Link>
-                                 </template>
-                             </div>
-                        </CollapsibleContent>
+                         <CollapsibleContent>
+                              <div class="mt-1 space-y-1 pl-8 pr-2">
+                                  <template v-for="child in item.children" :key="child.href">
+                                      <div 
+                                          v-if="child.requiredPermission && !hasPermission(child.requiredPermission)"
+                                          class="text-[9px] uppercase font-bold text-gray-500 tracking-wider pt-2.5 pb-1 px-3 border-t border-gray-800/40 mt-2 first:mt-0 first:border-0"
+                                      >
+                                          {{ child.label }}
+                                      </div>
+                                      <Link
+                                          v-else-if="!child.requiredPermission || hasPermission(child.requiredPermission)"
+                                          :href="child.href"
+                                          class="block px-3 py-1.5 text-xs text-gray-450 rounded-md hover:bg-gray-800 hover:text-blue-300 transition-colors truncate"
+                                          @click="isMobileMenuOpen = false"
+                                      >
+                                          {{ child.label }}
+                                      </Link>
+                                  </template>
+                              </div>
+                         </CollapsibleContent>
                     </Collapsible>
                 </div>
             </nav>
@@ -422,6 +432,25 @@ const toggleMenuItem = (title: string) => {
                     </span>
                 </div>
                 
+                <!-- Workspace & Settings links (system-level items) -->
+                <div class="space-y-1 mb-2" v-show="isExpanded || isHovered">
+                    <Link
+                        href="/calendar"
+                        class="flex items-center gap-3 px-3 py-1.5 text-xs text-gray-400 rounded-md hover:bg-gray-800 hover:text-blue-300 transition-colors"
+                    >
+                        <CalendarDays class="h-4 w-4 shrink-0" />
+                        <span>Workspace</span>
+                    </Link>
+                    <Link
+                        v-if="canViewAdmin"
+                        href="/admin/rbac"
+                        class="flex items-center gap-3 px-3 py-1.5 text-xs text-gray-400 rounded-md hover:bg-gray-800 hover:text-blue-300 transition-colors"
+                    >
+                        <Settings class="h-4 w-4 shrink-0" />
+                        <span>Settings</span>
+                    </Link>
+                </div>
+                
                 <Button
                     variant="ghost"
                     size="sm"
@@ -449,7 +478,7 @@ const toggleMenuItem = (title: string) => {
                         <Menu class="h-6 w-6" />
                     </Button>
                     <div class="text-sm font-medium text-gray-600 truncate hidden sm:block">
-                        {{ currentRoute }}
+                        {{ breadcrumbText }}
                     </div>
                 </div>
                 
@@ -458,12 +487,13 @@ const toggleMenuItem = (title: string) => {
                           <span class="text-xl font-bold text-gray-900">CRM</span>
                      </div>
                      <div class="flex-1"></div>
-                     <div class="flex items-center gap-2">
-                         <AssistantIcon />
-                         <span class="hidden sm:inline text-xs font-medium text-purple-700">Ask AI</span>
-                         <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
-                         <span class="hidden sm:inline text-xs font-medium text-blue-600">See Docs</span>
-                     </div>
+                      <div class="flex items-center gap-2">
+                          <AssistantIcon />
+                          <span class="hidden sm:inline text-xs font-medium text-purple-700">Ask AI</span>
+                          <HelpPanel :current-route="currentRoute" :user-roles="userRoles" v-model:open="showHelpPanel" />
+                          <span class="hidden sm:inline text-xs font-medium text-blue-600">See Docs</span>
+                          <Link :href="selfServiceUrl" class="hidden sm:inline text-xs font-medium text-green-600 hover:text-green-700">Self Service Portal</Link>
+                      </div>
                  </div>
             </header>
             <div class="flex-1 p-4 lg:p-8">

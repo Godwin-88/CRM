@@ -10,7 +10,7 @@
     </div>
     <div class="flex items-center justify-end gap-2">
       <Button variant="secondary" size="sm" @click="$emit('cancel')">Cancel</Button>
-      <Button size="sm" @click="$emit('confirm', tool, arguments)">Confirm</Button>
+      <Button size="sm" @click="$emit('confirm', tool, args)">Confirm</Button>
     </div>
   </div>
 </template>
@@ -22,22 +22,22 @@ import Button from '@/components/ui/button/Button.vue';
 const props = defineProps<{
   message: string;
   tool: string;
-  arguments: Record<string, any>;
+  args: Record<string, any>;
 }>();
 
 defineEmits<{
-  (e: 'confirm', tool: string, arguments: Record<string, any>): void;
+  (e: 'confirm', tool: string, args: Record<string, any>): void;
   (e: 'cancel'): void;
 }>();
 
 const toolDetails = computed(() => {
-  if (!props.tool && !props.arguments) return null;
-  return { tool: props.tool, arguments: props.arguments };
+  if (!props.tool && !props.args) return null;
+  return { tool: props.tool, arguments: props.args };
 });
 
 const prettyArgs = computed(() => {
   try {
-    return JSON.stringify(props.arguments);
+    return JSON.stringify(props.args);
   } catch {
     return JSON.stringify({});
   }

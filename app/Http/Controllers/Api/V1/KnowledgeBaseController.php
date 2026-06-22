@@ -25,8 +25,10 @@ class KnowledgeBaseController extends Controller
             ->with(['category', 'author']);
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%'.$request->search.'%')
-                ->orWhere('body', 'like', '%'.$request->search.'%');
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%'.$request->search.'%')
+                  ->orWhere('body', 'like', '%'.$request->search.'%');
+            });
         }
 
         if ($request->filled('category_id')) {
@@ -57,11 +59,12 @@ class KnowledgeBaseController extends Controller
             'status' => 'sometimes|in:draft,in_review,approved,published,archived',
             'audience' => 'sometimes|in:agent,manager,admin,all',
             'feature_refs' => 'sometimes|array',
+            'slug' => 'nullable|string|max:255|unique:knowledge_base_articles,slug',
         ]);
 
         $article = KnowledgeBaseArticle::create([
             'title' => $validated['title'],
-            'slug' => Str::slug($validated['title']),
+            'slug' => $validated['slug'] ?? Str::slug($validated['title']),
             'body' => $validated['body'],
             'category_id' => $validated['category_id'],
             'author_id' => Auth::id(),
@@ -89,10 +92,11 @@ class KnowledgeBaseController extends Controller
             'status' => 'sometimes|in:draft,in_review,approved,published,archived',
             'audience' => 'sometimes|in:agent,manager,admin,all',
             'feature_refs' => 'sometimes|array',
+            'slug' => 'nullable|string|max:255|unique:knowledge_base_articles,slug,'.$article->id,
         ]);
 
         if (isset($validated['title'])) {
-            $validated['slug'] = Str::slug($validated['title']);
+            $validated['slug'] = $validated['slug'] ?? Str::slug($validated['title']);
         }
 
         $article->update($validated);

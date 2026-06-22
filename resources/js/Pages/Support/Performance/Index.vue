@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3'
+import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -87,112 +88,115 @@ const getTrendColor = (trend: { direction: string }) => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Agent Performance</h1>
-        <p class="text-gray-500">Monitor team output and individual agent metrics.</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <select v-model="selectedRange" class="p-2 border rounded" @change="applyFilters">
-          <option v-for="opt in dateRanges" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
-        <select v-model="selectedTeam" class="p-2 border rounded" @change="applyFilters">
-          <option value="">All Teams</option>
-          <option v-for="team in teams" :key="team.id" :value="team.id">
-            {{ team.name }}
-          </option>
-        </select>
-        <Button @click="exportCsv" variant="outline">Export CSV</Button>
-      </div>
-    </div>
-
-    <!-- Custom Date Range Picker -->
-    <div v-if="selectedRange === 'custom'" class="flex gap-2">
-      <input v-model="customStart" type="date" class="p-2 border rounded" />
-      <input v-model="customEnd" type="date" class="p-2 border rounded" />
-      <Button @click="applyFilters">Apply</Button>
-    </div>
-
-    <!-- Team Summary -->
-    <Card class="bg-blue-50">
-      <CardHeader>
-        <CardTitle>Team Summary</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p class="text-sm text-gray-500">Tickets Created</p>
-            <p class="text-2xl font-bold">{{ teamMetrics.tickets_created }}</p>
-            <span :class="['text-xs', getTrendColor(teamMetrics.trends.tickets_created_change)]">
-              {{ getTrendIcon(teamMetrics.trends.tickets_created_change) }} {{ teamMetrics.trends.tickets_created_change.percent }}%
-            </span>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">Resolution Rate</p>
-            <p class="text-2xl font-bold">
-              {{ teamMetrics.tickets_created > 0
-                ? Math.round((teamMetrics.tickets_resolved / teamMetrics.tickets_created) * 100)
-                : 0 }}%
-            </p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">SLA Breach Rate</p>
-            <p class="text-2xl font-bold">
-<Badge :variant="teamMetrics.sla_breach_rate > 5 ? 'destructive' : 'success'">
-              {{ teamMetrics.sla_breach_rate }}%
-            </Badge>
-            </p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">Avg CSAT</p>
-            <p class="text-2xl font-bold">{{ teamMetrics.avg_csat_score }}/5</p>
-          </div>
+  <AppLayout>
+    <Head title="Agent Performance" />
+    <div class="max-w-7xl mx-auto space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Agent Performance</h1>
+          <p class="text-gray-500">Monitor team output and individual agent metrics.</p>
         </div>
-      </CardContent>
-    </Card>
+        <div class="flex items-center gap-2">
+          <select v-model="selectedRange" class="p-2 border rounded" @change="applyFilters">
+            <option v-for="opt in dateRanges" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+          <select v-model="selectedTeam" class="p-2 border rounded" @change="applyFilters">
+            <option value="">All Teams</option>
+            <option v-for="team in teams" :key="team.id" :value="team.id">
+              {{ team.name }}
+            </option>
+          </select>
+          <Button @click="exportCsv" variant="outline">Export CSV</Button>
+        </div>
+      </div>
 
-    <!-- Agent Metrics Table -->
-    <Card>
-      <CardContent class="p-0">
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHead>Agent</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Resolved</TableHead>
-              <TableHead>Closed</TableHead>
-              <TableHead>Avg Response</TableHead>
-              <TableHead>Avg Resolution</TableHead>
-              <TableHead>Breach Rate</TableHead>
-              <TableHead>CSAT</TableHead>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow v-for="agent in agentMetrics" :key="agent.agent_id">
-              <TableCell>
-                <div>
-                  <p class="font-medium">{{ agent.agent_name }}</p>
-                  <p class="text-xs text-gray-500">{{ agent.agent_email }}</p>
-                </div>
-              </TableCell>
-              <TableCell>{{ agent.tickets_created }}</TableCell>
-              <TableCell>{{ agent.tickets_resolved }}</TableCell>
-              <TableCell>{{ agent.tickets_closed }}</TableCell>
-              <TableCell>{{ agent.avg_first_response_hours }} hrs</TableCell>
-              <TableCell>{{ agent.avg_resolution_hours }} hrs</TableCell>
-              <TableCell>
-                <Badge :variant="agent.sla_breach_rate > 5 ? 'destructive' : 'success'">
-                  {{ agent.sla_breach_rate }}%
+      <!-- Custom Date Range Picker -->
+      <div v-if="selectedRange === 'custom'" class="flex gap-2">
+        <input v-model="customStart" type="date" class="p-2 border rounded" />
+        <input v-model="customEnd" type="date" class="p-2 border rounded" />
+        <Button @click="applyFilters">Apply</Button>
+      </div>
+
+      <!-- Team Summary -->
+      <Card class="bg-blue-50">
+        <CardHeader>
+          <CardTitle>Team Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p class="text-sm text-gray-500">Tickets Created</p>
+              <p class="text-2xl font-bold">{{ teamMetrics.tickets_created }}</p>
+              <span :class="['text-xs', getTrendColor(teamMetrics.trends.tickets_created_change)]">
+                {{ getTrendIcon(teamMetrics.trends.tickets_created_change) }} {{ teamMetrics.trends.tickets_created_change.percent }}%
+              </span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Resolution Rate</p>
+              <p class="text-2xl font-bold">
+                {{ teamMetrics.tickets_created > 0
+                  ? Math.round((teamMetrics.tickets_resolved / teamMetrics.tickets_created) * 100)
+                  : 0 }}%
+              </p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">SLA Breach Rate</p>
+              <p class="text-2xl font-bold">
+                <Badge :variant="teamMetrics.sla_breach_rate > 5 ? 'destructive' : 'success'">
+                  {{ teamMetrics.sla_breach_rate }}%
                 </Badge>
-              </TableCell>
-              <TableCell>{{ agent.avg_csat_score }}/5</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  </div>
+              </p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Avg CSAT</p>
+              <p class="text-2xl font-bold">{{ teamMetrics.avg_csat_score }}/5</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Agent Metrics Table -->
+      <Card>
+        <CardContent class="p-0">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHead>Agent</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Resolved</TableHead>
+                <TableHead>Closed</TableHead>
+                <TableHead>Avg Response</TableHead>
+                <TableHead>Avg Resolution</TableHead>
+                <TableHead>Breach Rate</TableHead>
+                <TableHead>CSAT</TableHead>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow v-for="agent in agentMetrics" :key="agent.agent_id">
+                <TableCell>
+                  <div>
+                    <p class="font-medium">{{ agent.agent_name }}</p>
+                    <p class="text-xs text-gray-500">{{ agent.agent_email }}</p>
+                  </div>
+                </TableCell>
+                <TableCell>{{ agent.tickets_created }}</TableCell>
+                <TableCell>{{ agent.tickets_resolved }}</TableCell>
+                <TableCell>{{ agent.tickets_closed }}</TableCell>
+                <TableCell>{{ agent.avg_first_response_hours }} hrs</TableCell>
+                <TableCell>{{ agent.avg_resolution_hours }} hrs</TableCell>
+                <TableCell>
+                  <Badge :variant="agent.sla_breach_rate > 5 ? 'destructive' : 'success'">
+                    {{ agent.sla_breach_rate }}%
+                  </Badge>
+                </TableCell>
+                <TableCell>{{ agent.avg_csat_score }}/5</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  </AppLayout>
 </template>

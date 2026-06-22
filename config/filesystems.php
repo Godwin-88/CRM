@@ -67,7 +67,7 @@ return [
             'region' => 'auto',
             'bucket' => env('R2_BUCKET'),
             'endpoint' => env('R2_ENDPOINT'),
-            'use_path_style_endpoint' => false,
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true),
             'url' => env('R2_URL'),
             'visibility' => 'private',
             'throw' => false,

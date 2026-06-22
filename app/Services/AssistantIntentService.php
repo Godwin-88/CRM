@@ -116,6 +116,9 @@ class AssistantIntentService
         '4.12.4' => ['discussion', 'discussions', 'discussion board'],
         '4.12.5' => ['team calendar'],
         '4.12.6' => ['mention', 'mentions', '@mention'],
+        '4.15.1' => ['service catalog', 'catalog item', 'catalog items', 'service offering'],
+        '4.15.2' => ['service request', 'service requests', 'support request', 'support requests', 'document request'],
+        '4.15.3' => ['case record', 'case records', 'service case', 'service cases', 'complaint case', 'investigation case'],
     ];
 
     private const NAVIGATION_MAP = [
@@ -158,6 +161,9 @@ class AssistantIntentService
         '4.12.1' => '/calendar',
         '4.12.2' => '/notifications',
         '4.12.4' => '/discussions',
+        '4.15.1' => '/service-catalog',
+        '4.15.2' => '/service-requests',
+        '4.15.3' => '/cases',
     ];
 
     private const TOOL_HINTS = [
@@ -173,6 +179,7 @@ class AssistantIntentService
         '4.10' => ['users.my_permissions'],
         '4.11' => ['integrations.get_status', 'webhooks.get_delivery_log'],
         '4.12' => ['notifications.get_unread', 'calendar.upcoming', 'comments.post'],
+        '4.15' => ['services.search', 'services.get', 'service_requests.search', 'service_requests.create', 'service_requests.get_status', 'service_requests.update_status', 'service_requests.add_document_request', 'cases.search', 'cases.create', 'cases.get', 'cases.update_status', 'cases.add_note', 'cases.request_signoff'],
     ];
 
     public function systemPrompt(): string
@@ -644,6 +651,21 @@ class AssistantIntentService
         return 'all';
     }
 
+    private const SECTION_NAMES = [
+        '4.1' => 'Contacts & Accounts',
+        '4.2' => 'Deals & Pipelines',
+        '4.3' => 'Omni-Channel',
+        '4.4' => 'Campaigns',
+        '4.5' => 'Loyalty & CX',
+        '4.6' => 'Support',
+        '4.7' => 'Analytics',
+        '4.8' => 'Contracts & Legal',
+        '4.9' => 'Finance & Procurement',
+        '4.10' => 'Security',
+        '4.11' => 'Integrations',
+        '4.12' => 'Calendar & Notifications',
+    ];
+
     private function decomposedIntents(array $groups, array $featureRefs): array
     {
         $intents = [];
@@ -651,7 +673,7 @@ class AssistantIntentService
         foreach (array_keys($groups) as $section) {
             $sectionRefs = array_values(array_filter($featureRefs, fn ($ref) => str_starts_with($ref, $section.'.')));
             $intents[] = [
-                'section' => $section,
+                'section' => self::SECTION_NAMES[$section] ?? $section,
                 'feature_refs' => $sectionRefs,
                 'help_type' => $this->sectionDefaultHelpType($section),
                 'possible_tools' => self::TOOL_HINTS[$section] ?? [],
@@ -693,7 +715,29 @@ class AssistantIntentService
         [$section, $feature] = array_pad(explode('.', $featureRef), 2, null);
         $index = config('docs.spec_sections', []);
 
+        // Handle new structure with 'features' key
+        if (isset($index[$section]['features'][$feature])) {
+            return $index[$section]['features'][$feature];
+        }
+
+        // Fallback to old structure
         return $index[$section][$feature] ?? $featureRef;
+    }
+
+    private function sectionTitle(string $sectionRef): string
+    {
+        $index = config('docs.spec_sections', []);
+
+        return $index[$sectionRef]['title'] ?? $sectionRef;
+    }
+
+    private function featureTitleOrSection(string $featureRef): string
+    {
+        [$section] = array_pad(explode('.', $featureRef), 2, $featureRef);
+
+        return $this->featureTitle($featureRef) !== $featureRef
+            ? $this->featureTitle($featureRef)
+            : $this->sectionTitle($section);
     }
 
     private function resolvedIntentLabel(string $intent, array $featureRefs): string

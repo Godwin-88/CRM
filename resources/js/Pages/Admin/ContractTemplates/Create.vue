@@ -29,7 +29,7 @@ const form = useForm({
   description: '',
   type: '',
   is_active: true,
-  clauses: [] as { id: string; is_mandatory: boolean; is_optional: boolean; sort_order: number }[],
+  clauses: [] as { id: string; name: string; category: string; body: string; is_mandatory: boolean; is_optional: boolean; sort_order: number }[],
 });
 
 const selectedClauseIds = computed(() => new Set(form.clauses.map((clause) => clause.id)));
@@ -46,6 +46,9 @@ const submit = () => {
 const addClause = (clause: ClauseOption) => {
   form.clauses.push({
     id: clause.id,
+    name: clause.name,
+    category: clause.category,
+    body: clause.body || '',
     is_mandatory: true,
     is_optional: false,
     sort_order: form.clauses.length,

@@ -11,6 +11,7 @@ const localRules = ref(props.rules || []);
 
 const availableFields = [
   { value: 'type', label: 'Contact Type' },
+  { value: 'annual_revenue', label: 'Annual Revenue' },
   { value: 'loyalty_tier', label: 'Loyalty Tier' },
   { value: 'clv_score', label: 'CLV Score' },
   { value: 'source', label: 'Source Channel' },
@@ -70,33 +71,29 @@ const removeRule = (index: number) => {
   emit('update', localRules.value);
 };
 
-watch(localRules, (newRules) => {
-  emit('update', newRules);
-}, { deep: true });
-
 watch(() => props.rules, (newRules) => {
   localRules.value = [...newRules];
-}, { deep: true });
+});
 </script>
 
 <template>
   <div class="space-y-3 border rounded-lg p-4 bg-gray-50">
-    <label class="text-sm font-medium">Filter Rules</label>
+    <p class="text-xs text-gray-500">Add one or more rules to define which contacts belong in this segment. Use AND/OR logic below to combine rules.</p>
     <div v-for="(rule, index) in localRules" :key="index" class="flex gap-2 items-start">
       <Select v-model="rule.field" class="flex-1">
-        <SelectTrigger class="w-[180px]"><SelectValue placeholder="Field" /></SelectTrigger>
+        <SelectTrigger class="w-full"><SelectValue placeholder="Field" /></SelectTrigger>
         <SelectContent>
           <SelectItem v-for="f in availableFields" :key="f.value" :value="f.value">{{ f.label }}</SelectItem>
         </SelectContent>
       </Select>
-      <Select v-model="rule.operator" class="flex-1">
-        <SelectTrigger class="w-[140px]"><SelectValue placeholder="Operator" /></SelectTrigger>
+      <Select v-model="rule.operator" class="w-[140px]">
+        <SelectTrigger><SelectValue placeholder="Operator" /></SelectTrigger>
         <SelectContent>
           <SelectItem v-for="op in operatorsForField(rule.field)" :key="op.value" :value="op.value">{{ op.label }}</SelectItem>
         </SelectContent>
       </Select>
       <Input v-model="rule.value" placeholder="Value(s)" class="flex-1" />
-      <Button variant="destructive" size="sm" @click="removeRule(index)">✕</Button>
+      <Button variant="ghost" size="sm" class="text-red-500 hover:text-red-700" @click="removeRule(index)">✕</Button>
     </div>
     <Button variant="outline" size="sm" @click="addRule">+ Add Rule</Button>
   </div>

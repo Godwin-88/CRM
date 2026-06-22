@@ -56,6 +56,10 @@ class PortalController extends Controller
     {
         $contact = auth()->user()?->contact;
 
+        if (! $contact) {
+            return back()->withErrors(['contact' => 'Your account is not linked to a contact record. Please contact support.']);
+        }
+
         $validated = $request->validate([
             'subject' => 'required|string|max:255',
             'description' => 'required|string',
@@ -64,6 +68,11 @@ class PortalController extends Controller
         ]);
 
         $category = TicketCategory::find($validated['category_id']);
+
+        if (! $category) {
+            return back()->withErrors(['category_id' => 'Selected category is invalid.']);
+        }
+
         if ($category->is_agent_only) {
             abort(403, 'This category is not available in the self-service portal.');
         }

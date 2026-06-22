@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
+const routeFn = route
+
 const props = defineProps<{
   tickets: {
     data: Array<{
@@ -40,7 +42,7 @@ const getStatusVariant = (status: string) => {
           <h1 class="text-3xl font-bold text-gray-900">Support Portal</h1>
           <p class="text-gray-500">View and manage your support tickets.</p>
         </div>
-        <Link :href="$route('self-service.tickets.create')">
+        <Link :href="routeFn('self-service.tickets.create')">
           <Button>Create Ticket</Button>
         </Link>
       </div>
@@ -54,7 +56,7 @@ const getStatusVariant = (status: string) => {
             <div v-for="ticket in tickets.data" :key="ticket.id" class="border rounded-lg p-4">
               <div class="flex items-center justify-between">
                 <div>
-                  <Link :href="$route('self-service.tickets.show', ticket.id)" class="text-lg font-medium text-blue-600 hover:underline">
+                  <Link :href="routeFn('self-service.tickets.show', ticket.id)" class="text-lg font-medium text-blue-600 hover:text-blue-600 hover:underline">
                     {{ ticket.subject }}
                   </Link>
                   <p class="text-sm text-gray-500">
@@ -74,7 +76,7 @@ const getStatusVariant = (status: string) => {
           </div>
           <div v-else class="text-center py-8">
             <p class="text-gray-500">No tickets found.</p>
-            <Link :href="$route('self-service.tickets.create')" class="mt-4 inline-block">
+            <Link :href="routeFn('self-service.tickets.create')" class="mt-4 inline-block">
               <Button>Create Your First Ticket</Button>
             </Link>
           </div>

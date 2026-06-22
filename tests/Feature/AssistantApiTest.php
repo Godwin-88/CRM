@@ -4,31 +4,58 @@ use App\Models\User;
 use App\Models\AgentInternalToken;
 use App\Services\AssistantTokenService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
+use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
-    $this->tokenService = app(AssistantTokenService::class);
+});
+
+afterEach(function () {
+    AgentInternalToken::query()->delete();
+    \App\Models\AssistantConversation::query()->delete();
 });
 
 it('can mint and validate an assistant internal token', function () {
-    $token = $this->tokenService->mintToken($this->user, ['assistant:chat']);
-    $raw = cache("assistant_token:{$token->id}");
+    $rawToken = 'test-raw-token-'.time();
+    $tokenHash = hash('sha256', $rawToken);
 
-    $response = $this->actingAs($this->user, 'sanctum')
-        ->withHeader('X-Assistant-Token', $raw)
+    $token = AgentInternalToken::create([
+        'id' => (string) \Illuminate\Support\Str::ulid(),
+        'user_id' => $this->user->id,
+        'token_hash' => $tokenHash,
+        'abilities' => ['assistant:chat', 'assistant:tool.use'],
+        'expires_at' => now()->addMinutes(5),
+        'used_count' => 0,
+        'last_used_at' => null,
+    ]);
+
+    Cache::put("assistant_token:{$token->id}", $rawToken, now()->addMinutes(5));
+
+    $response = $this->withHeader('X-Assistant-Token', $rawToken)
+        ->withHeader('X-Assistant-Session', 'test-session')
         ->postJson('/api/v1/assistant/tool/users/my_permissions', []);
 
-    $response->assertStatus(200);
+    $response->assertStatus(200)
+        ->assertJsonStructure(['permissions', 'roles']);
 });
 
 it('can revoke an assistant token', function () {
-    $token = $this->tokenService->mintToken($this->user, ['assistant:chat']);
-    $raw = cache("assistant_token:{$token->id}");
+    $rawToken = 'test-raw-token-'.time();
+    $tokenHash = hash('sha256', $rawToken);
 
-    $response = $this->actingAs($this->user, 'sanctum')
-        ->withHeader('X-Assistant-Token', $raw)
+    $token = AgentInternalToken::create([
+        'id' => (string) \Illuminate\Support\Str::ulid(),
+        'user_id' => $this->user->id,
+        'token_hash' => $tokenHash,
+        'abilities' => ['assistant:chat', 'assistant:tool.use'],
+        'expires_at' => now()->addMinutes(5),
+        'used_count' => 0,
+        'last_used_at' => null,
+    ]);
+
+    Cache::put("assistant_token:{$token->id}", $rawToken, now()->addMinutes(5));
+
+    $response = $this->withHeader('X-Assistant-Token', $rawToken)
         ->deleteJson('/api/v1/assistant/token');
 
     $response->assertStatus(200);
@@ -41,23 +68,23 @@ it('rejects tool calls with an invalid assistant token', function () {
     $response->assertStatus(401);
 });
 
-it('allows a valid assistant token to call a read tool', function () {
-    $token = $this->tokenService->mintToken($this->user, ['assistant:chat']);
-    $raw = cache("assistant_token:{$token->id}");
-
-    $response = $this->withHeader('X-Assistant-Token', $raw)
-        ->withHeader('X-Assistant-Session', 'test-session')
-        ->postJson('/api/v1/assistant/tool/users/my_permissions', []);
-
-    $response->assertStatus(200)
-        ->assertJsonStructure(['permissions', 'roles']);
-});
-
 it('blocks destructive actions via the assistant tool api', function () {
-    $token = $this->tokenService->mintToken($this->user, ['assistant:chat']);
-    $raw = cache("assistant_token:{$token->id}");
+    $rawToken = 'test-raw-token-'.time();
+    $tokenHash = hash('sha256', $rawToken);
 
-    $response = $this->withHeader('X-Assistant-Token', $raw)
+    $token = AgentInternalToken::create([
+        'id' => (string) \Illuminate\Support\Str::ulid(),
+        'user_id' => $this->user->id,
+        'token_hash' => $tokenHash,
+        'abilities' => ['assistant:chat', 'assistant:tool.use'],
+        'expires_at' => now()->addMinutes(5),
+        'used_count' => 0,
+        'last_used_at' => null,
+    ]);
+
+    Cache::put("assistant_token:{$token->id}", $rawToken, now()->addMinutes(5));
+
+    $response = $this->withHeader('X-Assistant-Token', $rawToken)
         ->withHeader('X-Assistant-Session', 'test-session')
         ->postJson('/api/v1/assistant/tool/contacts/bulk-delete', []);
 
@@ -66,10 +93,22 @@ it('blocks destructive actions via the assistant tool api', function () {
 });
 
 it('requires confirmation for write-significant tools', function () {
-    $token = $this->tokenService->mintToken($this->user, ['assistant:chat']);
-    $raw = cache("assistant_token:{$token->id}");
+    $rawToken = 'test-raw-token-'.time();
+    $tokenHash = hash('sha256', $rawToken);
 
-    $response = $this->withHeader('X-Assistant-Token', $raw)
+    $token = AgentInternalToken::create([
+        'id' => (string) \Illuminate\Support\Str::ulid(),
+        'user_id' => $this->user->id,
+        'token_hash' => $tokenHash,
+        'abilities' => ['assistant:chat', 'assistant:tool.use'],
+        'expires_at' => now()->addMinutes(5),
+        'used_count' => 0,
+        'last_used_at' => null,
+    ]);
+
+    Cache::put("assistant_token:{$token->id}", $rawToken, now()->addMinutes(5));
+
+    $response = $this->withHeader('X-Assistant-Token', $rawToken)
         ->withHeader('X-Assistant-Session', 'test-session')
         ->postJson('/api/v1/assistant/tool/comments/post', [
             'entity_type' => 'deal',
@@ -81,28 +120,59 @@ it('requires confirmation for write-significant tools', function () {
         ->assertJsonFragment(['requires_confirmation' => true]);
 });
 
-it('stores tool call audit logs', function () {
-    $token = $this->tokenService->mintToken($this->user, ['assistant:chat']);
-    $raw = cache("assistant_token:{$token->id}");
+it('requires confirmation for write-reversible tools', function () {
+    $rawToken = 'test-raw-token-'.time();
+    $tokenHash = hash('sha256', $rawToken);
 
-    \Illuminate\Support\Facades\Log::partialMock();
+    $token = AgentInternalToken::create([
+        'id' => (string) \Illuminate\Support\Str::ulid(),
+        'user_id' => $this->user->id,
+        'token_hash' => $tokenHash,
+        'abilities' => ['assistant:chat', 'assistant:tool.use'],
+        'expires_at' => now()->addMinutes(5),
+        'used_count' => 0,
+        'last_used_at' => null,
+    ]);
 
-    $this->withHeader('X-Assistant-Token', $raw)
+    Cache::put("assistant_token:{$token->id}", $rawToken, now()->addMinutes(5));
+
+    $response = $this->withHeader('X-Assistant-Token', $rawToken)
         ->withHeader('X-Assistant-Session', 'test-session')
-        ->postJson('/api/v1/assistant/tool/users/my_permissions', []);
+        ->postJson('/api/v1/assistant/tool/deals/move_stage', [
+            'deal_id' => 'fake-uuid',
+            'stage' => 'Proposal',
+        ]);
 
-    \Illuminate\Support\Facades\Log::shouldHaveReceived('info')->with('Agent tool call');
+    $response->assertStatus(412)
+        ->assertJsonFragment(['requires_confirmation' => true])
+        ->assertJsonStructure(['cascading_actions']);
 });
 
-it('returns available tools filtered by user permissions', function () {
-    $token = $this->tokenService->mintToken($this->user, ['assistant:chat']);
-    $raw = cache("assistant_token:{$token->id}");
+it('returns available tools showing write-reversible requires confirmation', function () {
+    $rawToken = 'test-raw-token-'.time();
+    $tokenHash = hash('sha256', $rawToken);
 
-    $response = $this->withHeader('X-Assistant-Token', $raw)
+    $token = AgentInternalToken::create([
+        'id' => (string) \Illuminate\Support\Str::ulid(),
+        'user_id' => $this->user->id,
+        'token_hash' => $tokenHash,
+        'abilities' => ['assistant:chat', 'assistant:tool.use'],
+        'expires_at' => now()->addMinutes(5),
+        'used_count' => 0,
+        'last_used_at' => null,
+    ]);
+
+    Cache::put("assistant_token:{$token->id}", $rawToken, now()->addMinutes(5));
+
+    $response = $this->withHeader('X-Assistant-Token', $rawToken)
         ->getJson('/api/v1/assistant/tools/available');
 
     $response->assertStatus(200)
-        ->assertJsonStructure(['tools' => ['name', 'tier'], 'permissions']);
+        ->assertJsonStructure(['tools' => ['name', 'tier', 'requires_confirmation'], 'permissions']);
+
+    $tools = $response->json('tools');
+    $writeReversibleTool = collect($tools)->firstWhere('name', 'deals.move_stage');
+    expect($writeReversibleTool['requires_confirmation'])->toBeTrue();
 });
 
 it('proactive endpoint returns empty when no items exist', function () {

@@ -45,6 +45,18 @@ class SegmentService
         });
     }
 
+    protected function hasStatusRule(array $criteria): bool
+    {
+        $rules = $criteria['rules'] ?? $criteria;
+        foreach ($rules as $rule) {
+            if (($rule['field'] ?? '') === 'status') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Apply a single filter rule to a query.
      */
@@ -111,12 +123,38 @@ class SegmentService
      */
     public function getPreview(array $criteria, int $sampleSize = 10): array
     {
-        $query = $this->applyCriteria(Contact::query(), $criteria);
+        $query = Contact::query()->withoutTrashed();
+        
+        if (!$this->hasStatusRule($criteria)) {
+            $query->where('status', 'active');
+        }
+
+        $query->where('support_opt_out', '=', false);
+
+        $this->applyCriteria($query, $criteria);
         $count = $query->count();
         $sample = $query->take($sampleSize)->get(['id', 'first_name', 'last_name', 'email', 'type']);
 
+        $base = Contact::query()->withoutTrashed();
+        if (!$this->hasStatusRule($criteria)) {
+            $base->where('status', 'active');
+        }
+        $base->where('support_opt_out', '=', false);
+        $this->applyCriteria($base, $criteria);
+
         return [
+            'total_count' => $count,
             'count' => $count,
+            'email_eligible' => (clone $base)->whereNotNull('email')->count(),
+            'sms_eligible' => (clone $base)->whereNotNull('phone')->count(),
+            'push_eligible' => (clone $base)->where('preferred_channel', 'push')->count(),
+            'in_app_eligible' => (clone $base)->where('preferred_channel', 'in_app')->count(),
+            'whatsapp_eligible' => (clone $base)->whereNotNull('phone')->count(),
+            'facebook_eligible' => $count,
+            'instagram_eligible' => $count,
+            'tiktok_eligible' => $count,
+            'linkedin_eligible' => $count,
+            'sample_contacts' => $sample,
             'sample' => $sample,
         ];
     }

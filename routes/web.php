@@ -108,6 +108,18 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             ->name('admin.rbac.roles.delete');
     });
 
+    // ─── User Management ──────────────────────────────────────────────────────────
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])
+            ->name('admin.users.index');
+        Route::post('/admin/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])
+            ->name('admin.users.store');
+        Route::put('/admin/users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'update'])
+            ->name('admin.users.update');
+        Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])
+            ->name('admin.users.destroy');
+    });
+
     // ─── Privileged Session ───────────────────────────────────────────────────────
     Route::get('/admin/privileged/challenge', [PrivilegedSessionController::class, 'showChallenge'])
         ->name('admin.privileged.challenge');
@@ -138,6 +150,27 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
             ->name('admin.integrations.webhooks.destroy');
         Route::post('/admin/integrations/webhooks/{webhook}/retry', [\App\Http\Controllers\Admin\WebhookWebController::class, 'retry'])
             ->name('admin.integrations.webhooks.retry');
+
+        Route::post('/admin/omni/settings/social-channels/{provider}', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveSocialChannel'])
+            ->name('admin.omni.settings.social-channels.save');
+        Route::post('/admin/omni/settings/social-channels/{provider}/disconnect', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'disconnectSocialChannel'])
+            ->name('admin.omni.settings.social-channels.disconnect');
+        Route::post('/admin/omni/settings/email/{provider}', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveEmailChannel'])
+            ->name('admin.omni.settings.email.save');
+        Route::post('/admin/omni/settings/email/{provider}/disconnect', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'disconnectEmailChannel'])
+            ->name('admin.omni.settings.email.disconnect');
+        Route::post('/admin/omni/settings/sms/{provider}', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveSmsChannel'])
+            ->name('admin.omni.settings.sms.save');
+        Route::post('/admin/omni/settings/sms/{provider}/disconnect', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'disconnectSmsChannel'])
+            ->name('admin.omni.settings.sms.disconnect');
+        Route::post('/admin/omni/settings/chat', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveChatChannel'])
+            ->name('admin.omni.settings.chat.save');
+        Route::post('/admin/omni/settings/ivr', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveIvrChannel'])
+            ->name('admin.omni.settings.ivr.save');
+        Route::post('/admin/omni/settings/field', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'saveFieldChannel'])
+            ->name('admin.omni.settings.field.save');
+        Route::post('/admin/omni/settings/channels/{provider}/disconnect', [\App\Http\Controllers\Admin\OmniChannelWebController::class, 'disconnectChannel'])
+            ->name('admin.omni.settings.channels.disconnect');
     });
 
     Route::middleware(['role:manager|admin'])->group(function () {
@@ -198,6 +231,8 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     // Segments
     Route::get('/segments', [SegmentController::class, 'index'])->name('segments.index');
     Route::post('/segments', [SegmentController::class, 'store'])->name('segments.store');
+    Route::put('/segments/{segment}', [SegmentController::class, 'update'])->name('segments.update');
+    Route::delete('/segments/{segment}', [SegmentController::class, 'destroy'])->name('segments.destroy');
 
     // Deals
     Route::get('/deals', [DealController::class, 'index'])->name('deals.index');
@@ -244,9 +279,15 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::get('/support/categories/{ticketCategory}/form', [TicketController::class, 'getCategoryForm'])->name('support.categories.form');
 
     Route::get('/support/knowledge-base', [KnowledgeBaseController::class, 'index'])->name('support.knowledge-base.index');
+    Route::get('/support/knowledge-base/create', [KnowledgeBaseController::class, 'create'])->name('support.knowledge-base.create');
+    Route::get('/support/knowledge-base/{article}/edit', [KnowledgeBaseController::class, 'edit'])->name('support.knowledge-base.edit');
     Route::get('/support/knowledge-base/{article}', [KnowledgeBaseController::class, 'show'])->name('support.knowledge-base.show');
     Route::post('/support/knowledge-base/{article}/rate', [KnowledgeBaseController::class, 'rate'])->name('support.knowledge-base.rate');
     Route::post('/support/knowledge-base/{article}/link', [KnowledgeBaseController::class, 'linkToTicket'])->name('support.knowledge-base.link');
+
+    Route::get('/admin/service-requests', fn () => Inertia::render('ServiceManagement/ServiceRequests'))->name('admin.service-requests.index');
+    Route::get('/admin/cases', fn () => Inertia::render('ServiceManagement/Cases'))->name('admin.cases.index');
+    Route::get('/admin/service-catalog', fn () => Inertia::render('ServiceManagement/ServiceCatalog'))->name('admin.service-catalog.index');
 
     Route::get('/support/performance', [PerformanceController::class, 'index'])->name('support.performance.index');
     Route::get('/support/performance/export', [PerformanceController::class, 'export'])->name('support.performance.export');
@@ -284,6 +325,7 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
 
         Route::get('/admin/support/canned-responses', [CannedResponseController::class, 'index'])->name('admin.support.canned-responses.index');
         Route::post('/admin/support/canned-responses', [CannedResponseController::class, 'store'])->name('admin.support.canned-responses.store');
+        Route::put('/admin/support/canned-responses/{cannedResponse}', [CannedResponseController::class, 'update'])->name('admin.support.canned-responses.update');
 
         Route::get('/admin/support/sla-breaches', [SlaBreachController::class, 'index'])->name('admin.support.sla-breaches.index');
     });
@@ -369,7 +411,6 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::get('/admin/surveys', fn () => redirect('/admin/cx-insights'))->name('admin.surveys.index');
         Route::get('/admin/surveys/responses', fn () => redirect('/admin/cx-insights'))->name('admin.surveys.responses');
         Route::get('/admin/clv-analytics', fn () => redirect('/admin/cx-insights'))->name('admin.clv-analytics.index');
-        Route::get('/admin/sla', fn () => redirect('/admin/service-delivery'))->name('admin.sla.index');
         Route::get('/admin/onboarding', fn () => redirect('/admin/customer-journeys'))->name('admin.onboarding.index');
         Route::get('/admin/journeys', fn () => redirect('/admin/customer-journeys'))->name('admin.journeys.index');
         Route::get('/admin/reactivation', fn () => redirect('/admin/customer-journeys'))->name('admin.reactivation.index');

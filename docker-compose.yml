@@ -22,13 +22,21 @@ services:
             - SESSION_DRIVER=redis
             - SCOUT_DRIVER=meilisearch
             - MEILISEARCH_HOST=http://meilisearch:7700
-            - MEILISEARCH_MASTER_KEY=masterKey
+            - MEILISEARCH_KEY=masterKey
             - FILESYSTEM_DISK=s3
             - AWS_ACCESS_KEY_ID=minioadmin
             - AWS_SECRET_ACCESS_KEY=minioadmin
             - AWS_DEFAULT_REGION=us-east-1
             - AWS_BUCKET=crm-local
             - AWS_ENDPOINT=http://minio:9000
+            - AWS_URL=http://localhost:9000
+            - AWS_USE_PATH_STYLE_ENDPOINT=true
+            - R2_ACCESS_KEY_ID=minioadmin
+            - R2_SECRET_ACCESS_KEY=minioadmin
+            - R2_BUCKET=crm-local
+            - R2_ENDPOINT=http://minio:9000
+            - R2_URL=http://localhost:9000
+            - MEDIA_DISK=r2
             - REVERB_APP_ID=local-app-id
             - REVERB_APP_KEY=local-app-key
             - REVERB_APP_SECRET=local-app-secret
@@ -132,6 +140,8 @@ services:
         command: php artisan reverb:start --host=0.0.0.0 --port=8080
         ports:
             - '8080:8080'
+        volumes: ['.:/var/www/html']  # ADD THIS
+
         environment:
             - APP_ENV=${APP_ENV:-local}
             - APP_KEY=${APP_KEY}

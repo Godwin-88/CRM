@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Users } from 'lucide-vue-next';
 
 interface Campaign {
   id: string;
@@ -27,6 +28,7 @@ interface Campaign {
   utm_content: string;
   tags: string[];
   segment?: { id: string; name: string; contact_count: number };
+  segment_count_draft?: number | null;
   created_by?: { name: string };
   steps?: CampaignStep[];
   abTest?: ABTest;
@@ -40,6 +42,17 @@ interface CampaignStep {
   delay_value: number;
   status: string;
   email_template?: { id: string; name: string };
+  sms_content?: string;
+  push_title?: string;
+  push_content?: string;
+  in_app_title?: string;
+  in_app_content?: string;
+  whatsapp_content?: string;
+  facebook_content?: string;
+  instagram_content?: string;
+  tiktok_content?: string;
+  linkedin_content?: string;
+  social_image_url?: string;
 }
 
 interface ABTest {
@@ -54,7 +67,7 @@ interface ABTest {
 
 const props = defineProps<{
   campaign: Campaign;
-  templates: { id: string; name: string }[];
+  templates: { id: string; name: string; type?: string }[];
 }>();
 
 const campaign = ref(props.campaign);
@@ -66,9 +79,16 @@ const isUtmOpen = ref(false);
 
 const newStep = ref({
   channel: 'email',
+  email_template_id: '',
+  sms_content: '',
+  push_title: '',
+  push_content: '',
+  in_app_title: '',
+  in_app_content: '',
+  social_content: '',
+  social_image_url: '',
   delay_type: 'immediately',
   delay_value: 0,
-  email_template_id: '',
 });
 
 const abTestData = ref({
@@ -95,15 +115,70 @@ const utmData = ref({
   content: '',
 });
 
+const refreshSegmentPreview = async () => {
+  if (!campaign.value.segment) return;
+  try {
+    const response = await fetch(`/api/v1/segments/${campaign.value.segment.id}/count`);
+    const data = await response.json();
+    campaign.value.segment.contact_count = data.total_count;
+  } catch {
+    // silently fail
+  }
+};
+
 const addStep = async () => {
   const position = campaign.value.steps?.length || 0;
+  const payload: any = {
+    channel: newStep.value.channel,
+    position,
+    delay_type: newStep.value.delay_type,
+    delay_value: newStep.value.delay_value,
+  };
+
+  switch (newStep.value.channel) {
+    case 'email':
+      payload.email_template_id = newStep.value.email_template_id || null;
+      break;
+    case 'sms':
+      payload.sms_content = newStep.value.sms_content || '';
+      break;
+    case 'push':
+      payload.push_title = newStep.value.push_title || '';
+      payload.push_content = newStep.value.push_content || '';
+      break;
+    case 'in_app':
+      payload.in_app_title = newStep.value.in_app_title || '';
+      payload.in_app_content = newStep.value.in_app_content || '';
+      break;
+    case 'whatsapp':
+      payload.whatsapp_content = newStep.value.social_content || '';
+      payload.social_image_url = newStep.value.social_image_url || null;
+      break;
+    case 'facebook':
+      payload.facebook_content = newStep.value.social_content || '';
+      payload.social_image_url = newStep.value.social_image_url || null;
+      break;
+    case 'instagram':
+      payload.instagram_content = newStep.value.social_content || '';
+      payload.social_image_url = newStep.value.social_image_url || null;
+      break;
+    case 'tiktok':
+      payload.tiktok_content = newStep.value.social_content || '';
+      payload.social_image_url = newStep.value.social_image_url || null;
+      break;
+    case 'linkedin':
+      payload.linkedin_content = newStep.value.social_content || '';
+      payload.social_image_url = newStep.value.social_image_url || null;
+      break;
+  }
+
   const response = await fetch(`/api/v1/campaigns/${campaign.value.id}/steps`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
     },
-    body: JSON.stringify({ ...newStep.value, position }),
+    body: JSON.stringify(payload),
   });
   if (response.ok) {
     isAddStepOpen.value = false;
@@ -112,17 +187,33 @@ const addStep = async () => {
 };
 
 const scheduleCampaign = async () => {
-  const response = await fetch(`/api/v1/campaigns/${campaign.value.id}`, {
-    method: 'PUT',
+  const response = await fetch(`/api/v1/campaigns/${campaign.value.id}/dispatch`, {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
     },
-    body: JSON.stringify({ ...scheduleData.value, status: 'scheduled' }),
+    body: JSON.stringify({ ...scheduleData.value }),
   });
+  const data = await response.json();
   if (response.ok) {
     isScheduleOpen.value = false;
     router.reload();
+  } else if (data.variance_warning) {
+    if (confirm(`Segment count variance exceeds 20%. Draft count: ${data.draft_count}, current count: ${data.current_count}. Do you want to proceed?`)) {
+      const retry = await fetch(`/api/v1/campaigns/${campaign.value.id}/dispatch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
+        },
+        body: JSON.stringify({ ...scheduleData.value, confirmed_variance: true }),
+      });
+      if (retry.ok) {
+        isScheduleOpen.value = false;
+        router.reload();
+      }
+    }
   }
 };
 
@@ -200,6 +291,31 @@ const countdown = computed(() => {
         <p class="text-sm font-medium">Scheduled to send in: <span class="text-blue-600">{{ countdown }}</span></p>
       </div>
 
+      <!-- Segment Targeting Preview -->
+      <Card v-if="campaign.segment">
+        <CardHeader>
+          <CardTitle class="flex items-center gap-2">
+            <Users class="h-5 w-5" />
+            Target Segment: {{ campaign.segment.name }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="flex items-center gap-4">
+            <div class="text-2xl font-bold">{{ (campaign.segment as any).contact_count?.toLocaleString() ?? '—' }}</div>
+            <div class="text-sm text-gray-500">contacts in segment</div>
+          </div>
+          <div v-if="campaign.segment_count_draft !== null && campaign.segment_count_draft !== undefined" class="mt-2 text-xs text-gray-500">
+            Draft count recorded: {{ campaign.segment_count_draft?.toLocaleString() }}
+          </div>
+          <div v-if="campaign.status === 'draft'" class="mt-3">
+            <Button variant="outline" size="sm" @click="refreshSegmentPreview">Refresh Count</Button>
+          </div>
+        </CardContent>
+      </Card>
+      <div v-else-if="campaign.status === 'draft'" class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+        <p class="text-sm text-yellow-800">No target segment selected. Schedule requires a valid segment with matching contacts.</p>
+      </div>
+
       <!-- A/B Test Status -->
       <Card v-if="campaign.abTest">
         <CardHeader>
@@ -247,7 +363,15 @@ const countdown = computed(() => {
                 </TableCell>
                 <TableCell>
                   <span v-if="step.channel === 'email'">{{ step.email_template?.name || 'No template' }}</span>
-                  <span v-else-if="step.channel === 'sms'">SMS content</span>
+                  <span v-else-if="step.channel === 'sms'">{{ (step.sms_content || '').substring(0, 50) || 'No content' }}{{ (step.sms_content || '').length > 50 ? '...' : '' }}</span>
+                  <span v-else-if="step.channel === 'push'">{{ step.push_title || 'Push notification' }}</span>
+                  <span v-else-if="step.channel === 'in_app'">{{ step.in_app_title || 'In-app notification' }}</span>
+                  <span v-else-if="step.channel === 'whatsapp'">{{ (step.whatsapp_content || '').substring(0, 50) || 'WhatsApp message' }}{{ (step.whatsapp_content || '').length > 50 ? '...' : '' }}</span>
+                  <span v-else-if="step.channel === 'facebook'">{{ (step.facebook_content || '').substring(0, 50) || 'Facebook post' }}{{ (step.facebook_content || '').length > 50 ? '...' : '' }}</span>
+                  <span v-else-if="step.channel === 'instagram'">{{ (step.instagram_content || '').substring(0, 50) || 'Instagram post' }}{{ (step.instagram_content || '').length > 50 ? '...' : '' }}</span>
+                  <span v-else-if="step.channel === 'tiktok'">{{ (step.tiktok_content || '').substring(0, 50) || 'TikTok post' }}{{ (step.tiktok_content || '').length > 50 ? '...' : '' }}</span>
+                  <span v-else-if="step.channel === 'linkedin'">{{ (step.linkedin_content || '').substring(0, 50) || 'LinkedIn post' }}{{ (step.linkedin_content || '').length > 50 ? '...' : '' }}</span>
+                  <span v-else>{{ step.channel }}</span>
                 </TableCell>
                 <TableCell>
                   {{ step.delay_type === 'immediately' ? 'Immediately' : `${step.delay_value} ${step.delay_type === 'n_hours' ? 'hours' : 'days'}` }}
@@ -280,7 +404,7 @@ const countdown = computed(() => {
 
     <!-- Add Step Dialog -->
     <Dialog v-model:open="isAddStepOpen">
-      <DialogContent>
+      <DialogContent class="max-w-xl">
         <DialogHeader>
           <DialogTitle>Add Campaign Step</DialogTitle>
         </DialogHeader>
@@ -292,12 +416,18 @@ const countdown = computed(() => {
               <SelectContent>
                 <SelectItem value="email">Email</SelectItem>
                 <SelectItem value="sms">SMS</SelectItem>
-                <SelectItem value="push">Push</SelectItem>
-                <SelectItem value="in_app">In-App</SelectItem>
+                <SelectItem value="push">Push Notification</SelectItem>
+                <SelectItem value="in_app">In-App Notification</SelectItem>
+                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                <SelectItem value="facebook">Facebook</SelectItem>
+                <SelectItem value="instagram">Instagram</SelectItem>
+                <SelectItem value="tiktok">TikTok</SelectItem>
+                <SelectItem value="linkedin">LinkedIn</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div>
+
+          <div v-if="newStep.channel === 'email'">
             <label class="text-sm font-medium">Email Template</label>
             <Select v-model="newStep.email_template_id">
               <SelectTrigger><SelectValue placeholder="Select template" /></SelectTrigger>
@@ -306,6 +436,33 @@ const countdown = computed(() => {
               </SelectContent>
             </Select>
           </div>
+
+          <div v-if="newStep.channel === 'sms'">
+            <label class="text-sm font-medium">SMS Content</label>
+            <Textarea v-model="newStep.sms_content" placeholder="Enter SMS message..." rows="3" />
+          </div>
+
+          <div v-if="newStep.channel === 'push'">
+            <label class="text-sm font-medium">Push Title</label>
+            <Input v-model="newStep.push_title" placeholder="Notification title" />
+            <label class="text-sm font-medium mt-2 block">Push Content</label>
+            <Textarea v-model="newStep.push_content" placeholder="Notification body..." rows="2" />
+          </div>
+
+          <div v-if="newStep.channel === 'in_app'">
+            <label class="text-sm font-medium">In-App Title</label>
+            <Input v-model="newStep.in_app_title" placeholder="Notification title" />
+            <label class="text-sm font-medium mt-2 block">In-App Content</label>
+            <Textarea v-model="newStep.in_app_content" placeholder="Notification body..." rows="2" />
+          </div>
+
+          <div v-if="['whatsapp', 'facebook', 'instagram', 'tiktok', 'linkedin'].includes(newStep.channel)">
+            <label class="text-sm font-medium">Message Content</label>
+            <Textarea v-model="newStep.social_content" :placeholder="`Enter ${newStep.channel} message...`" rows="3" />
+            <label class="text-sm font-medium mt-2 block">Image / Media URL (optional)</label>
+            <Input v-model="newStep.social_image_url" placeholder="https://..." />
+          </div>
+
           <div>
             <label class="text-sm font-medium">Delay</label>
             <Select v-model="newStep.delay_type">
@@ -318,7 +475,8 @@ const countdown = computed(() => {
             </Select>
           </div>
           <div v-if="newStep.delay_type !== 'immediately'">
-            <Input v-model="newStep.delay_value" type="number" min="1" placeholder="Delay value" />
+            <label class="text-sm font-medium">Delay Value</label>
+            <Input v-model="newStep.delay_value" type="number" min="1" placeholder="e.g. 24" />
           </div>
           <Button @click="addStep">Add Step</Button>
         </div>

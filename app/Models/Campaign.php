@@ -22,6 +22,7 @@ class Campaign extends Model implements HasMedia
         'type',
         'status',
         'segment_id',
+        'segment_count_draft',
         'created_by',
         'scheduled_at',
         'started_at',
@@ -98,6 +99,16 @@ class Campaign extends Model implements HasMedia
 
     public function canBeScheduled(): bool
     {
-        return $this->isDraft() && $this->segment_id && $this->steps()->exists() && $this->steps()->whereNull('email_template_id')->doesntExist();
+        if (!$this->segment_id) return false;
+        if (!$this->steps()->exists()) return false;
+        foreach ($this->steps as $step) {
+            if ($step->channel === 'email' && !$step->email_template_id) {
+                return false;
+            }
+            if (in_array($step->channel, ['whatsapp', 'facebook', 'instagram', 'tiktok', 'linkedin']) && empty($step->social_image_url)) {
+                // social steps without image are still valid, just warn
+            }
+        }
+        return true;
     }
 }

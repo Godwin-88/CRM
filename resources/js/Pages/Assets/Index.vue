@@ -37,7 +37,7 @@ const props = defineProps<{
                 <TableHead>Identifier</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Assigned To</TableHead>
-                <TableHead v-if="assets.data.some(a => a.type === 'hardware' || a.type === 'furniture')">Stock</TableHead>
+                <TableHead v-if="assets.data.some((a: any) => a.type === 'hardware' || a.type === 'furniture')">Stock</TableHead>
                 <TableHead>Book Value</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -57,7 +57,7 @@ const props = defineProps<{
                   <span v-else-if="asset.assigned_account">{{ asset.assigned_account.name }}</span>
                   <span v-else>—</span>
                 </TableCell>
-                <TableCell v-if="assets.data.some(a => a.type === 'hardware' || a.type === 'furniture')">
+                <TableCell v-if="assets.data.some((a: any) => a.type === 'hardware' || a.type === 'furniture')">
                   <span v-if="asset.total_quantity">{{ asset.available_quantity }} / {{ asset.total_quantity }}</span>
                   <span v-else>—</span>
                 </TableCell>

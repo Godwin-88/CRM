@@ -191,7 +191,7 @@
         v-if="pendingConfirmation"
         :message="pendingConfirmation.message"
         :tool="pendingConfirmation.tool"
-        :arguments="pendingConfirmation.arguments"
+        :args="pendingConfirmation.arguments"
         @confirm="handleConfirm"
         @cancel="handleCancel"
       />
@@ -349,11 +349,18 @@ function close() {
 function navigateTo(nav: AssistantNavigation) {
   if (nav.allowed === false) return;
 
+  const cleanQuery = { ...nav.query };
+  Object.keys(cleanQuery).forEach(key => {
+    if (key.startsWith('assistant_prefill_')) {
+      delete cleanQuery[key];
+    }
+  });
+
   if (nav.prefill && (nav.route || nav.href)) {
     localStorage.setItem(`assistant_navigation_prefill:${nav.route || nav.href}`, JSON.stringify(nav.prefill));
   }
 
-  router.visit(resolveHref(nav.href || nav.route || '/', nav.query));
+  router.visit(resolveHref(nav.href || nav.route || '/', Object.keys(cleanQuery).length > 0 ? cleanQuery : undefined));
 }
 
 function resolveHref(route: string, query?: Record<string, string>) {

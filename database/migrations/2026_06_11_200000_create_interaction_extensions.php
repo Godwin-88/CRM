@@ -30,7 +30,7 @@ return new class extends Migration {
 
         Schema::create('unmatched_items', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->enum('source_type', ['email', 'call', 'sms', 'ivr', 'kiosk']);
+            $table->enum('source_type', ['email', 'call', 'sms', 'whatsapp', 'facebook', 'linkedin', 'instagram', 'tiktok', 'ivr', 'kiosk']);
             $table->string('external_id')->nullable();
             $table->json('raw_payload');
             $table->foreignUlid('matched_contact_id')->nullable()->constrained('contacts')->nullOnDelete();

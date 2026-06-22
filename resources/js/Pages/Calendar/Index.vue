@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { Head, router } from '@inertiajs/vue3'
+import { ref, watch } from 'vue'
+import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -14,9 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
-defineProps<{
+const props = defineProps<{
   events: any[]
   teams: { id: string; name: string }[]
 }>()
@@ -24,6 +22,51 @@ defineProps<{
 const currentDate = ref(new Date())
 const currentView = ref<'month' | 'week' | 'day'>('month')
 const selectedTeam = ref<string | null>(null)
+const events = ref<any[]>(props.events)
+
+const periodRange = () => {
+  const date = currentDate.value
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const day = date.getDate()
+
+  if (currentView.value === 'day') {
+    const start = new Date(year, month, day)
+    const end = new Date(year, month, day, 23, 59, 59, 999)
+    return { start, end }
+  }
+
+  if (currentView.value === 'week') {
+    const start = new Date(year, month, day)
+    start.setDate(day - start.getDay())
+    start.setHours(0, 0, 0, 0)
+    const end = new Date(start)
+    end.setDate(start.getDate() + 6)
+    end.setHours(23, 59, 59, 999)
+    return { start, end }
+  }
+
+  const start = new Date(year, month, 1)
+  const end = new Date(year, month + 1, 0, 23, 59, 59, 999)
+  return { start, end }
+}
+
+const fetchEvents = async () => {
+  const range = periodRange()
+  const params = new URLSearchParams({
+    start: range.start.toISOString(),
+    end: range.end.toISOString(),
+    view: currentView.value,
+  })
+
+  if (selectedTeam.value) {
+    params.set('team_id', selectedTeam.value)
+  }
+
+  const response = await fetch(`/api/v1/calendar?${params.toString()}`)
+  const payload = await response.json()
+  events.value = payload.data || []
+}
 
 const prevPeriod = () => {
   const d = new Date(currentDate.value)
@@ -40,19 +83,8 @@ const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString()
 }
 
-const fetchEvents = () => {
-  router.visit('/api/v1/calendar', {
-    data: { team_id: selectedTeam.value, view: currentView.value, date: currentDate.value.toISOString() },
-    preserveState: true,
-  })
-}
-
 watch(currentView, fetchEvents)
 watch(currentDate, fetchEvents)
-
-onMounted(() => {
-  fetchEvents()
-})
 </script>
 
 <template>

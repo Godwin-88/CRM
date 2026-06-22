@@ -17,22 +17,47 @@ class SlaDefinition extends Model
         'description',
         'priority',
         'support_category',
+        'target_entity_type',
+        'service_catalog_item_id',
         'loyalty_tier_id',
         'account_type',
         'first_response_time_business_hours',
         'resolution_time_business_hours',
+        'acknowledgement_time_business_hours',
+        'review_time_business_hours',
+        'next_action_time_business_hours',
+        'completion_time_business_hours',
+        'triage_time_business_hours',
+        'investigation_update_time_business_hours',
+        'resolution_proposal_time_business_hours',
+        'closure_signoff_time_business_hours',
+        'milestone_definitions',
         'is_default',
     ];
 
     protected $casts = [
         'first_response_time_business_hours' => 'integer',
         'resolution_time_business_hours' => 'integer',
+        'acknowledgement_time_business_hours' => 'integer',
+        'review_time_business_hours' => 'integer',
+        'next_action_time_business_hours' => 'integer',
+        'completion_time_business_hours' => 'integer',
+        'triage_time_business_hours' => 'integer',
+        'investigation_update_time_business_hours' => 'integer',
+        'resolution_proposal_time_business_hours' => 'integer',
+        'closure_signoff_time_business_hours' => 'integer',
+        'milestone_definitions' => 'array',
         'is_default' => 'boolean',
     ];
 
     public function tier(): BelongsTo
     {
         return $this->belongsTo(LoyaltyTier::class, 'loyalty_tier_id');
+    }
+
+    public function serviceCatalogItem(): BelongsTo
+    {
+        return $this->belongsTo(ServiceCatalogItem::class, 'service_catalog_item_id');
     }
 
     public function category(): BelongsTo

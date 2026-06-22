@@ -159,7 +159,16 @@ erDiagram
     CONTACTS ||--o{ LOYALTY_ENROLLMENTS : enrolled_in
     CONTACTS ||--o{ TICKETS : files
     CONTACTS ||--o{ SURVEY_RESPONSES : submits
+    CONTACTS ||--o{ SERVICE_REQUESTS : submits
+    CONTACTS ||--o{ CASE_RECORDS : linked_to
+    ACCOUNTS ||--o{ SERVICE_REQUESTS : owns
     DEALS ||--o{ DEAL_COMMENTS : has
+    SERVICE_CATALOG_ITEMS ||--o{ SERVICE_REQUESTS : defines
+    SERVICE_REQUESTS }|--|| CASE_RECORDS : may_open
+    TICKETS }|--|| CASE_RECORDS : may_link
+    TICKETS }|--|| SLA_INSTANCES : tracked_by
+    SERVICE_REQUESTS }|--|| SLA_INSTANCES : tracked_by
+    CASE_RECORDS }|--|| SLA_INSTANCES : tracked_by
     DEALS ||--o{ DEMO_TRIALS : schedules
     DEALS }|--|| PIPELINES : belongs_to
     DEALS }|--|| PIPELINE_STAGES : current_stage
@@ -167,7 +176,6 @@ erDiagram
     CAMPAIGNS ||--o{ CAMPAIGN_RECIPIENTS : targets
     SEGMENTS ||--o{ CONTACTS : targets
     SEGMENTS ||--o{ CAMPAIGNS : used_by
-    TICKETS }|--|| SLA_INSTANCES : tracked_by
     ONBOARDING_RECORDS }|--|| ONBOARDING_TEMPLATES : follows
     GUIDED_JOURNEYS ||--o{ JOURNEY_COMPLETIONS : records
     CLV_CALCULATION }|--|| CONTACTS : for

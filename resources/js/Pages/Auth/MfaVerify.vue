@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const routeFn = route as any
+
 const form = useForm({
     code: "",
     use_recovery: false,
@@ -23,7 +25,7 @@ const form = useForm({
                 </CardHeader>
                 <CardContent>
                     <form
-                        @submit.prevent="form.post($route('mfa.verify'))"
+                        @submit.prevent="form.post(routeFn('mfa.verify'))"
                         class="space-y-4"
                     >
                         <p class="text-sm text-gray-600">

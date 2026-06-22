@@ -272,11 +272,15 @@ const loadPreview = async (contract: Contract) => {
   previewLoading.value = true;
 
   try {
+    const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content;
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    };
+    if (csrf) {
+      headers['X-CSRF-TOKEN'] = csrf;
+    }
     const response = await fetch(`/contracts/${contract.id}/download`, {
-      headers: {
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content,
-      },
+      headers,
     });
 
     if (!response.ok) {

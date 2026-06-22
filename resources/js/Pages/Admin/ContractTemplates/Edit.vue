@@ -90,7 +90,7 @@ const addClause = (clause: ClauseOption) => {
     id: clause.id,
     name: clause.name,
     category: clause.category,
-    body: clause.body,
+    body: clause.body || '',
     is_mandatory: true,
     is_optional: false,
     sort_order: form.clauses.length,

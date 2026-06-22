@@ -98,13 +98,17 @@ class TicketController extends Controller
 
     public function create(Request $request)
     {
-        $categories = TicketCategory::active()->get();
+        $categories = TicketCategory::orderBy('name')->get(['id', 'name']);
         $agents = User::whereNotNull('name')->orderBy('name')->get(['id', 'name']);
+        $contacts = \App\Models\Contact::orderBy('first_name')->get(['id', 'first_name', 'last_name', 'email']);
+        $accounts = \App\Models\Account::orderBy('name')->get(['id', 'name']);
         $prefill = $request->only(['subject', 'description', 'contact_id', 'account_id', 'priority', 'category_id', 'assigned_to']);
 
         return Inertia::render('Support/Tickets/Create', [
             'categories' => $categories,
             'agents' => $agents,
+            'contacts' => $contacts,
+            'accounts' => $accounts,
             'prefill' => $prefill,
         ]);
     }
