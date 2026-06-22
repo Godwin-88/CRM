@@ -492,11 +492,12 @@ Backend tool registry entries and assistant routes are registered in `AgentToolC
 - Added API controllers for service catalog CRUD, service request lifecycle actions, and case lifecycle/link/sign-off actions.
 - Added service/case events, notifications, webhook payloads, and listener wiring.
 - Added assistant tool registry entries and API routes.
+- Added frontend pages for Service Requests, Cases, and Service Catalog.
+- Added sidebar navigation under Service & Support.
 - Added RBAC permissions to the role seeder.
 
 ### Remaining Work
 
-- Add frontend pages for Service Requests, Cases, and Service Catalog.
 - Add self-service portal request submission and request history views.
 - Add inbound email/kiosk/IVR channel routing to service requests.
 - Add SLA breach checking and manager alerts for service requests and cases.

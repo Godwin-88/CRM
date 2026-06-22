@@ -135,16 +135,16 @@ const menuItems = computed(() => [
         ],
     },
     {
-        title: "Support",
+        title: "Service & Support",
         icon: LifeBuoy,
         show: hasAnyRole('admin', 'manager', 'agent'),
         children: [
-            { href: "/support/tickets", label: "Tickets", requiredPermission: "tickets.view" },
-            { href: "/admin/sla", label: "SLA Policies", requiredPermission: "sla.manage" },
-            { href: "/admin/support/categories", label: "Categories", requiredPermission: "tickets.manage" },
-            { href: "/admin/support/forms", label: "Forms", requiredPermission: "tickets.manage" },
-            { href: "/admin/support/canned-responses", label: "Canned Responses", requiredPermission: "tickets.manage" },
-            { href: "/admin/support/sla-breaches", label: "SLA Breaches", requiredPermission: "tickets.manage" },
+            { href: "/support/tickets", label: "Inbox / Tickets", requiredPermission: "tickets.view" },
+            { href: "/admin/service-requests", label: "Service Requests", requiredPermission: "service_requests.view" },
+            { href: "/admin/cases", label: "Cases", requiredPermission: "cases.view" },
+            { href: "/admin/service-catalog", label: "Service Catalog", requiredPermission: "services.view" },
+            { href: "/support/knowledge-base", label: "Knowledge Base" },
+            { href: "/admin/sla", label: "SLA Management", requiredPermission: "sla.manage" },
         ],
     },
     {

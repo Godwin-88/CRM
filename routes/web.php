@@ -281,6 +281,10 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     Route::post('/support/knowledge-base/{article}/rate', [KnowledgeBaseController::class, 'rate'])->name('support.knowledge-base.rate');
     Route::post('/support/knowledge-base/{article}/link', [KnowledgeBaseController::class, 'linkToTicket'])->name('support.knowledge-base.link');
 
+    Route::get('/admin/service-requests', fn () => Inertia::render('ServiceManagement/ServiceRequests'))->name('admin.service-requests.index');
+    Route::get('/admin/cases', fn () => Inertia::render('ServiceManagement/Cases'))->name('admin.cases.index');
+    Route::get('/admin/service-catalog', fn () => Inertia::render('ServiceManagement/ServiceCatalog'))->name('admin.service-catalog.index');
+
     Route::get('/support/performance', [PerformanceController::class, 'index'])->name('support.performance.index');
     Route::get('/support/performance/export', [PerformanceController::class, 'export'])->name('support.performance.export');
 
