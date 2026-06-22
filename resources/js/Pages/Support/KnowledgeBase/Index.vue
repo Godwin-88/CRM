@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Head, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,9 +7,19 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
-  articles: any[]
-  categories: any[]
+  articles: any[] | { data: any[] }
+  categories: any[] | { data: any[] }
 }>()
+
+const visibleArticles = computed(() => {
+  const articles = Array.isArray(props.articles) ? props.articles : props.articles?.data || []
+  return articles.filter(Boolean)
+})
+
+const visibleCategories = computed(() => {
+  const categories = Array.isArray(props.categories) ? props.categories : props.categories?.data || []
+  return categories.filter(Boolean)
+})
 
 const searchForm = useForm({
   search: '',
@@ -38,7 +49,7 @@ const searchForm = useForm({
             </CardHeader>
             <CardContent>
               <ul class="space-y-2">
-                <li v-for="category in categories" :key="category.id">
+                <li v-for="category in visibleCategories" :key="category.id">
                   <a href="#" class="text-blue-600 hover:underline">{{ category.name }}</a>
                 </li>
               </ul>
@@ -48,7 +59,7 @@ const searchForm = useForm({
 
         <div class="md:col-span-3">
           <div class="space-y-4">
-            <Card v-for="article in articles" :key="article.id">
+            <Card v-for="article in visibleArticles" :key="article.id">
               <CardHeader>
                 <CardTitle>
                   <a :href="`/support/knowledge-base/${article.id}`" class="hover:underline">
@@ -65,7 +76,7 @@ const searchForm = useForm({
             </Card>
           </div>
           
-          <div v-if="articles.length === 0" class="text-center py-8 text-gray-500">
+          <div v-if="visibleArticles.length === 0" class="text-center py-8 text-gray-500">
             No articles found.
           </div>
         </div>

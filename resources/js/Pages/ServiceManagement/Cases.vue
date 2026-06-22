@@ -46,6 +46,13 @@ const linkType = ref('related');
 const linkableType = ref('App\\Models\\Ticket');
 const linkableId = ref('');
 
+const contactSearch = ref('');
+const accountSearch = ref('');
+const contactResults = ref<{ id: string; first_name?: string; last_name?: string; email?: string }[]>([]);
+const accountResults = ref<{ id: string; name?: string }[]>([]);
+const showContactDropdown = ref(false);
+const showAccountDropdown = ref(false);
+
 const newCase = ref({
   title: '',
   type: 'service_delivery',
@@ -57,6 +64,40 @@ const newCase = ref({
   metadata: {},
 });
 
+const searchContacts = async (query: string) => {
+  if (query.length < 1) { contactResults.value = []; return; }
+  try {
+    const res = await fetch(`/api/v1/contacts?per_page=10&search=${encodeURIComponent(query)}`);
+    if (!res.ok) { contactResults.value = []; return; }
+    const payload = await res.json();
+    contactResults.value = payload.data ?? [];
+    showContactDropdown.value = true;
+  } catch { contactResults.value = []; }
+};
+
+const selectContact = (contact: { id: string; first_name?: string; last_name?: string }) => {
+  newCase.value.primary_contact_id = contact.id;
+  contactSearch.value = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || contact.id;
+  showContactDropdown.value = false;
+};
+
+const searchAccounts = async (query: string) => {
+  if (query.length < 1) { accountResults.value = []; return; }
+  try {
+    const res = await fetch(`/api/v1/accounts?per_page=10&search=${encodeURIComponent(query)}`);
+    if (!res.ok) { accountResults.value = []; return; }
+    const payload = await res.json();
+    accountResults.value = payload.data ?? [];
+    showAccountDropdown.value = true;
+  } catch { accountResults.value = []; }
+};
+
+const selectAccount = (account: { id: string; name?: string }) => {
+  newCase.value.primary_account_id = account.id;
+  accountSearch.value = account.name || account.id;
+  showAccountDropdown.value = false;
+};
+
 const statusOptions = ['new', 'triaged', 'in_progress', 'pending_customer', 'pending_internal', 'resolution_proposed', 'closed', 'reopened'];
 const typeOptions = ['service_delivery', 'complaint', 'compliance', 'dispute', 'investigation', 'escalation', 'custom'];
 const priorityOptions = ['low', 'medium', 'high', 'urgent'];
@@ -65,10 +106,21 @@ const contactName = (record: CaseRecord) => [record.primary_contact?.first_name,
 
 const loadCases = async () => {
   isLoading.value = true;
-  const response = await fetch('/api/v1/cases?per_page=25');
-  const payload = await response.json() as Paginated<CaseRecord>;
-  cases.value = payload.data;
-  isLoading.value = false;
+  try {
+    const response = await fetch('/api/v1/cases?per_page=25');
+    if (!response.ok) {
+      error.value = `Failed to load cases: ${response.status} ${response.statusText}`;
+      cases.value = [];
+      return;
+    }
+    const payload = await response.json() as Paginated<CaseRecord>;
+    cases.value = payload.data ?? [];
+  } catch (e) {
+    error.value = 'Failed to load cases.';
+    cases.value = [];
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const createCase = async () => {
@@ -236,13 +288,23 @@ onMounted(loadCases);
               </div>
             </div>
             <div class="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label>Contact ID</Label>
-                <Input v-model="newCase.primary_contact_id" />
+              <div class="relative">
+                <Label>Contact</Label>
+                <Input v-model="contactSearch" placeholder="Search contacts..." @input="searchContacts(contactSearch)" @focus="searchContacts(contactSearch)" @blur="setTimeout(() => showContactDropdown = false, 200)" />
+                <ul v-if="showContactDropdown && contactResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <li v-for="c in contactResults" :key="c.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectContact(c)">
+                    {{ c.first_name }} {{ c.last_name }} ({{ c.email || c.id }})
+                  </li>
+                </ul>
               </div>
-              <div>
-                <Label>Account ID</Label>
-                <Input v-model="newCase.primary_account_id" />
+              <div class="relative">
+                <Label>Account</Label>
+                <Input v-model="accountSearch" placeholder="Search accounts..." @input="searchAccounts(accountSearch)" @focus="searchAccounts(accountSearch)" @blur="setTimeout(() => showAccountDropdown = false, 200)" />
+                <ul v-if="showAccountDropdown && accountResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <li v-for="a in accountResults" :key="a.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectAccount(a)">
+                    {{ a.name || a.id }}
+                  </li>
+                </ul>
               </div>
             </div>
             <label class="flex items-center gap-2 text-sm">

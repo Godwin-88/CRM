@@ -231,6 +231,8 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
     // Segments
     Route::get('/segments', [SegmentController::class, 'index'])->name('segments.index');
     Route::post('/segments', [SegmentController::class, 'store'])->name('segments.store');
+    Route::put('/segments/{segment}', [SegmentController::class, 'update'])->name('segments.update');
+    Route::delete('/segments/{segment}', [SegmentController::class, 'destroy'])->name('segments.destroy');
 
     // Deals
     Route::get('/deals', [DealController::class, 'index'])->name('deals.index');

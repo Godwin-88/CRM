@@ -34,6 +34,16 @@ const isCreateOpen = ref(false);
 const isLoading = ref(false);
 const error = ref('');
 
+const teamSearch = ref('');
+const categorySearch = ref('');
+const slaSearch = ref('');
+const teamResults = ref<{ id: string; name: string }[]>([]);
+const categoryResults = ref<{ id: string; name: string }[]>([]);
+const slaResults = ref<{ id: string; name: string }[]>([]);
+const showTeamDropdown = ref(false);
+const showCategoryDropdown = ref(false);
+const showSlaDropdown = ref(false);
+
 const newItem = ref({
   name: '',
   slug: '',
@@ -53,12 +63,74 @@ const newItem = ref({
 
 const priorityOptions = ['low', 'medium', 'high', 'urgent'];
 
+const searchTeams = async (query: string) => {
+  if (query.length < 1) { teamResults.value = []; return; }
+  try {
+    const res = await fetch(`/api/v1/teams?per_page=10&search=${encodeURIComponent(query)}`);
+    if (!res.ok) { teamResults.value = []; return; }
+    const { data } = await res.json();
+    teamResults.value = data ?? [];
+    showTeamDropdown.value = true;
+  } catch { teamResults.value = []; }
+};
+
+const selectTeam = (team: { id: string; name: string }) => {
+  newItem.value.default_team_id = team.id;
+  teamSearch.value = team.name;
+  showTeamDropdown.value = false;
+};
+
+const searchCategories = async (query: string) => {
+  if (query.length < 1) { categoryResults.value = []; return; }
+  try {
+    const res = await fetch(`/api/v1/ticket-categories?per_page=10&search=${encodeURIComponent(query)}`);
+    if (!res.ok) { categoryResults.value = []; return; }
+    const { data } = await res.json();
+    categoryResults.value = data ?? [];
+    showCategoryDropdown.value = true;
+  } catch { categoryResults.value = []; }
+};
+
+const selectCategory = (cat: { id: string; name: string }) => {
+  newItem.value.category_id = cat.id;
+  categorySearch.value = cat.name;
+  showCategoryDropdown.value = false;
+};
+
+const searchSlaPolicies = async (query: string) => {
+  if (query.length < 1) { slaResults.value = []; return; }
+  try {
+    const res = await fetch(`/api/v1/sla?per_page=10&search=${encodeURIComponent(query)}`);
+    if (!res.ok) { slaResults.value = []; return; }
+    const { data } = await res.json();
+    slaResults.value = data ?? [];
+    showSlaDropdown.value = true;
+  } catch { slaResults.value = []; }
+};
+
+const selectSla = (sla: { id: string; name: string }) => {
+  newItem.value.sla_policy_id = sla.id;
+  slaSearch.value = sla.name;
+  showSlaDropdown.value = false;
+};
+
 const loadCatalogItems = async () => {
   isLoading.value = true;
-  const response = await fetch('/api/v1/service-catalog-items?per_page=50');
-  const payload = await response.json() as Paginated<CatalogItem>;
-  catalogItems.value = payload.data;
-  isLoading.value = false;
+  try {
+    const response = await fetch('/api/v1/service-catalog-items?per_page=50');
+    if (!response.ok) {
+      error.value = `Failed to load catalog items: ${response.status} ${response.statusText}`;
+      catalogItems.value = [];
+      return;
+    }
+    const payload = await response.json() as Paginated<CatalogItem>;
+    catalogItems.value = payload.data ?? [];
+  } catch (e) {
+    error.value = 'Failed to load catalog items.';
+    catalogItems.value = [];
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const createCatalogItem = async () => {
@@ -186,19 +258,34 @@ onMounted(loadCatalogItems);
                   <option v-for="priority in priorityOptions" :key="priority" :value="priority">{{ priority }}</option>
                 </select>
               </div>
-              <div>
-                <Label>Category ID</Label>
-                <Input v-model="newItem.category_id" />
+              <div class="relative">
+                <Label>Category</Label>
+                <Input v-model="categorySearch" placeholder="Search categories..." @input="searchCategories(categorySearch)" @focus="searchCategories(categorySearch)" @blur="setTimeout(() => showCategoryDropdown = false, 200)" />
+                <ul v-if="showCategoryDropdown && categoryResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <li v-for="cat in categoryResults" :key="cat.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectCategory(cat)">
+                    {{ cat.name }}
+                  </li>
+                </ul>
               </div>
             </div>
             <div class="grid gap-3 sm:grid-cols-3">
-              <div>
-                <Label>Team ID</Label>
-                <Input v-model="newItem.default_team_id" />
+              <div class="relative">
+                <Label>Team</Label>
+                <Input v-model="teamSearch" placeholder="Search teams..." @input="searchTeams(teamSearch)" @focus="searchTeams(teamSearch)" @blur="setTimeout(() => showTeamDropdown = false, 200)" />
+                <ul v-if="showTeamDropdown && teamResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <li v-for="t in teamResults" :key="t.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectTeam(t)">
+                    {{ t.name }}
+                  </li>
+                </ul>
               </div>
-              <div>
-                <Label>SLA Policy ID</Label>
-                <Input v-model="newItem.sla_policy_id" />
+              <div class="relative">
+                <Label>SLA Policy</Label>
+                <Input v-model="slaSearch" placeholder="Search SLA policies..." @input="searchSlaPolicies(slaSearch)" @focus="searchSlaPolicies(slaSearch)" @blur="setTimeout(() => showSlaDropdown = false, 200)" />
+                <ul v-if="showSlaDropdown && slaResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <li v-for="s in slaResults" :key="s.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectSla(s)">
+                    {{ s.name }}
+                  </li>
+                </ul>
               </div>
               <label class="flex items-center gap-2 text-sm">
                 <input v-model="newItem.portal_visible" type="checkbox" />

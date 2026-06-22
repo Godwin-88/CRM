@@ -35,6 +35,18 @@ interface CatalogItem {
   name: string;
 }
 
+interface ContactOption {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+}
+
+interface AccountOption {
+  id: string;
+  name?: string;
+}
+
 interface Paginated<T> {
   data: T[];
   links: { first?: string; last?: string; prev?: string | null; next?: string | null };
@@ -46,6 +58,15 @@ const catalogItems = ref<CatalogItem[]>([]);
 const isCreateOpen = ref(false);
 const isLoading = ref(false);
 const error = ref('');
+
+const contactSearch = ref('');
+const accountSearch = ref('');
+const contactResults = ref<ContactOption[]>([]);
+const accountResults = ref<AccountOption[]>([]);
+const showContactDropdown = ref(false);
+const showAccountDropdown = ref(false);
+const selectedContactName = ref('');
+const selectedAccountName = ref('');
 
 const newRequest = ref({
   catalog_item_id: '',
@@ -68,18 +89,73 @@ const priorityOptions = ['low', 'medium', 'high', 'urgent'];
 
 const contactName = (request: ServiceRequest) => [request.contact?.first_name, request.contact?.last_name].filter(Boolean).join(' ') || request.contact_id || 'Unknown contact';
 
+const searchContacts = async (query: string) => {
+  if (query.length < 1) { contactResults.value = []; return; }
+  try {
+    const res = await fetch(`/api/v1/contacts?per_page=10&search=${encodeURIComponent(query)}`);
+    if (!res.ok) { contactResults.value = []; return; }
+    const payload = await res.json();
+    contactResults.value = payload.data ?? [];
+    showContactDropdown.value = true;
+  } catch { contactResults.value = []; }
+};
+
+const selectContact = (contact: ContactOption) => {
+  newRequest.value.contact_id = contact.id;
+  selectedContactName.value = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || contact.id;
+  contactSearch.value = selectedContactName.value;
+  showContactDropdown.value = false;
+};
+
+const searchAccounts = async (query: string) => {
+  if (query.length < 1) { accountResults.value = []; return; }
+  try {
+    const res = await fetch(`/api/v1/accounts?per_page=10&search=${encodeURIComponent(query)}`);
+    if (!res.ok) { accountResults.value = []; return; }
+    const payload = await res.json();
+    accountResults.value = payload.data ?? [];
+    showAccountDropdown.value = true;
+  } catch { accountResults.value = []; }
+};
+
+const selectAccount = (account: AccountOption) => {
+  newRequest.value.account_id = account.id;
+  selectedAccountName.value = account.name || account.id;
+  accountSearch.value = selectedAccountName.value;
+  showAccountDropdown.value = false;
+};
+
 const loadServiceRequests = async () => {
   isLoading.value = true;
-  const response = await fetch('/api/v1/service-requests?per_page=25');
-  const payload = await response.json() as Paginated<ServiceRequest>;
-  serviceRequests.value = payload.data;
-  isLoading.value = false;
+  try {
+    const response = await fetch('/api/v1/service-requests?per_page=25');
+    if (!response.ok) {
+      error.value = `Failed to load service requests: ${response.status} ${response.statusText}`;
+      serviceRequests.value = [];
+      return;
+    }
+    const payload = await response.json() as Paginated<ServiceRequest>;
+    serviceRequests.value = payload.data ?? [];
+  } catch (e) {
+    error.value = 'Failed to load service requests.';
+    serviceRequests.value = [];
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const loadCatalogItems = async () => {
-  const response = await fetch('/api/v1/service-catalog-items?per_page=100&active=true');
-  const payload = await response.json() as Paginated<CatalogItem>;
-  catalogItems.value = payload.data.filter((item) => item.name);
+  try {
+    const response = await fetch('/api/v1/service-catalog-items?per_page=100&active=true');
+    if (!response.ok) {
+      catalogItems.value = [];
+      return;
+    }
+    const payload = await response.json() as Paginated<CatalogItem>;
+    catalogItems.value = (payload.data ?? []).filter((item) => item.name);
+  } catch (e) {
+    catalogItems.value = [];
+  }
 };
 
 const createRequest = async () => {
@@ -225,13 +301,23 @@ onMounted(() => {
               <Label>Requester User ID</Label>
               <Input v-model="newRequest.requester_id" />
             </div>
-            <div>
-              <Label>Contact ID</Label>
-              <Input v-model="newRequest.contact_id" />
+            <div class="relative">
+              <Label>Contact</Label>
+              <Input v-model="contactSearch" placeholder="Search contacts..." @input="searchContacts(contactSearch)" @focus="searchContacts(contactSearch)" @blur="setTimeout(() => showContactDropdown = false, 200)" />
+              <ul v-if="showContactDropdown && contactResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                <li v-for="c in contactResults" :key="c.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectContact(c)">
+                  {{ c.first_name }} {{ c.last_name }} ({{ c.email || c.id }})
+                </li>
+              </ul>
             </div>
-            <div>
-              <Label>Account ID</Label>
-              <Input v-model="newRequest.account_id" />
+            <div class="relative">
+              <Label>Account</Label>
+              <Input v-model="accountSearch" placeholder="Search accounts..." @input="searchAccounts(accountSearch)" @focus="searchAccounts(accountSearch)" @blur="setTimeout(() => showAccountDropdown = false, 200)" />
+              <ul v-if="showAccountDropdown && accountResults.length" class="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                <li v-for="a in accountResults" :key="a.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100" @mousedown="selectAccount(a)">
+                  {{ a.name || a.id }}
+                </li>
+              </ul>
             </div>
             <div>
               <Label>Priority</Label>
