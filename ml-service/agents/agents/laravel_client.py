@@ -34,6 +34,10 @@ _failures = 0
 _last_failure_ts: float | None = None
 _circuit_open_until = 0.0
 
+_RATE_LIMIT_WINDOW = 60.0
+_RATE_LIMIT_MAX = int(os.getenv("ASSISTANT_RATE_LIMIT_PER_MIN", "60"))
+_session_calls: dict[str, list[float]] = {}
+
 
 def _is_circuit_open() -> bool:
     global _circuit_open_until
@@ -60,8 +64,25 @@ def _reset_circuit() -> None:
     _circuit_open_until = 0.0
 
 
+def _check_rate_limit(session_id: str) -> None:
+    now = time.monotonic()
+    window_start = now - _RATE_LIMIT_WINDOW
+    calls = _session_calls.get(session_id, [])
+    _session_calls[session_id] = [t for t in calls if t > window_start]
+    if len(_session_calls[session_id]) >= _RATE_LIMIT_MAX:
+        raise RateLimitExceeded(
+            f"Rate limit exceeded for session {session_id}: "
+            f"{_RATE_LIMIT_MAX} calls per {int(_RATE_LIMIT_WINDOW)}s window"
+        )
+    _session_calls[session_id].append(now)
+
+
 class CircuitOpen(Exception):
     """Raised when the circuit breaker is open for a downstream service."""
+
+
+class RateLimitExceeded(Exception):
+    """Raised when the per-session rate limit is exceeded."""
 
 
 async def call_tool(
@@ -73,6 +94,8 @@ async def call_tool(
 ) -> ToolResult:
     if _is_circuit_open():
         raise CircuitOpen(f"Circuit open for {_LARAVEL_API_URL}")
+
+    _check_rate_limit(session_id)
 
     started = time.monotonic()
     try:

@@ -244,7 +244,7 @@ class CreatePostRequest(BaseModel):
 # updating the consuming workflows.
 # ================================================================
 
-from agents.agents.laravel_client import call_rest
+from agents.laravel_client import call_rest
 
 
 @app.post("/agents/content/create-post", tags=["content"])
@@ -442,7 +442,7 @@ async def _try_docs_fallback(query: str, token: str, session_id: str) -> dict | 
     matching the static documentation search fallback in AssistantChatController.
     """
     try:
-        from agents.agents.laravel_client import call_tool
+        from agents.laravel_client import call_tool
     except ImportError:
         return None
 

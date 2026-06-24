@@ -46,6 +46,24 @@ class DocsWebController extends Controller
         ]);
     }
 
+    protected function renderArticleBody(KnowledgeBaseArticle $article): string
+    {
+        if ($article->body && preg_match('/^\s*<\w/', $article->body)) {
+            return $article->body;
+        }
+
+        static $converter;
+
+        if ($converter === null) {
+            $converter = new \League\CommonMark\CommonMarkConverter([
+                'allow_unsafe_attributes' => false,
+                'allow_unsafe_html' => false,
+            ]);
+        }
+
+        return $converter->convert($article->body ?? '')->getContent();
+    }
+
     public function verify(Request $request, KnowledgeBaseArticle $article)
     {
         $article->update(['last_verified_at' => now()]);

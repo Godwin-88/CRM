@@ -273,15 +273,23 @@ const createQuote = async () => {
             <CardContent>
 
               <Dialog v-model:open="isCloseModalOpen">
-                <DialogContent>
+                <DialogContent class="sm:max-w-lg">
                   <DialogHeader>
-                    <DialogTitle>{{ closeType === 'won' ? 'Close as Won' : 'Close as Lost' }}</DialogTitle>
+                    <DialogTitle :class="closeType === 'won' ? 'text-green-700' : 'text-red-700'">
+                      {{ closeType === 'won' ? 'Close as Won' : 'Close as Lost' }}
+                    </DialogTitle>
                   </DialogHeader>
-                  <div class="space-y-4">
+                  <div class="space-y-5">
+                    <div v-if="closeType === 'won'" class="rounded-lg border border-green-200 bg-green-50 p-3">
+                      <p class="text-sm text-green-800">Mark this deal as successfully closed. Select the primary reason for the win.</p>
+                    </div>
+                    <div v-else class="rounded-lg border border-red-200 bg-red-50 p-3">
+                      <p class="text-sm text-red-800">Mark this deal as lost. Select the primary reason for the loss to help improve forecasting.</p>
+                    </div>
                     <div>
-                      <Label>{{ closeType === 'won' ? 'Won Reason' : 'Lost Reason' }}</Label>
+                      <Label class="text-base font-medium">{{ closeType === 'won' ? 'Won Reason' : 'Lost Reason' }}</Label>
                       <Select v-model="closeReasonId">
-                        <SelectTrigger>
+                        <SelectTrigger class="mt-1.5">
                           <SelectValue :placeholder="closeType === 'won' ? 'Select won reason' : 'Select lost reason'" />
                         </SelectTrigger>
                         <SelectContent>
@@ -290,14 +298,18 @@ const createQuote = async () => {
                           </SelectItem>
                         </SelectContent>
                       </Select>
+                      <p v-if="!closeReasonId" class="text-xs text-gray-500 mt-1">This field is required to close the deal.</p>
                     </div>
                     <div>
-                      <Label>Note</Label>
-                      <Textarea v-model="closeNote" placeholder="Optional context..." />
+                      <Label class="text-base font-medium">Note <span class="text-gray-400 font-normal">(optional)</span></Label>
+                      <Textarea v-model="closeNote" placeholder="Add context about this outcome..." class="mt-1.5" rows="3" />
                     </div>
-                    <Button :disabled="closeLoading || !closeReasonId" @click="submitClose" class="w-full">
-                      {{ closeLoading ? 'Closing...' : 'Confirm Close' }}
-                    </Button>
+                    <div class="flex gap-3 pt-1">
+                      <Button variant="outline" @click="isCloseModalOpen = false" class="flex-1">Cancel</Button>
+                      <Button :disabled="closeLoading || !closeReasonId" @click="submitClose" :class="closeType === 'won' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'" class="flex-1 text-white">
+                        {{ closeLoading ? 'Closing...' : 'Confirm Close' }}
+                      </Button>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>

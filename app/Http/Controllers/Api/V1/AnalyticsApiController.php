@@ -59,6 +59,147 @@ class AnalyticsApiController extends Controller
         return response()->json($widgets);
     }
 
+    public function pipelineDetails(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $role = $this->roleFor($user);
+        $filters = $this->scopedFilters($request, ['date_from', 'date_to', 'owner_id', 'team_id', 'pipeline_stage']);
+
+        $query = Deal::query()
+            ->whereNotIn('stage', ['closed_won', 'closed_lost'])
+            ->with(['contact', 'account', 'owner', 'pipelineStage']);
+
+        $this->applyScope($query, $filters);
+
+        $deals = $query->orderByDesc('value')->get()->map(function (Deal $deal) {
+            return [
+                'id' => $deal->id,
+                'title' => $deal->title,
+                'value' => $deal->value,
+                'stage' => $deal->stage,
+                'probability' => $deal->probability,
+                'account' => $deal->account?->name,
+                'contact' => $deal->contact ? trim($deal->contact->first_name.' '.$deal->contact->last_name) : null,
+                'owner' => $deal->owner?->name,
+                'expected_close_date' => $deal->expected_close_date?->toIso8601String(),
+                'weighted_value' => $deal->getWeightedValue(),
+            ];
+        })->toArray();
+
+        return response()->json(['deals' => $deals]);
+    }
+
+    public function activityDetails(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $role = $this->roleFor($user);
+        $filters = $this->scopedFilters($request, ['date_from', 'date_to', 'owner_id', 'team_id']);
+
+        $query = \App\Models\Activity::query();
+        $this->applyScope($query, $filters);
+
+        $activities = $query->with(['assignee', 'contact', 'account', 'deal'])
+            ->orderByDesc('due_at')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'id' => $activity->id,
+                    'subject' => $activity->subject,
+                    'type' => $activity->type,
+                    'priority' => $activity->priority,
+                    'due_at' => $activity->due_at?->toIso8601String(),
+                    'completed_at' => $activity->completed_at?->toIso8601String(),
+                    'status' => $activity->completed_at ? 'completed' : ($activity->due_at && $activity->due_at->isPast() ? 'overdue' : 'pending'),
+                    'assignee' => $activity->assignee?->name,
+                    'contact' => $activity->contact ? trim($activity->contact->first_name.' '.$activity->contact->last_name) : null,
+                    'account' => $activity->account?->name,
+                ];
+            })->toArray();
+
+        return response()->json(['activities' => $activities]);
+    }
+
+    public function ticketDetails(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $role = $this->roleFor($user);
+        $filters = $this->scopedFilters($request, ['date_from', 'date_to', 'owner_id', 'team_id']);
+
+        $query = \App\Models\Ticket::query();
+        $this->applyScope($query, $filters);
+
+        $tickets = $query->with(['contact', 'account', 'assignee', 'slaInstance'])
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($ticket) {
+                return [
+                    'id' => $ticket->id,
+                    'subject' => $ticket->subject,
+                    'status' => $ticket->status,
+                    'priority' => $ticket->priority,
+                    'contact' => $ticket->contact ? trim($ticket->contact->first_name.' '.$ticket->contact->last_name) : null,
+                    'account' => $ticket->account?->name,
+                    'assigned_to' => $ticket->assignee?->name,
+                    'sla_breached' => !is_null($ticket->sla_breached_at),
+                    'sla_breached_at' => $ticket->sla_breached_at?->toIso8601String(),
+                    'created_at' => $ticket->created_at?->toIso8601String(),
+                ];
+            })->toArray();
+
+        return response()->json(['tickets' => $tickets]);
+    }
+
+    public function revenueDetails(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $role = $this->roleFor($user);
+        $filters = $this->scopedFilters($request, ['date_from', 'date_to', 'owner_id', 'team_id']);
+
+        $query = Deal::query()->where('stage', 'closed_won');
+        $this->applyScope($query, $filters);
+
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
+
+        $deals = $query->whereBetween('updated_at', [$start, $end])
+            ->with(['contact', 'account', 'owner'])
+            ->orderByDesc('value')
+            ->get()
+            ->map(function (Deal $deal) {
+                return [
+                    'id' => $deal->id,
+                    'title' => $deal->title,
+                    'value' => $deal->value,
+                    'closed_at' => $deal->updated_at?->toIso8601String(),
+                    'account' => $deal->account?->name,
+                    'contact' => $deal->contact ? trim($deal->contact->first_name.' '.$deal->contact->last_name) : null,
+                    'owner' => $deal->owner?->name,
+                ];
+            })->toArray();
+
+        $winRate = $this->analyticsService->getRevenueMetrics($filters)['win_rate'] ?? 0;
+
+        return response()->json([
+            'deals' => $deals,
+            'win_rate' => $winRate,
+            'period_start' => $start->toIso8601String(),
+            'period_end' => $end->toIso8601String(),
+        ]);
+    }
+
+    public function systemHealthDetails(Request $request): JsonResponse
+    {
+        $jobCount = $this->safeTableCount('jobs');
+        $failedJobs = $this->safeTableCount('failed_jobs');
+        $lastSchedulerRun = \Illuminate\Support\Facades\Cache::get('last_scheduler_run');
+
+        return response()->json([
+            'queue_depth' => $jobCount,
+            'failed_jobs' => $failedJobs,
+            'last_scheduler_run' => $lastSchedulerRun?->toIso8601String() ?? now()->toIso8601String(),
+        ]);
+    }
+
     public function updateDashboardWidgets(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -318,7 +459,7 @@ class AnalyticsApiController extends Controller
 
     protected function roleFor($user): string
     {
-        if ($user->is_admin) {
+        if ($user->hasRole('admin')) {
             return 'admin';
         }
 
@@ -354,5 +495,35 @@ class AnalyticsApiController extends Controller
             $score <= 75 => 'hot',
             default => 'very_hot',
         };
+    }
+
+    protected function applyScope($query, array $filters): void
+    {
+        if (isset($filters['team_id']) && $filters['team_id'] !== '') {
+            $model = $query->getModel();
+
+            if (method_exists($model, 'owner')) {
+                $query->whereHas('owner', fn ($q) => $q->whereHas('primaryTeam', fn ($team) => $team->where('team_id', $filters['team_id'])));
+            } elseif (method_exists($model, 'assignee')) {
+                $query->whereHas('assignee', fn ($q) => $q->whereHas('primaryTeam', fn ($team) => $team->where('team_id', $filters['team_id'])));
+            }
+        }
+
+        if (isset($filters['owner_id']) && $filters['owner_id'] !== '') {
+            $model = $query->getModel();
+
+            if (method_exists($model, 'owner')) {
+                $query->where('owner_id', $filters['owner_id']);
+            } elseif (method_exists($model, 'assignee')) {
+                $query->where('assigned_to', $filters['owner_id']);
+            }
+        }
+
+        if (isset($filters['date_from']) && $filters['date_from'] !== '') {
+            $query->where('created_at', '>=', $filters['date_from']);
+        }
+        if (isset($filters['date_to']) && $filters['date_to'] !== '') {
+            $query->where('created_at', '<=', $filters['date_to']);
+        }
     }
 }

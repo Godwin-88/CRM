@@ -48,7 +48,7 @@ const rateArticle = (helpful: boolean) => {
 
       <Card>
         <CardContent class="pt-6">
-          <div class="article-body" v-html="article.body"></div>
+          <div class="article-body prose" v-html="article.body"></div>
         </CardContent>
       </Card>
 

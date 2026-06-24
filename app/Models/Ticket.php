@@ -139,14 +139,10 @@ class Ticket extends Model implements HasMedia
 
     public function linkedArticles(): BelongsToMany
     {
-        return $this->belongsToMany(KnowledgeBaseArticle::class, 'article_ticket_links')
+        return $this->belongsToMany(KnowledgeBaseArticle::class, 'article_ticket_links', 'ticket_id', 'article_id')
             ->withTimestamps();
     }
 
-    public function interactions(): HasMany
-    {
-        return $this->hasMany(Interaction::class);
-    }
 
     public function canBeReopened(): bool
     {

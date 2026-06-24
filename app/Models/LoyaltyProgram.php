@@ -45,21 +45,21 @@ class LoyaltyProgram extends Model
 
     public function tiers(): HasMany
     {
-        return $this->hasMany(LoyaltyTier::class);
+        return $this->hasMany(LoyaltyTier::class, 'program_id');
     }
 
     public function rules(): HasMany
     {
-        return $this->hasMany(LoyaltyRule::class);
+        return $this->hasMany(LoyaltyRule::class, 'program_id');
     }
 
     public function redemptionRules(): HasMany
     {
-        return $this->hasMany(LoyaltyRedemptionRule::class);
+        return $this->hasMany(LoyaltyRedemptionRule::class, 'program_id');
     }
 
     public function enrollments(): HasMany
     {
-        return $this->hasMany(LoyaltyEnrollment::class);
+        return $this->hasMany(LoyaltyEnrollment::class, 'program_id');
     }
 }

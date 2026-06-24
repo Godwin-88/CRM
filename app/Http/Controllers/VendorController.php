@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vendor;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -23,7 +23,7 @@ class VendorController extends Controller
             ->when($request->filled('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
-            ->withAvg(['ratings as overall_rating'], 'quality + delivery_timeliness + communication + value_for_money')
+            ->withAvg(['ratings as overall_rating'], DB::raw('quality + delivery_timeliness + communication + value_for_money'))
             ->orderBy('name')
             ->paginate(25)
             ->appends($request->query());

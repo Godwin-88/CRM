@@ -73,7 +73,7 @@ class KnowledgeBaseArticle extends Model implements HasMedia
 
     public function tickets(): BelongsToMany
     {
-        return $this->belongsToMany(Ticket::class, 'article_ticket_links')
+        return $this->belongsToMany(Ticket::class, 'article_ticket_links', 'article_id', 'ticket_id')
             ->withTimestamps();
     }
 

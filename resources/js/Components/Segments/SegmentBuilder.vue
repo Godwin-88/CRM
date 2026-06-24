@@ -24,10 +24,10 @@ const criteria = computed(() => ({
 
 const updateRules = (newRules: any[]) => {
   rules.value = newRules;
-  emitUpdate();
 };
 
-const emitUpdate = () => {
+const handleSubmit = () => {
+  if (!segmentName.value.trim()) return;
   emit('update', {
     name: segmentName.value,
     type: segmentType.value,
@@ -60,11 +60,11 @@ const loadPreview = async () => {
     <div class="grid grid-cols-2 gap-4">
       <div class="space-y-2">
         <label class="text-sm font-medium">Segment Name</label>
-        <Input v-model="segmentName" placeholder="e.g., High-value leads" @input="emitUpdate" />
+        <Input v-model="segmentName" placeholder="e.g., High-value leads" />
       </div>
       <div class="space-y-2">
         <label class="text-sm font-medium">Type</label>
-        <select v-model="segmentType" @change="emitUpdate" class="w-full border rounded-md px-3 py-2 text-sm">
+        <select v-model="segmentType" class="w-full border rounded-md px-3 py-2 text-sm">
           <option value="demographic">Demographic</option>
           <option value="psychographic">Psychographic</option>
           <option value="behavioral">Behavioral</option>
@@ -78,7 +78,7 @@ const loadPreview = async () => {
       <button
         v-for="op in ['and', 'or']"
         :key="op"
-        @click="joinOperator = op; emitUpdate()"
+        @click="joinOperator = op"
         class="px-3 py-1 text-sm rounded-full"
         :class="joinOperator === op ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'"
       >
@@ -107,5 +107,9 @@ const loadPreview = async () => {
         <p v-else class="text-sm text-gray-400">No matching contacts found.</p>
       </CardContent>
     </Card>
+
+    <Button type="button" class="w-full" @click="handleSubmit" :disabled="!segmentName.trim()">
+      Create Segment
+    </Button>
   </div>
 </template>

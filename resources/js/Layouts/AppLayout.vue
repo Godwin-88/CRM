@@ -71,8 +71,12 @@ const currentRoute = computed(() => page.url || '');
 const breadcrumbText = computed(() => {
     const url = page.url || '';
     const campaign = (page.props as any).campaign;
+    const asset = (page.props as any).asset;
     if (campaign && campaign.name && url.startsWith('/admin/campaigns/')) {
         return campaign.name;
+    }
+    if (asset && asset.name && url.startsWith('/assets/')) {
+        return asset.name;
     }
     if (url === '/admin/campaigns') return 'Campaigns';
     return url;

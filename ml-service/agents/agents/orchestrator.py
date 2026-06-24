@@ -31,7 +31,7 @@ from .state import (
     RouteConfidence,
     NavigationTarget,
 )
-from .tool_registry import REGISTERED_TOOLS
+from .tool_registry import REGISTERED_TOOLS, _filter_tools_for_user
 from .session_manager import SessionManager
 from .navigation import pick_best_route
 from . import utils as agent_utils
@@ -86,10 +86,10 @@ For each user message, classify the intent into one of: navigate | explain | exe
 
 CLASSIFIER_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", "Classify the user message into one intent: navigate | explain | execute | clarify.\n"
-                   "Also return confidence: confident | ambiguous | unclear.\n"
-                   "Extract any CRM entities you detect (contact_id, deal_id, ticket_id, account_id, etc.).\n"
-                   "Return JSON: {intent, confidence, entities, reason}"),
+         ("system", "Classify the user message into one intent: navigate | explain | execute | clarify.\n"
+                    "Also return confidence: confident | ambiguous | unclear.\n"
+                    "Extract any CRM entities you detect (contact_id, deal_id, ticket_id, account_id, etc.).\n"
+                    "Return JSON with fields: intent, confidence, entities, reason"),
         ("human", "{message}"),
     ]
 )
@@ -98,16 +98,16 @@ TOOL_SELECTOR_PROMPT = ChatPromptTemplate.from_messages(
     [
         ("system",
          "Given a user message and available tools, select ONE most appropriate tool to call. "
-         "Return JSON: {\"tool_name\": \"<selected tool name>\", \"reason\": \"<why this tool>\"}"),
+         "Return JSON with fields: tool_name and reason"),
         ("human", "Message: {message}\nAvailable tools: {tool_names}\nEntities: {entities}"),
     ]
 )
 
 ARGUMENTS_FILLER_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system",
-         "Fill the tool arguments from the schema using entity values and message context. "
-         "Only include values that can be reasonably inferred. Return JSON: {\"arguments\": {...}}"),
+         ("system",
+          "Fill the tool arguments from the schema using entity values and message context. "
+          "Only include values that can be reasonably inferred. Return JSON with an \"arguments\" object."),
         ("human", "Tool: {tool_name}\nSchema properties: {schema}\nEntities: {entities}\nMessage: {message}"),
     ]
 )
@@ -200,6 +200,31 @@ def _fill_arguments_with_llm(tc: ToolCall, entities: dict[str, Any], message: st
     except Exception as exc:
         logger.warning("LLM argument filler failed: %s, using fallback", exc)
         return _build_arguments(tc, entities)
+
+
+async def _log_audit(*, session_id: str, token: str, tool_name: str, arguments: dict, result: dict | None, error: str | None) -> None:
+    """POST audit log entry to Laravel API after tool execution."""
+    url = f"{_LARAVEL_API_URL}/assistant/internal/audit-log"
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(connect=5.0, write=5.0, pool=2.0)) as client:
+            await client.post(
+                url,
+                json={
+                    "session_id": session_id,
+                    "actor_type": "assistant",
+                    "tool_name": tool_name,
+                    "arguments": arguments,
+                    "result": result,
+                    "error": error,
+                },
+                headers={
+                    "X-Assistant-Token": token,
+                    "X-Assistant-Session": session_id,
+                    "Accept": "application/json",
+                },
+            )
+    except Exception as exc:
+        logger.warning("Audit log posting failed: %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -301,16 +326,19 @@ async def resolve_tools(state: AssistantState) -> dict[str, Any]:
     tc = selected[0]
     tc.arguments = _fill_arguments_with_llm(tc, entities, message)
 
+    extra_calls = _detect_cross_module_chain(message, entities, tools, tc)
+    all_calls = [tc] + extra_calls
+
     if tc.tool.tier in (ConfirmationTier.WRITE_REVERSIBLE, ConfirmationTier.WRITE_SIGNIFICANT):
         return {
-            "tools_to_call": [tc],
+            "tools_to_call": all_calls,
             "current_tool_call": tc,
             "confirm_required": True,
             "confirm_message": _confirm_message(tc),
         }
 
     return {
-        "tools_to_call": [tc],
+        "tools_to_call": all_calls,
         "current_tool_call": tc,
         "confirm_required": False,
         "confirm_message": None,
@@ -384,20 +412,86 @@ def _build_arguments(tc: ToolCall, entities: dict[str, Any]) -> dict[str, Any]:
     return args
 
 
+_CROSS_MODULE_PATTERNS: list[tuple[list[str], str, str, dict[str, str]]] = [
+    (
+        ["ticket", "tickets"],
+        "tool.tickets.search",
+        "tool.accounts.search",
+        {"status": "status", "priority": "priority", "account_id": "account_id"},
+    ),
+    (
+        ["deal", "deals"],
+        "tool.deals.search",
+        "tool.contacts.search",
+        {"stage": "stage", "owner_id": "owner_id", "account_id": "account_id"},
+    ),
+]
+
+
+def _detect_cross_module_chain(
+    message: str,
+    entities: dict[str, Any],
+    tools: list,
+    primary: ToolCall,
+) -> list[ToolCall]:
+    lowered = message.lower()
+    extra: list[ToolCall] = []
+
+    for keywords, primary_tool_name, secondary_tool_name, entity_map in _CROSS_MODULE_PATTERNS:
+        if primary.tool.name != primary_tool_name:
+            continue
+        if not any(k in lowered for k in keywords):
+            continue
+
+        secondary = next((t for t in tools if t.name == secondary_tool_name), None)
+        if not secondary:
+            continue
+
+        if any(k in lowered for k in ["contact", "customer", "account"]):
+            args = _build_arguments(secondary, entities)
+            extra.append(ToolCall(tool=secondary, arguments=args))
+
+    return extra
+
+
+
 def _confirm_message(tc: ToolCall) -> str:
     action = "perform this action"
+    consequences = []
+
     if tc.tool.name.endswith("move_stage"):
         deal_id = tc.arguments.get("deal_id", "this deal")
-        action = f"move deal **{deal_id}** to stage **{tc.arguments.get('stage', '?')}**"
+        stage = tc.arguments.get("stage", "?")
+        action = f"move deal **{deal_id}** to stage **{stage}**"
+        consequences.append("trigger any configured stage automations (notifications, follow-up tasks)")
     elif tc.tool.name.endswith("tickets.create"):
-        action = f"create a ticket with subject **{tc.arguments.get('subject', '?')}**"
+        subject = tc.arguments.get("subject", "?")
+        action = f"create a ticket with subject **{subject}**"
     elif tc.tool.name.endswith("activities.create"):
-        action = f"create a follow-up task **{tc.arguments.get('subject', '?')}**"
+        subject = tc.arguments.get("subject", "?")
+        action = f"create a follow-up task **{subject}**"
+        consequences.append("assigned user will receive a notification")
     elif tc.tool.name.endswith("comments.post"):
-        action = f"post a comment on **{tc.arguments.get('entity_type', 'record')}**"
+        entity = tc.arguments.get("entity_type", "record")
+        action = f"post a comment on **{entity}**"
+        mentions = tc.arguments.get("mentions", [])
+        if mentions:
+            consequences.append(f"notify mentioned users: {', '.join(mentions)}")
+    elif tc.tool.name.endswith("contracts.generate"):
+        action = "generate a contract from a template"
+        consequences.append("variables will be substituted into the template")
+        consequences.append("signature workflow will be initiated for required signers")
+    elif tc.tool.name.endswith("campaigns.send"):
+        action = "send this campaign"
+        consequences.append("message will be dispatched to the target segment")
+        consequences.append("this action cannot be undone")
 
     if tc.tool.tier == ConfirmationTier.WRITE_SIGNIFICANT:
-        return f"This is a significant action: {action}. It may trigger downstream automations. Confirm?"
+        base = f"This is a significant action: {action}."
+        if consequences:
+            base += f" It will also: {'; '.join(consequences)}."
+        base += " Confirm?"
+        return base
     return f"{action}. Confirm?"
 
 
@@ -429,6 +523,15 @@ async def tool_execute(state: AssistantState) -> dict[str, Any]:
         logger.exception("Tool execution failed for %s", tc.tool.name)
         tc.error = str(exc)
         tc.result = None
+
+    await _log_audit(
+        session_id=state.get("session_id", ""),
+        token=state.get("validated_token", ""),
+        tool_name=tc.tool.name,
+        arguments=tc.arguments,
+        result=tc.result,
+        error=tc.error,
+    )
 
     return {
         "current_tool_call": tc,
@@ -485,6 +588,16 @@ async def handle_confirmed_action(state: AssistantState) -> dict[str, Any]:
                 logger.exception("Confirmed tool execution failed for %s", confirmed_action)
                 tc.error = str(exc)
                 tc.result = None
+
+            await _log_audit(
+                session_id=state.get("session_id", ""),
+                token=state.get("validated_token", ""),
+                tool_name=confirmed_action,
+                arguments=confirmed_args,
+                result=tc.result,
+                error=tc.error,
+            )
+
             return {
                 "current_tool_call": tc,
                 "tools_to_call": [tc],
@@ -651,7 +764,7 @@ async def run_orchestrator(*, user: dict, message: str, token: str, session_id: 
     state["session_id"] = session_id
     state["context"] = {**state.get("context", {}), **context, "message": message}
 
-    state["available_tools"] = list(REGISTERED_TOOLS)
+    state["available_tools"] = _filter_tools_for_user(user, list(REGISTERED_TOOLS))
 
     final: AssistantState | dict = await orchestrator_graph.ainvoke(state)
 

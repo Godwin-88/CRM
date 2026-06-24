@@ -21,12 +21,55 @@ class AssistantNavigationService
         '/deals/create' => 'Create Deal',
         '/deals/board' => 'Pipeline Board',
         '/admin/pipelines' => 'Pipeline Setup',
+        '/admin/deal-automations' => 'Deal Automations',
+        '/admin/win-loss-reasons' => 'Win/Loss Reasons',
+        '/admin/quote-templates' => 'Quote Templates',
         '/support/tickets' => 'Support Tickets',
         '/support/tickets/create' => 'Create Support Ticket',
-        '/contracts' => 'Contracts',
-        '/contracts/create' => 'Create Contract',
+        '/admin/support/canned-responses' => 'Canned Responses',
         '/admin/sla' => 'SLA Policies',
         '/admin/sla/instances' => 'SLA Instances',
+        '/docs' => 'Knowledge Base',
+        '/contracts' => 'Contracts',
+        '/contracts/create' => 'Create Contract',
+        '/legal' => 'Legal Matters',
+        '/invoices' => 'Invoices',
+        '/vendors' => 'Vendors',
+        '/purchase-orders' => 'Purchase Orders',
+        '/assets' => 'Assets',
+        '/employees' => 'Employees',
+        '/finance' => 'Finance Overview',
+        '/admin/campaigns' => 'Campaigns',
+        '/admin/campaign-templates' => 'Campaign Templates',
+        '/admin/analytics/campaigns-dashboard' => 'Campaign Analytics',
+        '/admin/loyalty' => 'Loyalty Programs',
+        '/admin/surveys' => 'Surveys',
+        '/admin/onboarding' => 'Onboarding & Journeys',
+        '/admin/queue-stats' => 'Queue Statistics',
+        '/admin/interactions/inbox' => 'Interaction Inbox',
+        '/admin/chat/inbox' => 'Chat Inbox',
+        '/admin/analytics/dashboard' => 'Analytics Dashboard',
+        '/admin/analytics/report-builder' => 'Report Builder',
+        '/admin/custom-fields' => 'Custom Fields',
+        '/admin/duplicates' => 'Duplicate Management',
+        '/admin/scoring-rules' => 'Scoring Rules',
+        '/admin/rbac' => 'RBAC Matrix',
+        '/admin/security/events' => 'Security Events',
+        '/admin/privileged' => 'Privileged Sessions',
+        '/admin/sso' => 'SSO Configuration',
+        '/mfa' => 'MFA Setup',
+        '/admin/integrations/marketplace' => 'Integration Marketplace',
+        '/admin/integrations/webhooks' => 'Webhooks',
+        '/admin/integrations' => 'Integrations',
+        '/calendar' => 'Calendar',
+        '/notifications' => 'Notifications',
+        '/discussions' => 'Discussion Boards',
+        '/admin/email/compose' => 'Email Composer',
+        '/admin/sms/compose' => 'SMS Composer',
+        '/admin/call/log' => 'Call Log',
+        '/service-catalog' => 'Service Catalog',
+        '/service-requests' => 'Service Requests',
+        '/cases' => 'Cases',
     ];
 
     public function analyze(array $featureRefs, array $context = [], ?User $user = null): array
@@ -163,21 +206,136 @@ class AssistantNavigationService
             return ['route' => '/contacts', 'label' => 'Contacts'];
         }
 
-        foreach ($featureRefs as $featureRef) {
-            if ($featureRef === '4.6.7') {
-                return ['route' => '/admin/sla', 'label' => 'SLA Policies'];
+        // Module: Campaigns (4.4)
+        if ($this->mentions($text, ['campaign', 'campaigns', 'marketing campaign', 'email campaign'])) {
+            if ($this->mentions($text, ['analytics', 'performance', 'stats', 'metrics'])) {
+                return ['route' => '/admin/analytics/campaigns-dashboard', 'label' => 'Campaign Analytics'];
             }
-
-            if ($featureRef === '4.6.1') {
-                return ['route' => '/support/tickets', 'label' => 'Support Tickets'];
+            if ($this->mentions($text, ['template', 'templates'])) {
+                return ['route' => '/admin/campaign-templates', 'label' => 'Campaign Templates'];
             }
+            return ['route' => '/admin/campaigns', 'label' => 'Campaigns'];
+        }
 
-            if ($featureRef === '4.2.2') {
-                return ['route' => '/deals/board', 'label' => 'Pipeline Board'];
-            }
+        // Module: Loyalty Programs (4.5)
+        if ($this->mentions($text, ['loyalty', 'loyalty program', 'points program', 'rewards', 'tier'])) {
+            return ['route' => '/admin/loyalty', 'label' => 'Loyalty Programs'];
+        }
 
-            if ($featureRef === '4.2.1') {
-                return ['route' => '/deals', 'label' => 'Deals'];
+        // Module: Surveys (4.5.4)
+        if ($this->mentions($text, ['survey', 'surveys', 'feedback'])) {
+            return ['route' => '/admin/surveys', 'label' => 'Surveys'];
+        }
+
+        // Module: Knowledge Base / Docs (4.6.2)
+        if ($this->mentions($text, ['knowledge base', 'kb', 'documentation', 'docs', 'help article', 'article'])) {
+            return ['route' => '/docs', 'label' => 'Knowledge Base'];
+        }
+
+        // Module: Analytics (4.7)
+        if ($this->mentions($text, ['analytics dashboard', 'crm dashboard', 'analytics overview'])) {
+            return ['route' => '/admin/analytics/dashboard', 'label' => 'Analytics Dashboard'];
+        }
+        if ($this->mentions($text, ['report', 'report builder', 'custom report'])) {
+            return ['route' => '/admin/analytics/report-builder', 'label' => 'Report Builder'];
+        }
+
+        // Module: Inbox / Omni-Channel (4.3)
+        if ($this->mentions($text, ['inbox', 'interaction inbox', 'unified inbox'])) {
+            return ['route' => '/admin/interactions/inbox', 'label' => 'Interaction Inbox'];
+        }
+        if ($this->mentions($text, ['contact center', 'queue stats', 'queue statistics'])) {
+            return ['route' => '/admin/queue-stats', 'label' => 'Queue Statistics'];
+        }
+        if ($this->mentions($text, ['chat inbox', 'chat widget', 'live chat'])) {
+            return ['route' => '/admin/chat/inbox', 'label' => 'Chat Inbox'];
+        }
+
+        // Module: Contracts & Legal (4.8)
+        if ($this->mentions($text, ['legal', 'legal matter', 'litigation', 'case'])) {
+            return ['route' => '/legal', 'label' => 'Legal Matters'];
+        }
+        if ($this->mentions($text, ['invoice', 'invoices', 'billing'])) {
+            return ['route' => '/invoices', 'label' => 'Invoices'];
+        }
+
+        // Module: Assets (4.9.5)
+        if ($this->mentions($text, ['asset', 'assets', 'equipment'])) {
+            return ['route' => '/assets', 'label' => 'Assets'];
+        }
+
+        // Module: Integrations (4.11)
+        if ($this->mentions($text, ['integration marketplace', 'connector', 'marketplace'])) {
+            return ['route' => '/admin/integrations/marketplace', 'label' => 'Integration Marketplace'];
+        }
+        if ($this->mentions($text, ['webhook', 'webhooks'])) {
+            return ['route' => '/admin/integrations/webhooks', 'label' => 'Webhooks'];
+        }
+        if ($this->mentions($text, ['integration', 'integrations', 'api token'])) {
+            return ['route' => '/admin/integrations', 'label' => 'Integrations'];
+        }
+
+        // Module: Calendar & Notifications (4.12)
+        if ($this->mentions($text, ['calendar', 'schedule', 'my calendar'])) {
+            return ['route' => '/calendar', 'label' => 'Calendar'];
+        }
+        if ($this->mentions($text, ['notification', 'notifications', 'alerts'])) {
+            return ['route' => '/notifications', 'label' => 'Notifications'];
+        }
+
+        // Module: Security (4.10)
+        if ($this->mentions($text, ['mfa', 'two factor', '2fa', 'multi factor'])) {
+            return ['route' => '/mfa', 'label' => 'MFA Setup'];
+        }
+        if ($this->mentions($text, ['rbac', 'permission', 'permissions', 'role', 'roles', 'access control'])) {
+            return ['route' => '/admin/rbac', 'label' => 'RBAC Matrix'];
+        }
+        if ($this->mentions($text, ['security event', 'audit log', 'audit trail'])) {
+            return ['route' => '/admin/security/events', 'label' => 'Security Events'];
+        }
+        if ($this->mentions($text, ['privileged session', 'privileged access'])) {
+            return ['route' => '/admin/privileged', 'label' => 'Privileged Sessions'];
+        }
+        if ($this->mentions($text, ['sso', 'single sign-on'])) {
+            return ['route' => '/admin/sso', 'label' => 'SSO Configuration'];
+        }
+
+        // Module: Service Catalog & Requests (4.15)
+        if ($this->mentions($text, ['service catalog', 'catalog item', 'service offering'])) {
+            return ['route' => '/service-catalog', 'label' => 'Service Catalog'];
+        }
+        if ($this->mentions($text, ['service request', 'service requests'])) {
+            return ['route' => '/service-requests', 'label' => 'Service Requests'];
+        }
+
+        // Module: Onboarding & Journeys (4.5.6)
+        if ($this->mentions($text, ['onboarding', 'journey', 'reactivation', 'kiosk interaction'])) {
+            return ['route' => '/admin/onboarding', 'label' => 'Onboarding & Journeys'];
+        }
+
+        // Module: Email/SMS/Call Composer (4.3)
+        if ($this->mentions($text, ['compose email', 'email composer', 'send email'])) {
+            return ['route' => '/admin/email/compose', 'label' => 'Email Composer'];
+        }
+        if ($this->mentions($text, ['compose sms', 'sms composer', 'send sms'])) {
+            return ['route' => '/admin/sms/compose', 'label' => 'SMS Composer'];
+        }
+
+        // Module: Custom Fields (4.1.6)
+        if ($this->mentions($text, ['custom field', 'custom fields'])) {
+            return ['route' => '/admin/custom-fields', 'label' => 'Custom Fields'];
+        }
+
+        // Map feature refs from the intent classifier to actual navigation routes
+        if (! empty($featureRefs)) {
+            $navMap = $this->featureRefNavigationMap();
+
+            foreach ($featureRefs as $featureRef) {
+                if (isset($navMap[$featureRef])) {
+                    $nav = $navMap[$featureRef];
+
+                    return ['route' => $nav['route'], 'label' => $nav['label']];
+                }
             }
         }
 
@@ -559,7 +717,7 @@ class AssistantNavigationService
         return trim(preg_replace('/\b(ticket|deal|account|contact|contract|for|at|with|where|open|overdue|high|urgent)\b/i', '', $value));
     }
 
-    private function extractReferenceFilter(array $reference, string $type, string $message, ?User $user): ?array
+    private function extractReferenceFilter(?array $reference, string $type, string $message, ?User $user): ?array
     {
         if (! $reference) {
             return null;
@@ -731,5 +889,123 @@ class AssistantNavigationService
         }
 
         return '';
+    }
+
+    /**
+     * Map feature references (from the intent classifier) to navigation routes and labels.
+     * This allows routing by intent when the keyword-based matching doesn't apply.
+     */
+    private function featureRefNavigationMap(): array
+    {
+        return [
+            // 4.1 Contacts & Accounts
+            '4.1.1' => ['route' => '/contacts', 'label' => 'Contacts'],
+            '4.1.2' => ['route' => '/accounts', 'label' => 'Accounts'],
+            '4.1.3' => ['route' => '/admin/duplicates', 'label' => 'Duplicate Management'],
+            '4.1.4' => ['route' => '/admin/duplicates', 'label' => 'Duplicate Detection'],
+            '4.1.5' => ['route' => '/contacts', 'label' => 'Timeline View'],
+            '4.1.6' => ['route' => '/admin/custom-fields', 'label' => 'Custom Fields'],
+            '4.1.7' => ['route' => '/contacts', 'label' => 'Bulk Import/Export'],
+            '4.1.8' => ['route' => '/admin/scoring-rules', 'label' => 'Scoring Rules'],
+            // 4.2 Deals & Pipelines
+            '4.2.1' => ['route' => '/deals', 'label' => 'Deals'],
+            '4.2.2' => ['route' => '/deals/board', 'label' => 'Pipeline Board'],
+            '4.2.3' => ['route' => '/admin/deal-automations', 'label' => 'Deal Automations'],
+            '4.2.4' => ['route' => '/admin/win-loss-reasons', 'label' => 'Win/Loss Reasons'],
+            '4.2.5' => ['route' => '/admin/quote-templates', 'label' => 'Quote Templates'],
+            '4.2.6' => ['route' => '/deals', 'label' => 'Forecast'],
+            '4.2.7' => ['route' => '/deals', 'label' => 'Deal Comments'],
+            // 4.3 Omni-Channel
+            '4.3.1' => ['route' => '/admin/omni/dashboard', 'label' => 'Omni-Channel Dashboard'],
+            '4.3.2' => ['route' => '/admin/interactions/inbox', 'label' => 'Interaction Inbox'],
+            '4.3.3' => ['route' => '/admin/interactions/channels', 'label' => 'Channels Configuration'],
+            '4.3.4' => ['route' => '/admin/interactions/unmatched', 'label' => 'Unmatched Items'],
+            '4.3.5' => ['route' => '/admin/queue-stats', 'label' => 'Contact Center'],
+            '4.3.6' => ['route' => '/admin/field-channel', 'label' => 'Kiosk'],
+            '4.3.7' => ['route' => '/admin/email/compose', 'label' => 'Email Composer'],
+            '4.3.8' => ['route' => '/admin/call/log', 'label' => 'Call Log'],
+            '4.3.9' => ['route' => '/admin/chat/inbox', 'label' => 'Chat Inbox'],
+            '4.3.10' => ['route' => '/admin/sms/compose', 'label' => 'SMS Composer'],
+            '4.3.11' => ['route' => '/admin/queue-stats', 'label' => 'Queue Stats'],
+            // 4.4 Campaigns
+            '4.4.1' => ['route' => '/admin/campaigns', 'label' => 'Campaigns'],
+            '4.4.2' => ['route' => '/admin/campaign-templates', 'label' => 'Campaign Templates'],
+            '4.4.3' => ['route' => '/admin/campaign-templates', 'label' => 'Email Template Editor'],
+            '4.4.4' => ['route' => '/admin/social-posts', 'label' => 'Multi-Channel Builder'],
+            '4.4.5' => ['route' => '/admin/campaigns', 'label' => 'A/B Testing'],
+            '4.4.6' => ['route' => '/admin/drip-sequences', 'label' => 'Schedule Controls'],
+            '4.4.7' => ['route' => '/admin/tags', 'label' => 'Tag Management'],
+            '4.4.8' => ['route' => '/admin/analytics/campaigns-dashboard', 'label' => 'Campaign Analytics'],
+            // 4.5 Loyalty & CX
+            '4.5.1' => ['route' => '/admin/loyalty', 'label' => 'Loyalty Programs'],
+            '4.5.2' => ['route' => '/admin/loyalty/ledger', 'label' => 'Points Ledger'],
+            '4.5.3' => ['route' => '/admin/loyalty', 'label' => 'Tier Display'],
+            '4.5.4' => ['route' => '/admin/surveys', 'label' => 'Surveys'],
+            '4.5.5' => ['route' => '/admin/surveys/responses', 'label' => 'Survey Responses'],
+            '4.5.6' => ['route' => '/admin/onboarding', 'label' => 'Kiosk Interactions'],
+            // 4.6 Support
+            '4.6.1' => ['route' => '/support/tickets', 'label' => 'Support Tickets'],
+            '4.6.2' => ['route' => '/docs', 'label' => 'Knowledge Base'],
+            '4.6.3' => ['route' => '/support/tickets', 'label' => 'Ticket Merge/Split'],
+            '4.6.4' => ['route' => '/support/tickets', 'label' => 'Internal Notes'],
+            '4.6.5' => ['route' => '/admin/support/canned-responses', 'label' => 'Canned Responses'],
+            '4.6.6' => ['route' => '/admin/support', 'label' => 'CSAT Ratings'],
+            '4.6.7' => ['route' => '/admin/sla', 'label' => 'SLA Configuration'],
+            // 4.7 Analytics
+            '4.7.1' => ['route' => '/admin/analytics/dashboard', 'label' => 'Analytics Dashboard'],
+            '4.7.2' => ['route' => '/admin/analytics/customer', 'label' => 'Customer Analytics'],
+            '4.7.3' => ['route' => '/admin/analytics/growth', 'label' => 'Growth Analytics'],
+            '4.7.4' => ['route' => '/admin/analytics/finance', 'label' => 'Finance Analytics'],
+            '4.7.5' => ['route' => '/admin/analytics/compliance', 'label' => 'Compliance Analytics'],
+            '4.7.6' => ['route' => '/admin/analytics/predictive-scoring', 'label' => 'Predictive Scoring'],
+            '4.7.7' => ['route' => '/admin/analytics/report-builder', 'label' => 'Report Builder'],
+            '4.7.8' => ['route' => '/admin/analytics/report-builder', 'label' => 'Exploratory Analysis'],
+            '4.7.9' => ['route' => '/admin/analytics/dashboard', 'label' => 'Revenue Forecast'],
+            '4.7.10' => ['route' => '/admin/analytics/predictive-scoring', 'label' => 'Churn Risk'],
+            '4.7.11' => ['route' => '/admin/analytics/dashboard', 'label' => 'Time-Bucketed Forecast'],
+            // 4.8 Contracts & Legal
+            '4.8.1' => ['route' => '/contracts', 'label' => 'Contracts'],
+            '4.8.2' => ['route' => '/contracts/create', 'label' => 'Contract Creation'],
+            '4.8.3' => ['route' => '/legal', 'label' => 'Legal Matters'],
+            '4.8.4' => ['route' => '/legal', 'label' => 'Milestone Tracking'],
+            '4.8.5' => ['route' => '/contracts', 'label' => 'Renewal Reminders'],
+            '4.8.6' => ['route' => '/contracts', 'label' => 'E-Signature Workflow'],
+            '4.8.7' => ['route' => '/contracts', 'label' => 'Contract Repository'],
+            // 4.9 Finance & Procurement
+            '4.9.1' => ['route' => '/invoices', 'label' => 'Invoices'],
+            '4.9.2' => ['route' => '/vendors', 'label' => 'Payment Recording'],
+            '4.9.3' => ['route' => '/vendors', 'label' => 'Bank Details'],
+            '4.9.4' => ['route' => '/employees', 'label' => 'Headcount Planning'],
+            '4.9.5' => ['route' => '/assets', 'label' => 'Asset Management'],
+            '4.9.6' => ['route' => '/purchase-orders', 'label' => 'Procurement Approval'],
+            '4.9.7' => ['route' => '/finance', 'label' => 'Ledger Summary'],
+            // 4.10 Security
+            '4.10.1' => ['route' => '/mfa', 'label' => 'MFA'],
+            '4.10.2' => ['route' => '/admin/security/events', 'label' => 'Security Events'],
+            '4.10.3' => ['route' => '/admin/privileged', 'label' => 'Privileged Sessions'],
+            '4.10.4' => ['route' => '/admin/rbac', 'label' => 'RBAC Matrix'],
+            '4.10.5' => ['route' => '/admin/sso', 'label' => 'SSO Configuration'],
+            '4.10.6' => ['route' => '/admin', 'label' => 'Data Classification'],
+            '4.10.7' => ['route' => '/admin/dsr', 'label' => 'DSR Module'],
+            // 4.11 Integrations
+            '4.11.1' => ['route' => '/admin/integrations/marketplace', 'label' => 'Integration Marketplace'],
+            '4.11.2' => ['route' => '/admin/api-tokens', 'label' => 'API Tokens'],
+            '4.11.3' => ['route' => '/admin/integrations/webhooks', 'label' => 'Webhooks'],
+            '4.11.4' => ['route' => '/admin/oauth-clients', 'label' => 'OAuth2 Authorization'],
+            '4.11.5' => ['route' => '/admin/integrations', 'label' => 'Service Registry'],
+            '4.11.6' => ['route' => '/admin/integrations', 'label' => 'Rate Limit Configuration'],
+            '4.11.7' => ['route' => '/admin/integrations', 'label' => 'OpenAPI Documentation'],
+            // 4.12 Calendar & Notifications
+            '4.12.1' => ['route' => '/calendar', 'label' => 'Calendar'],
+            '4.12.2' => ['route' => '/notifications', 'label' => 'Notifications'],
+            '4.12.3' => ['route' => '/notifications', 'label' => 'File Attachments'],
+            '4.12.4' => ['route' => '/discussions', 'label' => 'Discussion Boards'],
+            '4.12.5' => ['route' => '/calendar', 'label' => 'Team Calendar'],
+            '4.12.6' => ['route' => '/notifications', 'label' => 'Mentions'],
+            // 4.15 Service & Support
+            '4.15.1' => ['route' => '/service-catalog', 'label' => 'Service Catalog'],
+            '4.15.2' => ['route' => '/service-requests', 'label' => 'Service Requests'],
+            '4.15.3' => ['route' => '/cases', 'label' => 'Cases'],
+        ];
     }
 }

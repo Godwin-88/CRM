@@ -9,26 +9,27 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const props = defineProps<{
-  types: string[];
-  statuses: string[];
+    asset: any;
+    types: string[];
+    statuses: string[];
 }>();
 
 const form = useForm({
-  name: '',
-  type: 'hardware',
-  identifier: '',
-  purchase_date: '',
-  purchase_cost: 0,
-  currency: 'USD',
-  status: 'available',
-  useful_life_years: 5,
-  total_quantity: '',
-  available_quantity: '',
-  minimum_threshold: '',
+    name: props.asset.name || '',
+    type: props.asset.type || 'hardware',
+    identifier: props.asset.identifier || '',
+    purchase_date: props.asset.purchase_date || '',
+    purchase_cost: props.asset.purchase_cost !== null && props.asset.purchase_cost !== undefined ? Number(props.asset.purchase_cost) : 0,
+    currency: props.asset.currency || 'USD',
+    status: props.asset.status || 'available',
+    useful_life_years: props.asset.useful_life_years !== null && props.asset.useful_life_years !== undefined ? Number(props.asset.useful_life_years) : null,
+    total_quantity: props.asset.total_quantity ? Number(props.asset.total_quantity) : '',
+    available_quantity: props.asset.available_quantity ? Number(props.asset.available_quantity) : '',
+    minimum_threshold: props.asset.minimum_threshold ? Number(props.asset.minimum_threshold) : '',
 });
 
 const isStockTrackable = computed(() => {
-  return form.type && ['hardware', 'furniture', 'custom'].includes(form.type);
+    return form.type && ['hardware', 'furniture', 'custom'].includes(form.type);
 });
 
 const bookValue = computed(() => {
@@ -44,13 +45,13 @@ const bookValue = computed(() => {
 });
 
 const submit = () => {
-  form.post('/assets');
+    form.put(`/assets/${props.asset.id}`);
 };
 </script>
 
 <template>
   <AppLayout>
-    <Head title="Create Asset" />
+    <Head title="Edit Asset" />
     
     <div class="max-w-2xl mx-auto">
       <div class="mb-4">
@@ -58,12 +59,13 @@ const submit = () => {
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Create Asset</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Edit Asset</CardTitle></CardHeader>
         <CardContent>
           <form @submit.prevent="submit" class="space-y-4">
             <div>
               <Label for="name">Name</Label>
               <Input id="name" v-model="form.name" />
+              <p v-if="form.errors.name" class="text-red-500 text-sm">{{ form.errors.name }}</p>
             </div>
 
             <div>
@@ -121,10 +123,9 @@ const submit = () => {
                   <Input id="minimum_threshold" type="number" step="0.01" v-model="form.minimum_threshold" />
                 </div>
               </div>
-              <p class="text-xs text-gray-500 mt-1">For consumable assets (SIM cards, USB drives, etc.)</p>
             </div>
 
-            <Button type="submit" :disabled="form.processing">Create Asset</Button>
+            <Button type="submit" :disabled="form.processing">Update Asset</Button>
           </form>
         </CardContent>
       </Card>

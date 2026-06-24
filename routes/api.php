@@ -118,6 +118,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('analytics/dashboard', [AnalyticsApiController::class, 'dashboard']);
     Route::get('analytics/dashboard-widgets', [AnalyticsApiController::class, 'dashboardWidgets']);
     Route::put('analytics/dashboard-widgets', [AnalyticsApiController::class, 'updateDashboardWidgets']);
+    Route::get('analytics/dashboard/pipeline', [AnalyticsApiController::class, 'pipelineDetails']);
+    Route::get('analytics/dashboard/activity', [AnalyticsApiController::class, 'activityDetails']);
+    Route::get('analytics/dashboard/tickets', [AnalyticsApiController::class, 'ticketDetails']);
+    Route::get('analytics/dashboard/revenue', [AnalyticsApiController::class, 'revenueDetails']);
+    Route::get('analytics/dashboard/system-health', [AnalyticsApiController::class, 'systemHealthDetails']);
     Route::get('analytics/growth', [AnalyticsApiController::class, 'growthMetrics']);
     Route::get('analytics/finance', [AnalyticsApiController::class, 'financeMetrics']);
     Route::get('analytics/deal-score/{deal}', [AnalyticsApiController::class, 'dealScore']);
@@ -563,6 +568,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
             Route::post('segments/preview', [AgentToolController::class, 'handle'])->name('assistant.tool.segments.preview');
             Route::post('segments/preview_count', [AgentToolController::class, 'handle'])->name('assistant.tool.segments.preview_count');
             Route::post('kb/search', [AgentToolController::class, 'handle'])->name('assistant.tool.kb.search');
+            Route::post('kb/create', [AgentToolController::class, 'handle'])->name('assistant.tool.kb.create');
+            Route::post('kb/update', [AgentToolController::class, 'handle'])->name('assistant.tool.kb.update');
             Route::post('dashboards/summary', [AgentToolController::class, 'handle'])->name('assistant.tool.dashboards.summary');
             Route::post('analytics/metric', [AgentToolController::class, 'handle'])->name('assistant.tool.analytics.metric');
             Route::post('reports/run', [AgentToolController::class, 'handle'])->name('assistant.tool.reports.run');

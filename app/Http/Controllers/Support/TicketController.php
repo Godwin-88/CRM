@@ -61,7 +61,6 @@ class TicketController extends Controller
             'relatedTickets',
             'rating',
             'linkedArticles',
-            'interactions',
         ]);
 
         $cannedResponses = CannedResponse::active()
@@ -77,12 +76,16 @@ class TicketController extends Controller
 
     public function create()
     {
-        $categories = TicketCategory::active()->get();
-        $agents = User::role('agent')->get(['id', 'name']);
+        $categories = TicketCategory::active()->get(['id', 'name']);
+        $agents = User::orderBy('name')->get(['id', 'name']);
+        $contacts = \App\Models\Contact::orderBy('first_name')->get(['id', 'first_name', 'last_name', 'email']);
+        $accounts = \App\Models\Account::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Support/Tickets/Create', [
             'categories' => $categories,
             'agents' => $agents,
+            'contacts' => $contacts,
+            'accounts' => $accounts,
         ]);
     }
 

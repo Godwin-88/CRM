@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pencil } from 'lucide-vue-next';
 
 const props = defineProps<{
-  asset: any;
-  canAssign: boolean;
-  users: any[];
-  accounts: any[];
+    asset: any;
+    canAssign: boolean;
+    canEdit: boolean;
+    users: any[];
+    accounts: any[];
 }>();
 
 const assignForm = useForm({
@@ -54,9 +56,14 @@ const submitReturn = () => {
               <CardTitle class="text-2xl">{{ asset.name }}</CardTitle>
               <p class="text-gray-500">{{ asset.type }}</p>
             </div>
-            <Badge :variant="asset.status === 'available' ? 'default' : 'secondary'">
-              {{ asset.status }}
-            </Badge>
+            <div class="flex items-center gap-2">
+              <Badge :variant="asset.status === 'available' ? 'default' : 'secondary'">
+                {{ asset.status }}
+              </Badge>
+              <Link v-if="canEdit" :href="`/assets/${asset.id}/edit`" class="text-gray-600 hover:text-gray-900">
+                <Pencil class="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

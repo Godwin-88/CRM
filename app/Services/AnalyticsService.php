@@ -52,10 +52,13 @@ class AnalyticsService
         $metrics['system_health'] = $this->getSystemHealthMetrics();
 
         if ($role === 'manager') {
-            $metrics['pipeline']['top_deals'] = $this->getTopDeals($filters, 5);
             $metrics['activity']['completion_rate'] = $this->getActivityCompletionRate($filters);
             $metrics['tickets']['sla_breach_count'] = $this->getTicketSlaBreachCount($filters);
             $metrics['agent_performance'] = $this->getAgentPerformance($filters['team_id'] ?? null);
+        }
+
+        if ($role === 'admin' || $role === 'manager') {
+            $metrics['pipeline']['top_deals'] = $this->getTopDeals($filters, 5);
         }
 
         if ($role === 'admin') {
@@ -111,7 +114,7 @@ class AnalyticsService
 
     protected function roleFor($user): string
     {
-        if ($user->is_admin) {
+        if ($user->hasRole('admin')) {
             return 'admin';
         }
 
@@ -163,7 +166,7 @@ class AnalyticsService
             'weighted_pipeline_value' => $weightedValue,
             'by_stage' => $byStage,
             'recent_interactions' => $recentInteractions,
-            'top_deals' => $role === 'manager' ? $this->getTopDeals($filters, 5) : [],
+            'top_deals' => in_array($role, ['admin', 'manager']) ? $this->getTopDeals($filters, 5) : [],
         ];
     }
 

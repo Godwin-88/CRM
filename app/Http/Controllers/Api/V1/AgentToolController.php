@@ -13,6 +13,7 @@ use App\Models\CaseRecord;
 use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\Deal;
+use App\Models\KnowledgeBaseArticle;
 use App\Models\ServiceCatalogItem;
 use App\Models\ServiceRequest;
 use App\Models\Ticket;
@@ -655,6 +656,53 @@ class AgentToolController extends Controller
             ],
             'output_schema' => ['type' => 'object', 'description' => 'Knowledge base article collection.'],
         ],
+        'kb.create' => [
+            'controller' => KnowledgeBaseController::class,
+            'method' => 'store',
+            'tier' => 'write-significant',
+            'module' => '4.6 Support',
+            'feature_ref' => '4.6.2',
+            'schema_version' => self::TOOL_SCHEMA_VERSION,
+            'roles' => ['admin', 'manager'],
+            'input_schema' => [
+                'type' => 'object',
+                'required' => ['title', 'body', 'category_id'],
+                'properties' => [
+                    'title' => ['type' => 'string', 'maxLength' => 255],
+                    'body' => ['type' => 'string'],
+                    'category_id' => ['type' => 'string'],
+                    'slug' => ['type' => 'string', 'maxLength' => 255],
+                    'status' => ['type' => 'string', 'enum' => ['draft', 'in_review', 'approved', 'published', 'archived']],
+                    'audience' => ['type' => 'string', 'enum' => ['agent', 'manager', 'admin', 'all']],
+                    'feature_refs' => ['type' => 'array'],
+                ],
+            ],
+            'output_schema' => ['type' => 'object', 'description' => 'Created knowledge base article.'],
+        ],
+        'kb.update' => [
+            'controller' => KnowledgeBaseController::class,
+            'method' => 'update',
+            'tier' => 'write-significant',
+            'module' => '4.6 Support',
+            'feature_ref' => '4.6.2',
+            'schema_version' => self::TOOL_SCHEMA_VERSION,
+            'roles' => ['admin', 'manager'],
+            'input_schema' => [
+                'type' => 'object',
+                'required' => ['article_id'],
+                'properties' => [
+                    'article_id' => ['type' => 'string'],
+                    'title' => ['type' => 'string', 'maxLength' => 255],
+                    'body' => ['type' => 'string'],
+                    'category_id' => ['type' => 'string'],
+                    'slug' => ['type' => 'string', 'maxLength' => 255],
+                    'status' => ['type' => 'string', 'enum' => ['draft', 'in_review', 'approved', 'published', 'archived']],
+                    'audience' => ['type' => 'string', 'enum' => ['agent', 'manager', 'admin', 'all']],
+                    'feature_refs' => ['type' => 'array'],
+                ],
+            ],
+            'output_schema' => ['type' => 'object', 'description' => 'Updated knowledge base article.'],
+        ],
         'dashboards.summary' => [
             'controller' => AnalyticsApiController::class,
             'method' => 'dashboard',
@@ -1296,6 +1344,7 @@ class AgentToolController extends Controller
             ServiceCatalogItem::class => 'service_catalog_item_id',
             ServiceRequest::class => 'service_request_id',
             CaseRecord::class => 'case_id',
+            KnowledgeBaseArticle::class => 'article_id',
             Contract::class => 'contract_id',
             default => 'id',
         };
@@ -1523,6 +1572,7 @@ class AgentToolController extends Controller
             WebhookController::class => \App\Models\Webhook::class,
             NotificationController::class => \App\Models\Notification::class,
             CalendarController::class => \App\Models\Activity::class,
+            KnowledgeBaseArticle::class => \App\Models\KnowledgeBaseArticle::class,
             InvoiceController::class => \App\Models\Invoice::class,
             SegmentController::class => \App\Models\Segment::class,
         ];
@@ -1591,6 +1641,8 @@ class AgentToolController extends Controller
             'contracts.get_status' => '/contracts',
             'invoices.search' => '/invoices',
             'invoices.get_ledger' => '/invoices',
+            'kb.create' => '/docs',
+            'kb.update' => '/docs',
         ];
 
         $id = $content['id']
@@ -1605,6 +1657,11 @@ class AgentToolController extends Controller
 
         if (! $route || ! $id) {
             return null;
+        }
+
+        if (in_array($tool, ['kb.create', 'kb.update'], true)) {
+            $slug = $content['slug'] ?? $id;
+            return "/docs/{$slug}";
         }
 
         return "{$route}/{$id}";
