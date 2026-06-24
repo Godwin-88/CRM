@@ -213,7 +213,10 @@ const statusColor = (status: string): "default" | "outline" | "secondary" | "des
   return colors[status] || 'outline';
 };
 
+const segmentFormErrors = ref<string[]>([]);
+
 const handleSegmentCreated = async (segmentData: any) => {
+  segmentFormErrors.value = [];
   try {
     const response = await fetch('/api/v1/segments', {
       method: 'POST',
@@ -229,9 +232,18 @@ const handleSegmentCreated = async (segmentData: any) => {
       selectedSegmentId.value = newSegment.id;
       isSegmentCreateOpen.value = false;
       previewSegmentCount(newSegment.id);
+    } else {
+      const err = await response.json();
+      if (err.errors) {
+        segmentFormErrors.value = Object.values(err.errors).flat() as string[];
+      } else if (err.message) {
+        segmentFormErrors.value = [err.message];
+      } else {
+        segmentFormErrors.value = ['Failed to create segment. Please check your input.'];
+      }
     }
-  } catch {
-    // ignore
+  } catch (e: any) {
+    segmentFormErrors.value = [e?.message || 'Network error. Please try again.'];
   }
 };
 </script>
@@ -404,18 +416,22 @@ const handleSegmentCreated = async (segmentData: any) => {
                   </div>
                 </div>
 
-                <Dialog v-model:open="isSegmentCreateOpen">
-                  <DialogContent class="max-w-2xl max-h-[85vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Create Segment</DialogTitle>
-                    </DialogHeader>
-                    <SegmentBuilder @update="handleSegmentCreated" />
-                  </DialogContent>
-                </Dialog>
-
                 <Button @click="createCampaign" :disabled="!canSubmit" class="w-full">
                   Create Campaign
                 </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <!-- Segment creation dialog (outside campaign dialog to avoid nested dialog overlay issues) -->
+          <Dialog v-model:open="isSegmentCreateOpen">
+            <DialogContent class="max-w-2xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create Segment</DialogTitle>
+              </DialogHeader>
+              <SegmentBuilder @update="handleSegmentCreated" />
+              <div v-if="segmentFormErrors.length" class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p v-for="(err, idx) in segmentFormErrors" :key="idx" class="text-sm text-red-600">{{ err }}</p>
               </div>
             </DialogContent>
           </Dialog>

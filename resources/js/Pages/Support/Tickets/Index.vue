@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3'
+import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -226,7 +226,19 @@ onMounted(async () => {
       </Card>
 
       <div class="flex justify-center">
-        <div v-html="tickets.links" />
+        <div class="flex gap-2">
+          <Link
+            v-for="link in tickets.links"
+            :key="link.url"
+            :href="link.url || '#'"
+            :class="[
+              'px-3 py-1 rounded text-sm',
+              link.active ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+              !link.url ? 'opacity-50 cursor-not-allowed' : ''
+            ]"
+            v-html="link.label"
+          />
+        </div>
       </div>
     </div>
   </AppLayout>

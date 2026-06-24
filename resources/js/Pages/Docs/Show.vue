@@ -51,27 +51,14 @@ const isStale = () => {
         <FileText class="h-6 w-6 text-blue-600 mt-1" />
         <div class="flex-1">
           <h1 class="text-3xl font-bold text-gray-900">{{ article.title }}</h1>
-          <p class="text-gray-500 mt-1">
-            Category: {{ article.category?.name }} |
-            Audience: {{ article.audience }}
-          </p>
-          <div v-if="isStale()" class="mt-2">
-            <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
-              Last verified: {{ article.last_verified_at ? new Date(article.last_verified_at).toLocaleDateString() : 'Never' }}
-            </span>
-          </div>
         </div>
       </div>
 
       <Card>
         <CardContent class="pt-6">
-          <div class="prose max-w-none" v-html="article.body"></div>
+          <div class="article-body" v-html="article.body"></div>
         </CardContent>
       </Card>
-
-      <div v-if="article.feature_refs && article.feature_refs.length > 0" class="text-xs text-gray-500">
-        References: {{ article.feature_refs.join(', ') }}
-      </div>
 
       <Card>
         <CardHeader>

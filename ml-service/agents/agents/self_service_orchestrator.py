@@ -36,7 +36,7 @@ SELF_SERVICE_TOOLS = [
     get("tool.contacts.get"),
     get("tool.contacts.search"),
     get("tool.notifications.get_unread"),
-    get("tool.users.my_permissions"),
+    get("tool.users.get_my_permissions"),
 ]
 SELF_SERVICE_TOOLS = [t for t in SELF_SERVICE_TOOLS if t is not None]
 

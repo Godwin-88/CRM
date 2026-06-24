@@ -54,7 +54,12 @@ class Asset extends Model
         'purchase_cost' => 'decimal:2',
         'assignment_start_date' => 'date',
         'expected_return_date' => 'date',
+        'total_quantity' => 'decimal:2',
+        'available_quantity' => 'decimal:2',
+        'minimum_threshold' => 'decimal:2',
     ];
+
+    protected $appends = ['book_value', 'depreciation'];
 
     public function assignee(): BelongsTo
     {
@@ -73,14 +78,28 @@ class Asset extends Model
 
     public function getBookValueAttribute(): ?float
     {
-        if (! $this->purchase_cost || ! $this->useful_life_years || ! $this->purchase_date) {
-            return $this->purchase_cost;
+        $purchaseCost = $this->purchase_cost ? (float) $this->purchase_cost : null;
+        $usefulLife = $this->useful_life_years ? (int) $this->useful_life_years : null;
+
+        if (! $purchaseCost || ! $usefulLife || ! $this->purchase_date) {
+            return $purchaseCost;
         }
 
         $yearsSincePurchase = $this->purchase_date->diffInYears(now());
-        $annualDepreciation = $this->purchase_cost / $this->useful_life_years;
+        $annualDepreciation = $purchaseCost / $usefulLife;
 
-        return max(0, (float) ($this->purchase_cost - ($annualDepreciation * $yearsSincePurchase)));
+        return max(0, (float) ($purchaseCost - ($annualDepreciation * $yearsSincePurchase)));
+    }
+
+    public function getDepreciationAttribute(): ?float
+    {
+        $purchaseCost = $this->purchase_cost ? (float) $this->purchase_cost : null;
+
+        if (! $purchaseCost || ! $this->useful_life_years) {
+            return null;
+        }
+
+        return (float) ($purchaseCost - $this->book_value);
     }
 
     public function getLastAssignmentDateAttribute(): ?string

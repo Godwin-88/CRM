@@ -79,20 +79,20 @@ watch(() => props.rules, (newRules) => {
 <template>
   <div class="space-y-3 border rounded-lg p-4 bg-gray-50">
     <p class="text-xs text-gray-500">Add one or more rules to define which contacts belong in this segment. Use AND/OR logic below to combine rules.</p>
-    <div v-for="(rule, index) in localRules" :key="index" class="flex gap-2 items-start">
-      <Select v-model="rule.field" class="flex-1">
-        <SelectTrigger class="w-full"><SelectValue placeholder="Field" /></SelectTrigger>
+    <div v-for="(rule, index) in localRules" :key="index" class="grid grid-cols-[1fr_100px_1fr_auto] gap-2 items-start">
+      <Select v-model="rule.field">
+        <SelectTrigger><SelectValue placeholder="Field" /></SelectTrigger>
         <SelectContent>
           <SelectItem v-for="f in availableFields" :key="f.value" :value="f.value">{{ f.label }}</SelectItem>
         </SelectContent>
       </Select>
-      <Select v-model="rule.operator" class="w-[140px]">
+      <Select v-model="rule.operator">
         <SelectTrigger><SelectValue placeholder="Operator" /></SelectTrigger>
         <SelectContent>
           <SelectItem v-for="op in operatorsForField(rule.field)" :key="op.value" :value="op.value">{{ op.label }}</SelectItem>
         </SelectContent>
       </Select>
-      <Input v-model="rule.value" placeholder="Value(s)" class="flex-1" />
+      <Input v-model="rule.value" placeholder="Value(s)" />
       <Button variant="ghost" size="sm" class="text-red-500 hover:text-red-700" @click="removeRule(index)">✕</Button>
     </div>
     <Button variant="outline" size="sm" @click="addRule">+ Add Rule</Button>

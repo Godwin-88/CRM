@@ -229,7 +229,7 @@ class AnalyticsWebController extends Controller
 
     protected function roleFor($user): string
     {
-        if ($user->is_admin) {
+        if ($user->hasRole('admin')) {
             return 'admin';
         }
 

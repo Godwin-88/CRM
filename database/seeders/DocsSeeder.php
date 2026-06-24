@@ -19,6 +19,13 @@ class DocsSeeder extends Seeder
 
 // Create categories for each spec section
         $categories = [
+            'overview' => KnowledgeBaseCategory::firstOrCreate(
+                ['slug' => 'overview'],
+                [
+                    'name' => 'Overview',
+                    'description' => 'Dashboard and platform overview',
+                ]
+            ),
             'getting-started' => KnowledgeBaseCategory::firstOrCreate(
                 ['slug' => 'getting-started'],
                 [
@@ -33,15 +40,15 @@ class DocsSeeder extends Seeder
                     'description' => 'Contact and account management documentation',
                 ]
             ),
-            'deals-pipelines' => KnowledgeBaseCategory::firstOrCreate(
-                ['slug' => 'deals-pipelines'],
+            'sales-pipeline' => KnowledgeBaseCategory::firstOrCreate(
+                ['slug' => 'sales-pipeline'],
                 [
                     'name' => 'Deals & Pipelines',
                     'description' => 'Deal management and pipeline workflows',
                 ]
             ),
-            'omnichannel' => KnowledgeBaseCategory::firstOrCreate(
-                ['slug' => 'omnichannel'],
+            'interactions-inbox' => KnowledgeBaseCategory::firstOrCreate(
+                ['slug' => 'interactions-inbox'],
                 [
                     'name' => 'Omni-Channel',
                     'description' => 'Multi-channel interaction management',
@@ -54,15 +61,15 @@ class DocsSeeder extends Seeder
                     'description' => 'Marketing campaigns and templates',
                 ]
             ),
-            'loyalty' => KnowledgeBaseCategory::firstOrCreate(
-                ['slug' => 'loyalty'],
+            'loyalty-cx' => KnowledgeBaseCategory::firstOrCreate(
+                ['slug' => 'loyalty-cx'],
                 [
                     'name' => 'Loyalty & CX',
                     'description' => 'Loyalty programs and customer experience',
                 ]
             ),
-            'support' => KnowledgeBaseCategory::firstOrCreate(
-                ['slug' => 'support'],
+            'service-support' => KnowledgeBaseCategory::firstOrCreate(
+                ['slug' => 'service-support'],
                 [
                     'name' => 'Support',
                     'description' => 'Ticket management and knowledge base',
@@ -82,15 +89,15 @@ class DocsSeeder extends Seeder
                     'description' => 'Contract and legal matter management',
                 ]
             ),
-            'finance' => KnowledgeBaseCategory::firstOrCreate(
-                ['slug' => 'finance'],
+            'finance-procurement' => KnowledgeBaseCategory::firstOrCreate(
+                ['slug' => 'finance-procurement'],
                 [
                     'name' => 'Finance & Procurement',
                     'description' => 'Billing, invoices, and vendor management',
                 ]
             ),
-            'security' => KnowledgeBaseCategory::firstOrCreate(
-                ['slug' => 'security'],
+            'security-admin' => KnowledgeBaseCategory::firstOrCreate(
+                ['slug' => 'security-admin'],
                 [
                     'name' => 'Security',
                     'description' => 'Security, compliance, and access control',
@@ -129,6 +136,15 @@ class DocsSeeder extends Seeder
                 ]
             );
         };
+
+        // OVERVIEW
+        $createArticle(
+            'Dashboard Overview',
+            'overview',
+            'all',
+            [],
+            '<div><h2>Dashboard Overview</h2><p>The Dashboard is your home base. It gives you a real-time snapshot of what matters most to your role.</p><h3>What you will see</h3><ul><li>KPI cards (open tickets, deals in pipeline, revenue, tasks due today)</li><li>Activity feed and notifications</li><li>Charts for revenue, ticket volume, and conversion</li></ul><h3>Personalisation</h3><p>Use the layout controls to reorder or hide widgets. Managers and admins can also add custom dashboards.</p><h3>Tips</h3><ul><li>Click any KPI to drill into the underlying list.</li><li>Use the date picker to change the reporting window.</li><li>Export charts as PNG or CSV from the context menu.</li></ul></div>'
+        );
 
         // 4.1 Contact Management
         $createArticle(
@@ -174,7 +190,7 @@ class DocsSeeder extends Seeder
         // 4.2 Deals & Pipelines
         $createArticle(
             'Deal Management',
-            'deals-pipelines',
+            'sales-pipeline',
             'agent',
             ['4.2.1'],
             '<div><h2>Managing Deals</h2><p>Create and track sales opportunities through the deal pipeline.</p><h3>Creating a Deal</h3><ol><li>From a contact or deal page, click "Create Deal".</li><li>Select the pipeline and stage.</li><li>Enter deal value and expected close date.</li><li>Assign to an owner.</li></ol></div>'
@@ -182,7 +198,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Pipeline Kanban Board',
-            'deals-pipelines',
+            'sales-pipeline',
             'agent',
             ['4.2.2'],
             '<div><h2>Kanban Board View</h2><p>Visualize your sales pipeline with drag-and-drop functionality.</p><h3>Using the Kanban Board</h3><ol><li>Navigate to Deals > Kanban Board.</li><li>Drag cards between columns to update stages.</li><li>Click cards to view deal details.</li><li>Use filters to focus on specific pipelines.</li></ol></div>'
@@ -190,7 +206,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Deal Automations',
-            'deals-pipelines',
+            'sales-pipeline',
             'manager',
             ['4.2.3'],
             '<div><h2>Deal Automation Workflows</h2><p>Automate repetitive deal-related tasks and notifications.</p><h3>Configuration</h3><ol><li>Go to Admin > Deal Automations.</li><li>Create workflows based on deal stage changes.</li><li>Set up email notifications and task assignments.</li><li>Test and activate workflows.</li></ol></div>'
@@ -198,7 +214,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Win Loss Reasons',
-            'deals-pipelines',
+            'sales-pipeline',
             'manager',
             ['4.2.4'],
             '<div><h2>Win/Loss Reason Tracking</h2><p>Configure and track reasons for won and lost deals to improve forecasting.</p><h3>Setup</h3><ol><li>Navigate to Admin > Win/Loss Reasons.</li><li>Define reasons for wins and losses.</li><li>Apply reasons when closing deals.</li><li>Review analytics in the dashboard.</li></ol></div>'
@@ -207,7 +223,7 @@ class DocsSeeder extends Seeder
         // 4.3 Omni-Channel
         $createArticle(
             'Omni-Channel Dashboard',
-            'omnichannel',
+            'interactions-inbox',
             'agent',
             ['4.3.1'],
             '<div><h2>Omni-Channel Dashboard</h2><p>Unified view of all multi-channel interactions.</p><h3>Overview</h3><p>The dashboard shows channels status, queue stats, and pending interactions.</p><h3>Channels Monitored</h3><ul><li>Email</li><li>SMS</li><li>Chat</li><li>Social Media</li></ul></div>'
@@ -215,7 +231,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Interaction Inbox',
-            'omnichannel',
+            'interactions-inbox',
             'agent',
             ['4.3.2'],
             '<div><h2>Interaction Inbox Management</h2><p>Manage and respond to all incoming interactions from multiple channels.</p><h3>Features</h3><ul><li>Unified inbox for all channels</li><li>Filter by status and channel type</li><li>Bulk actions for efficiency</li><li>Quick reply templates</li></ul></div>'
@@ -223,7 +239,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Channels Configuration',
-            'omnichannel',
+            'interactions-inbox',
             'admin',
             ['4.3.3'],
             '<div><h2>Channel Configuration</h2><p>Configure external channels for omni-channel routing.</p><h3>Setup Process</h3><ol><li>Go to Admin > Integrations.</li><li>Enable desired channels (email, SMS, chat).</li><li>Configure webhook endpoints and credentials.</li><li>Test connectivity and save settings.</li></ol></div>'
@@ -231,7 +247,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Kiosk',
-            'omnichannel',
+            'interactions-inbox',
             'agent',
             ['4.3.6'],
             '<div><h2>Kiosk Management</h2><p>Manage customer self-service kiosk interactions.</p><h3>Features</h3><p>The kiosk page allows you to view and manage kiosk sessions, track customer check-ins, and monitor queue status.</p></div>'
@@ -239,7 +255,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Email Composer',
-            'omnichannel',
+            'interactions-inbox',
             'agent',
             ['4.3.7'],
             '<div><h2>Email Composer Guide</h2><p>Compose and send emails directly from the CRM.</p><h3>Using the Composer</h3><ol><li>Navigate to Admin > Email Compose.</li><li>Enter recipient email addresses.</li><li>Compose subject and body.</li><li>Use templates or variables for personalization.</li></ol></div>'
@@ -247,7 +263,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Call Logging',
-            'omnichannel',
+            'interactions-inbox',
             'agent',
             ['4.3.8'],
             '<div><h2>Call Logging System</h2><p>Log and track customer phone calls within the CRM.</p><h3>Logging Calls</h3><ol><li>Go to Admin > Call Log.</li><li>Select the contact or create a new record.</li><li>Enter call details including duration and notes.</li><li>Set follow-up reminders if needed.</li></ol></div>'
@@ -281,7 +297,7 @@ class DocsSeeder extends Seeder
         // 4.5 Loyalty & CX
         $createArticle(
             'Loyalty Program',
-            'loyalty',
+            'loyalty-cx',
             'admin',
             ['4.5.1'],
             '<div><h2>Loyalty Program Management</h2><p>Configure and manage customer loyalty programs.</p><h3>Program Setup</h3><ol><li>Go to Admin > Loyalty Program.</li><li>Create earning rules based on purchases or interactions.</li><li>Define tier thresholds and benefits.</li><li>Set up redemption options.</li></ol></div>'
@@ -289,7 +305,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Points Ledger',
-            'loyalty',
+            'loyalty-cx',
             'agent',
             ['4.5.2'],
             '<div><h2>Points Ledger</h2><p>View and manage customer loyalty point transactions.</p><h3>Viewing Transactions</h3><ol><li>Navigate to Admin > Loyalty > Points Ledger.</li><li>Filter by customer or date range.</li><li>View earning and redemption history.</li><li>Export transaction records if needed.</li></ol></div>'
@@ -297,7 +313,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Surveys',
-            'loyalty',
+            'loyalty-cx',
             'manager',
             ['4.5.4'],
             '<div><h2>Survey Management</h2><p>Create and manage customer satisfaction surveys.</p><h3>Creating Surveys</h3><ol><li>Go to Admin > Surveys.</li><li>Select question types and create survey flow.</li><li>Configure delivery triggers and schedules.</li><li>Monitor responses and analyze results.</li></ol></div>'
@@ -305,7 +321,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Survey Responses',
-            'loyalty',
+            'loyalty-cx',
             'agent',
             ['4.5.5'],
             '<div><h2>Survey Responses</h2><p>View and analyze customer survey responses.</p><h3>Response Analysis</h3><ol><li>Navigate to Admin > Surveys > Responses.</li><li>View individual response details.</li><li>Filter by survey, date, or score.</li><li>Export data for deeper analysis.</li></ol></div>'
@@ -313,7 +329,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Kiosk Interactions',
-            'loyalty',
+            'loyalty-cx',
             'agent',
             ['4.5.6'],
             '<div><h2>Kiosk Interactions</h2><p>Track and analyze customer kiosk session data.</p><h3>Interaction Tracking</h3><ol><li>Access via Admin > Loyalty or Omni-Channel sections.</li><li>View session history and duration.</li><li>Monitor common actions and drop-off points.</li><li>Use data to improve kiosk experience.</li></ol></div>'
@@ -322,7 +338,7 @@ class DocsSeeder extends Seeder
         // 4.6 Support
         $createArticle(
             'Ticket Management',
-            'support',
+            'service-support',
             'agent',
             ['4.6.1'],
             '<div><h2>Support Ticket Management</h2><p>Efficiently manage customer support tickets.</p><h3>Key Actions</h3><ul><li>Create and assign tickets</li><li>Update status and priority</li><li>Add internal notes and customer replies</li><li>Link relevant knowledge base articles</li></ul></div>'
@@ -330,7 +346,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Knowledge Base',
-            'support',
+            'service-support',
             'all',
             ['4.6.2'],
             '<div><h2>Knowledge Base Management</h2><p>Search and access the knowledge base for customer support answers.</p><h3>Using Knowledge Base</h3><ol><li>Browse categories or search for articles.</li><li>View article content and rate helpfulness.</li><li>Link articles to tickets for customer reference.</li></ol></div>'
@@ -338,7 +354,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Canned Responses',
-            'support',
+            'service-support',
             'agent',
             ['4.6.5'],
             '<div><h2>Canned Responses</h2><p>Use pre-written responses for common support queries.</p><h3>Using Canned Responses</h3><ol><li>Access from Admin > Support > Canned Responses.</li><li>Browse or search templates by category tag.</li><li>Insert into ticket replies with one click.</li><li>Mark favorites for quick access.</li></ol></div>'
@@ -346,7 +362,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'CSAT Ratings',
-            'support',
+            'service-support',
             'manager',
             ['4.6.6'],
             '<div><h2>CSAT Rating Management</h2><p>Track customer satisfaction scores for support tickets.</p><h3>Review Process</h3><ol><li>View ratings in the Support Performance dashboard.</li><li>Analyze trends and identify improvement areas.</li><li>Follow up with dissatisfied customers.</li></ol></div>'
@@ -421,7 +437,7 @@ class DocsSeeder extends Seeder
         // 4.9 Finance & Procurement
         $createArticle(
             'Invoice Management',
-            'finance',
+            'finance-procurement',
             'agent',
             ['4.9.1'],
             '<div><h2>Invoice Management</h2><p>Create, view, and manage customer invoices.</p><h3>Invoice Actions</h3><ul><li>Create new invoices</li><li>Record payments</li><li>Send to customers</li><li>Track payment status</li></ul></div>'
@@ -429,7 +445,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Payment Recording',
-            'finance',
+            'finance-procurement',
             'agent',
             ['4.9.2'],
             '<div><h2>Recording Payments</h2><p>Record customer payments against invoices.</p><h3>Payment Process</h3><ol><li>Open an invoice with outstanding balance.</li><li>Click "Record Payment".</li><li>Enter payment amount and method.</li><li>Save to update invoice status.</li></ol></div>'
@@ -437,7 +453,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Ledger Summary',
-            'finance',
+            'finance-procurement',
             'manager',
             ['4.9.7'],
             '<div><h2>Ledger Summary</h2><p>View financial summary and account balances.</p><h3>Summary View</h3><p>The ledger provides an overview of accounts receivable, payable, and cash position.</p></div>'
@@ -446,7 +462,7 @@ class DocsSeeder extends Seeder
         // 4.10 Security
         $createArticle(
             'MFA Setup',
-            'security',
+            'security-admin',
             'all',
             ['4.10.1'],
             '<div><h2>Multi-Factor Authentication Setup</h2><p>Enable MFA for enhanced account security.</p><h3>Setup Process</h3><ol><li>Navigate to your profile settings.</li><li>Click "MFA Setup".</li><li>Scan QR code with authenticator app.</li><li>Enter verification code to confirm.</li></ol></div>'
@@ -454,7 +470,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'Security Events',
-            'security',
+            'security-admin',
             'admin',
             ['4.10.2'],
             '<div><h2>Security Events Monitoring</h2><p>Review and audit security-related events in the system.</p><h3>Event Types</h3><ul><li>Login attempts</li><li>Privileged session starts</li><li>Data export requests</li><li>Permission changes</li></ul></div>'
@@ -462,7 +478,7 @@ class DocsSeeder extends Seeder
 
         $createArticle(
             'RBAC Matrix',
-            'security',
+            'security-admin',
             'admin',
             ['4.10.4'],
             '<div><h2>RBAC Configuration</h2><p>Configure role-based access control for the platform.</p><h3>Managing Permissions</h3><ol><li>Navigate to Admin > RBAC.</li><li>Define roles and assign permissions.</li><li>Map roles to user groups.</li><li>Test access before deployment.</li></ol></div>'

@@ -44,11 +44,12 @@ class AssetController extends Controller
     {
         $this->authorize('view', $asset);
 
-        $asset->load(['assignments.assignee', 'assignedAccount']);
+        $asset->load(['assignments.assignee', 'assignedAccount', 'assignee']);
 
         return Inertia::render('Assets/Show', [
             'asset' => $asset,
             'canAssign' => auth()->user()->can('assign', $asset),
+            'canEdit' => auth()->user()->can('update', $asset),
             'users' => User::select(['id', 'name'])->orderBy('name')->get(),
             'accounts' => Account::select(['id', 'name'])->orderBy('name')->get(),
         ]);
@@ -58,10 +59,61 @@ class AssetController extends Controller
     {
         $this->authorize('create', Asset::class);
 
+        $types = AssetType::pluck('name');
+        if ($types->isEmpty()) {
+            $types = collect(['hardware', 'software', 'vehicle', 'furniture', 'custom']);
+        }
+
         return Inertia::render('Assets/Create', [
-            'types' => AssetType::pluck('name'),
+            'types' => $types,
             'statuses' => [Asset::STATUS_AVAILABLE, Asset::STATUS_ASSIGNED, Asset::STATUS_MAINTENANCE, Asset::STATUS_DISPOSED],
         ]);
+    }
+
+    public function edit(Asset $asset): Response
+    {
+        $this->authorize('update', $asset);
+
+        $types = AssetType::pluck('name');
+        if ($types->isEmpty()) {
+            $types = collect(['hardware', 'software', 'vehicle', 'furniture', 'custom']);
+        }
+
+        return Inertia::render('Assets/Edit', [
+            'asset' => $asset,
+            'types' => $types,
+            'statuses' => [Asset::STATUS_AVAILABLE, Asset::STATUS_ASSIGNED, Asset::STATUS_MAINTENANCE, Asset::STATUS_DISPOSED],
+        ]);
+    }
+
+    public function update(Request $request, Asset $asset)
+    {
+        $this->authorize('update', $asset);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'string'],
+            'identifier' => ['nullable', 'string'],
+            'purchase_date' => ['nullable', 'date'],
+            'purchase_cost' => ['nullable', 'numeric', 'min:0'],
+            'currency' => ['nullable', 'string', 'max:3'],
+            'status' => ['required', 'in:available,assigned,under_maintenance,disposed'],
+            'useful_life_years' => ['nullable', 'integer', 'min:1'],
+            'total_quantity' => ['nullable', 'numeric', 'min:0'],
+            'available_quantity' => ['nullable', 'numeric', 'min:0'],
+            'minimum_threshold' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $validated = array_map(fn($value) => $value === '' ? null : $value, $validated);
+
+        // Ensure purchase_cost is properly handled
+        if (isset($validated['purchase_cost']) && $validated['purchase_cost'] !== null) {
+            $validated['purchase_cost'] = (float) $validated['purchase_cost'];
+        }
+
+        $asset->update($validated);
+
+        return redirect()->route('assets.show', $asset->id)->with('success', 'Asset updated.');
     }
 
     public function store(Request $request)

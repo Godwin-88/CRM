@@ -535,6 +535,8 @@ Route::middleware(['auth', 'mfa_verified'])->group(function () {
         Route::middleware(['permission:assets.manage'])->group(function () {
             Route::get('/assets/create', [AssetController::class, 'create'])->name('assets.create');
             Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
+            Route::get('/assets/{asset}/edit', [AssetController::class, 'edit'])->name('assets.edit');
+            Route::put('/assets/{asset}', [AssetController::class, 'update'])->name('assets.update');
             Route::post('/assets/{asset}/assign', [AssetController::class, 'assign'])->name('assets.assign');
             Route::post('/assets/{asset}/return', [AssetController::class, 'returnAsset'])->name('assets.return');
             Route::get('/assets/export', [AssetController::class, 'export'])->name('assets.export');

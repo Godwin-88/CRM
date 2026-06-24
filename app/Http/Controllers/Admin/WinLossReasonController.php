@@ -17,8 +17,8 @@ class WinLossReasonController extends Controller
     public function index(): JsonResponse
     {
         return response()->json([
-            'won' => WinLossReason::won()->get(),
-            'lost' => WinLossReason::lost()->get(),
+            'won' => WinLossReason::won()->active()->orderBy('label')->get(),
+            'lost' => WinLossReason::lost()->active()->orderBy('label')->get(),
         ]);
     }
 

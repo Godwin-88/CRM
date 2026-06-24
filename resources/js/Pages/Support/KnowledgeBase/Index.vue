@@ -39,6 +39,16 @@ const filteredAdminArticles = computed(() => {
   })
 })
 
+const stripHtml = (html: string) => {
+  return html.replace(/<[^>]*>/g, '')
+}
+
+const truncate = (text: string, max: number) => {
+  const clean = stripHtml(text)
+  if (clean.length <= max) return clean
+  return clean.substring(0, max).trimEnd() + '...'
+}
+
 const stats = computed(() => ({
   total: visibleArticles.value.length,
   published: visibleArticles.value.filter((a) => a.status === 'published').length,
@@ -250,7 +260,7 @@ const statusBadgeVariant = (status: string) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p class="text-sm text-gray-600 line-clamp-3" v-html="article.body?.substring(0, 200) + '...'"></p>
+                  <p class="text-sm text-gray-600 line-clamp-3">{{ truncate(article.body || '', 200) }}</p>
                   <p class="text-xs text-gray-500 mt-2">
                     {{ article.view_count }} views | Helpfulness: {{ article.helpful_votes }}/{{ article.helpful_votes + article.not_helpful_votes }}
                   </p>

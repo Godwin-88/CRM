@@ -206,7 +206,7 @@ const submit = async (publish: boolean) => {
             <div
               ref="editorRef"
               contenteditable="true"
-              class="min-h-[400px] max-h-[600px] overflow-y-auto p-4 prose prose-sm max-w-none focus:outline-none"
+              class="article-body min-h-[400px] max-h-[600px] overflow-y-auto p-4 focus:outline-none"
               style="font-family: inherit; line-height: 1.6;"
             ></div>
           </div>
@@ -291,39 +291,67 @@ const submit = async (publish: boolean) => {
 </template>
 
 <style scoped>
-:deep(.prose) {
-  max-width: none;
-}
-:deep(.prose h1) {
-  font-size: 1.5em;
+.article-body :deep(h2) {
+  font-size: 1.25rem;
   font-weight: 700;
-  margin: 0.5em 0 0.3em;
+  color: #111827;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid #e5e7eb;
 }
-:deep(.prose h2) {
-  font-size: 1.3em;
-  font-weight: 700;
-  margin: 0.5em 0 0.3em;
+.article-body :deep(h3) {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-top: 1.25rem;
+  margin-bottom: 0.4rem;
 }
-:deep(.prose h3) {
-  font-size: 1.1em;
-  font-weight: 700;
-  margin: 0.5em 0 0.3em;
+.article-body :deep(p) {
+  color: #374151;
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
 }
-:deep(.prose ul),
-:deep(.prose ol) {
-  padding-left: 1.5em;
-  margin: 0.3em 0;
+.article-body :deep(ul),
+.article-body :deep(ol) {
+  margin: 0.5rem 0 1rem 1.5rem;
+  padding-left: 1rem;
 }
-:deep(.prose li) {
-  margin: 0.1em 0;
+.article-body :deep(ul) {
+  list-style-type: disc;
 }
-:deep(.prose a) {
+.article-body :deep(ol) {
+  list-style-type: decimal;
+}
+.article-body :deep(li) {
+  color: #374151;
+  line-height: 1.65;
+  margin-bottom: 0.35rem;
+  font-size: 0.95rem;
+}
+.article-body :deep(li::marker) {
+  color: #4b5563;
+  font-weight: 600;
+}
+.article-body :deep(strong) {
+  font-weight: 600;
+  color: #111827;
+}
+.article-body :deep(code) {
+  background: #f3f4f6;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+  color: #dc2626;
+}
+.article-body :deep(a) {
   color: #2563eb;
   text-decoration: underline;
 }
-:deep(.prose img) {
-  max-width: 100%;
-  height: auto;
-  border-radius: 0.375rem;
+.article-body :deep(hr) {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5rem 0;
 }
 </style>

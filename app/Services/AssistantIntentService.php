@@ -523,27 +523,34 @@ class AssistantIntentService
     {
         if ($helpType === self::HELP_CLARIFY) {
             if (! empty($navigation['disambiguation'])) {
-                return 'I found multiple matching records. Choose one to open: '.implode(', ', array_column($navigation['disambiguation'], 'label')).'.';
+                $labels = array_column($navigation['disambiguation'], 'label');
+                return 'I found '.count($labels).' records that match. Which one would you like to open: '.implode(', ', $labels).'?';
             }
 
-            return 'I need one detail before I route this. Are you trying to: '.implode(', ', $clarifyingOptions).'? Reply with the option that matches.';
+            return 'Just to make sure I get this right — are you trying to: '.implode(', ', $clarifyingOptions).'?';
         }
 
         $featureLabel = $featureRefs ? $this->featureTitle($featureRefs[0]) : 'the closest CRM area';
+        $navLabel = $navigation['label'] ?? $featureLabel;
+        $route = $navigation['route'] ?? null;
 
         if ($helpType === self::HELP_NAVIGATE) {
-            return 'Help type: Navigate. I can take you to '.$featureLabel.'.'.($navigation ? ' Use the button to open it.' : '');
+            if ($route && $navLabel) {
+                return 'I can take you to your '.$navLabel.'. Just click the button below to open it.';
+            }
+
+            return 'I can take you to your '.$featureLabel.'.';
         }
 
         if ($helpType === self::HELP_EXECUTE) {
-            return 'Help type: Execute. I can perform this through the assistant if you confirm and your permissions allow it.';
+            return 'I can perform this for you. If you\'d like to proceed, confirm and I\'ll run it — just make sure you have the right permissions.';
         }
 
         if ($lowConfidence) {
-            return 'Help type: Explain. I think this relates to '.$featureLabel.', but I do not have detailed documentation for it yet. I will still show the closest screen and relevant docs if available.';
+            return 'This looks like it\'s about '.$featureLabel.', but I don\'t have detailed information on it yet. I\'ll still show you the closest screen and any relevant docs I can find.';
         }
 
-        return 'Help type: Explain. I found documentation that can help answer this.';
+        return 'I found some information that can help with this.';
     }
 
     private function retrieveDocuments(string $query, array $featureRefs, int $limit, ?User $user): array
@@ -712,16 +719,31 @@ class AssistantIntentService
 
     private function featureTitle(string $featureRef): string
     {
-        [$section, $feature] = array_pad(explode('.', $featureRef), 2, null);
-        $index = config('docs.spec_sections', []);
+        // feature_ref format is X.Y.Z (e.g. 4.4.1)
+        // Extract section key (X.Y) from the feature ref by removing the last segment
+        $parts = explode('.', $featureRef);
+        $feature = $featureRef;
 
-        // Handle new structure with 'features' key
-        if (isset($index[$section]['features'][$feature])) {
-            return $index[$section]['features'][$feature];
+        if (count($parts) >= 3) {
+            // Section is everything except the last segment (e.g. 4.4 from 4.4.1)
+            $section = $parts[0].'.'.$parts[1];
+        } elseif (count($parts) === 2) {
+            $section = $featureRef;
+            $feature = $parts[1];
+        } else {
+            $section = $featureRef;
+            $feature = null;
         }
 
-        // Fallback to old structure
-        return $index[$section][$feature] ?? $featureRef;
+        $index = config('docs.spec_sections', []);
+
+        // Look up in the feature index using section.feature format
+        if (isset($index[$section]['features'][$featureRef])) {
+            return $index[$section]['features'][$featureRef];
+        }
+
+        // Fallback to section title
+        return $this->sectionTitle($section);
     }
 
     private function sectionTitle(string $sectionRef): string
